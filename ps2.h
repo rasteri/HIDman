@@ -5,6 +5,11 @@
 #define CLOCK 0
 #define DATA 1
 
+const extern uint8_t KEYA_MAKE[];
+const extern uint8_t KEYA_BREAK[];
+const extern uint8_t KEYB_MAKE[];
+const extern uint8_t KEYB_BREAK[];
+
 typedef struct ps2port {
 	
 	uint8_t state;
@@ -12,14 +17,23 @@ typedef struct ps2port {
 	uint8_t data;
 	uint8_t bitnum;
 	uint8_t parity;
+
+	// byte number within current chunk
+	uint8_t bytenum;
+
+	// ring buffer (pointers to chunks)
+	uint8_t sendBuffStart;
+	uint8_t sendBuffEnd;
+	uint8_t* sendBuff[64];
 	
 } ps2port;
-
 
 
 void OutPort (unsigned char port, unsigned char channel, bool val);
 
 bool GetPort (unsigned char port, unsigned char channel);
+
+void SendPS2(ps2port *port, const uint8_t *chunk);
 
 /*States
 

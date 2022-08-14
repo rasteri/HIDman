@@ -15,6 +15,11 @@ SBIT(MOUSE_CLOCK, 0xA0, 2); // port 2.2
 SBIT(MOUSE_DATA, 0xA0, 3); // port 2.3
 
 
+const uint8_t KEYA_MAKE[] = {1, 0x1C};
+const uint8_t KEYA_BREAK[] = {2, 0xF0, 0x1C};
+const uint8_t KEYB_MAKE[] = {1, 0x32};
+const uint8_t KEYB_BREAK[] = {2, 0xF0, 0x32};
+
 void OutPort (unsigned char port, unsigned char channel, bool val){
 	if (port == PORT_KEY)
 		if (channel == CLOCK)
@@ -43,28 +48,44 @@ bool GetPort (unsigned char port, unsigned char channel){
 			return MOUSE_DATA;
 }
 
-void ps2stuff(ps2port *port){
+void SendPS2(ps2port *port, const uint8_t *chunk){
+	// check for full
+	if ((port->sendBuffEnd + 1) % 64 == port->sendBuffStart){
+		// do nothing
+	} 
+	else {
+		port->sendBuff[port->sendBuffEnd] = chunk;
+		port->sendBuffEnd++;
+	}
+}
 
+void ps2stuff(ps2port *port){
+	uint8_t *chunk;
 	bool reEnter = 0;
 	do {
 		reEnter = 0;
 		switch (port->state){
 			case S_INIT:
-				port->state = S_SEND_CLOCK_LOW;
+				port->state = S_IDLE;
 				reEnter = 1;
 			break;
 			
 			case S_IDLE:
 				// check to see if host is trying to inhibit
-				if (!GetPort(port->port, CLOCK)){
+				/*if (!GetPort(port->port, CLOCK)){
 					// host is trying to inhibit, make sure data is high so we can detect it if it goes low
 					OutPort(port->port, DATA, 1);
 					port->state = S_INHIBIT;
 				}
 				else {
 					
+				}*/
+
+				//if buffer not empty
+				if (port->sendBuffEnd != port->sendBuffStart){
+					port->state = S_SEND_CLOCK_LOW;
+					reEnter = 1;
 				}
-				
 				
 				
 			break;
@@ -121,11 +142,31 @@ void ps2stuff(ps2port *port){
 				if (port->bitnum == 11){
 					port->parity = 0;
 					port->bitnum = 0;
-					//... and get next byte from whatever buffer, I suppose...
-					port->data = 0x1C;
+
+					// get current chunk
+					chunk = port->sendBuff[port->sendBuffStart];
+
+					port->bytenum++;
+
+					// if we've run out of bytes in this chunk
+					if (port->bytenum == chunk[0]){
+						// move onto next chunk
+						port->sendBuffStart = (port->sendBuffStart + 1) % 64;
+						port->bytenum = 0;
+						chunk = port->sendBuff[port->sendBuffStart];
+
+						// if we've run out of chunks, i.e. buffer empty
+						if (port->sendBuffStart == port->sendBuffEnd){
+							port->state = S_IDLE;
+							break;
+						}
+
+					}
+
+					port->data = chunk[port->bytenum + 1];
+					port->state = S_SEND_CLOCK_LOW;
 				}
 
-				port->state = S_SEND_CLOCK_LOW;
 			
 			break;
 			

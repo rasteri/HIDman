@@ -553,7 +553,7 @@ void pollHIDdevice()
 			{		
 				LED = !LED;	
 				//DEBUG_OUT("HID %lu, %i data %i : ", HIDdevice[hiddevice].type, hiddevice, HIDdevice[hiddevice].endPoint & 0x7F);
-				DEBUG_OUT("MSG %x\n
+				/*DEBUG_OUT("MSG %x\n
 				len %x\n
 				HIDDEVICETYPE %x\n
 				hiddevice %x\n
@@ -573,7 +573,7 @@ void pollHIDdevice()
 				VendorProductID[HIDdevice[hiddevice].rootHub].idVendorL,
 				VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,
 				VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,
-				VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);
+				VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);*/
 				
 				sendHidPollMSG(MSG_TYPE_DEVICE_POLL,len, HIDdevice[hiddevice].type, hiddevice, HIDdevice[hiddevice].endPoint & 0x7F, RxBuffer,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorL,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);
 			}

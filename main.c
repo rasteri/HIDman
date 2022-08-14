@@ -17,17 +17,24 @@ typedef unsigned char  __data             UINT8D;
 
 SBIT(LED, 0x90, 6);
 
-ps2port keyboard = {
-	S_INIT,
-	PORT_KEY,
-	0x1C,0,0
+__xdata ps2port keyboard = {
+	S_INIT, //state
+	PORT_KEY, //port
+	0x1C, //data
+	0, //bitnum
+	0, //parity
+
+	0, //bytenum
+
+	0, //sendBuffStart
+	0 //sendBuffEnd
 };
 
 void mTimer0Interrupt( void) __interrupt (1)
 {	
 	/*OutPort(keyboard.port, DATA, 0);
 	OutPort(keyboard.port, CLOCK, 0);*/
-	//ps2stuff(&keyboard);
+	ps2stuff(&keyboard);
 }
 
 void main()
@@ -41,7 +48,7 @@ void main()
     initUSB_Host();
 	
 	//port2 setup
-	/*PORT_CFG |= bP2_OC; // open collector
+	PORT_CFG |= bP2_OC; // open collector
 	P2_DIR = 0xff; // output
 	P2_PU = 0x00; // pull up - change this to 0x00 when we add the 5v pullup
 	
@@ -51,7 +58,7 @@ void main()
 	TH0 = 0x80; // reload to 128
 	TR0 = 1;// start timer0
 	ET0 = 1; //enable timer0 interrupt;
-	EA = 1; // enable all interrupts*/
+	EA = 1; // enable all interrupts
 	
 	
     DEBUG_OUT("Ready\n");
@@ -64,9 +71,16 @@ void main()
     {
         if(!(P4_IN & (1 << 6)))
             runBootloader();
-        processUart();
+        /*processUart();
         s = checkRootHubConnections();
-        pollHIDdevice();
+        pollHIDdevice();*/
+
+		// if we have at least 2 bytes left, send some codes
+		if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart &&
+			(keyboard.sendBuffEnd + 2) % 64 != keyboard.sendBuffStart){
+			SendPS2(&keyboard, KEYA_MAKE);
+			SendPS2(&keyboard, KEYB_MAKE);
+		} 
 		//ps2stuff(&keyboard);
     }
 }

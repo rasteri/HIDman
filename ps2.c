@@ -19,6 +19,8 @@ const uint8_t KEYA_MAKE[] = {1, 0x1C};
 const uint8_t KEYA_BREAK[] = {2, 0xF0, 0x1C};
 const uint8_t KEYB_MAKE[] = {1, 0x32};
 const uint8_t KEYB_BREAK[] = {2, 0xF0, 0x32};
+const uint8_t KEYC_MAKE[] = {1, 0x21};
+const uint8_t KEYC_BREAK[] = {2, 0xF0, 0x21};
 
 void OutPort (unsigned char port, unsigned char channel, bool val){
 	if (port == PORT_KEY)
@@ -75,12 +77,14 @@ void ps2stuff(ps2port *port){
 			break;
 			
 			case S_IDLE:
-				// check to see if host is trying to inhibit
+
+				// check to see if host is trying to inhibit (i.e. pulling clock low)
 				if (!GetPort(port->port, CLOCK)){
-					// host is trying to inhibit, make sure data is high so we can detect it if it goes low
+					// make sure data is high so we can detect it if it goes low
 					OutPort(port->port, DATA, 1);
+					OutPort(port->port, CLOCK, 1);
 					port->state = S_INHIBIT;
-					reEnter = 1;
+					P2 ^= 0b00001000;
 				}
 				else {
 					//if buffer not empty
@@ -88,7 +92,6 @@ void ps2stuff(ps2port *port){
 						port->data = chunk[port->bytenum + 1];
 						port->state = S_SEND_CLOCK_LOW;
 						reEnter = 1;
-						DEBUG_OUT("Not Empty\n");
 					}
 				}
 				
@@ -96,21 +99,22 @@ void ps2stuff(ps2port *port){
 			break;
 			
 			case S_SEND_CLOCK_LOW:
-				// check to see if host is trying to inhibit
+				// check to see if host is trying to inhibit (i.e. pulling clock low)
 				if (!GetPort(port->port, CLOCK)){
-					// host is trying to inhibit, make sure data is high so we can detect it if it goes low
+					// make sure clock/data are high so we can detect it if it goes low
 					OutPort(port->port, DATA, 1);
+					OutPort(port->port, CLOCK, 1);
 					port->state = S_INHIBIT;
-					reEnter = 1;
+					P2 ^= 0b00001000;
 				}
 				else {
 					// start bit
-					if (port->bitnum == 0){
+					if (port->sendbit == 0){
 						OutPort(port->port, DATA, 0);
 					}
 					
 					// data bits
-					else if (port->bitnum > 0 && port->bitnum < 9){
+					else if (port->sendbit > 0 && port->sendbit < 9){
 						// set current bit data
 						OutPort(port->port, DATA, port->data & 0x01);
 						
@@ -120,22 +124,22 @@ void ps2stuff(ps2port *port){
 					}
 					
 					// parity
-					else if (port->bitnum == 9){
+					else if (port->sendbit == 9){
 						OutPort(port->port, DATA, port->parity & 0x01);
 					}
 					
 					// stop bit
-					else if (port->bitnum == 10){
+					else if (port->sendbit == 10){
 						OutPort(port->port, DATA, 1);
 					}
 					
 					//make clock low
 					OutPort(port->port, CLOCK, 0);
 					
-					port->bitnum++;
+					port->sendbit++;
 					
 					port->state = S_SEND_CLOCK_HIGH;
-				//}
+				}
 				
 			break;
 			
@@ -144,9 +148,9 @@ void ps2stuff(ps2port *port){
 				OutPort(port->port, CLOCK, 1);
 				
 				// if final bit, move onto next byte
-				if (port->bitnum == 11){
+				if (port->sendbit == 11){
 					port->parity = 0;
-					port->bitnum = 0;
+					port->sendbit = 0;
 
 					port->bytenum++;
 
@@ -155,7 +159,7 @@ void ps2stuff(ps2port *port){
 						// move onto next chunk
 						port->sendBuffStart = (port->sendBuffStart + 1) % 64;
 						port->bytenum = 0;
-						port->state = S_WAIT;
+						port->state = S_IDLE;
 						break;
 					}
 					else {
@@ -169,29 +173,78 @@ void ps2stuff(ps2port *port){
 			break;
 
 			case S_RECEIVE_CLOCK_LOW:
-				
+				OutPort(port->port, CLOCK, 0);
+				port->state = S_RECEIVE_CLOCK_HIGH;
 			break;
 			
+			case S_RECEIVE_CLOCK_HIGH:
+				OutPort(port->port, CLOCK, 1);
+				port->recvbit++;
+
+				if (port->recvbit == 11){
+					// send ACK bit
+					port->state = S_RECEIVE_ACK;
+					break;
+				}
+
+				port->state = S_RECEIVE_CLOCK_LOW;
+			break;
+
+			case S_RECEIVE_ACK:
+				// ACK bit is low
+				OutPort(port->port, DATA, 0);
+				// Send it (make clock low)
+				OutPort(port->port, CLOCK, 0);
+
+				// next time round clock will rise and we can go back to normal
+				port->state = S_IDLE;
+			break;
+
+
 			case S_INHIBIT:
-			
+				// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
+				port->sendbit = 0;
+				port->bytenum = 0;
+
 				// wait for host to release clock
 				if (GetPort(port->port, CLOCK)){
 					// if data line low then host wants to transmit
 					if (!GetPort(port->port, DATA)) {
 						port->state = S_RECEIVE_CLOCK_LOW;
+						port->recvbit = 0;
+						port->recvBuff = 0;
+					} 
+					else {
+						//otherwise, just get on with it as normal
+						port->state = S_IDLE;
 					}
+
 				}
 			
 			break;
 
 			case S_WAIT:
-				del++;
-				if (del > 250){
-					del = 0;
-					port->state = S_IDLE;
-				}
+
+				// check to see if host is trying to inhibit (i.e. pulling clock low)
+				/*if (!GetPort(port->port, CLOCK)){
+					// make sure data is high so we can detect it if it goes low
+					OutPort(port->port, DATA, 1);
+					OutPort(port->port, CLOCK, 1);
+					port->state = S_INHIBIT;
+					reEnter = 1;
+					P2 ^= 0b00001000;
+					del=1;
+				} else {
+
+					del++;
+					if (del > 100){
+						del = 0;
+						port->state = S_IDLE;
+					}
+				}*/
 
 			break;
 		}
 	} while (reEnter);
+	
 }

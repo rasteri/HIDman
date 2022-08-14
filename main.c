@@ -43,6 +43,7 @@ void mTimer0Interrupt( void) __interrupt (1)
 void main()
 {
     unsigned char s;
+	uint8_t keyindex;
     initClock();
     initUART0(1000000, 1);
     DEBUG_OUT("Startup\n");
@@ -78,17 +79,27 @@ void main()
         s = checkRootHubConnections();
         pollHIDdevice();*/
 
-		// if we have at least 4 slots left, send some codes
-		if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart &&
-			(keyboard.sendBuffEnd + 2) % 64 != keyboard.sendBuffStart &&
-			(keyboard.sendBuffEnd + 3) % 64 != keyboard.sendBuffStart &&
-			(keyboard.sendBuffEnd + 4) % 64 != keyboard.sendBuffStart
-			){
+		// if buffer isn't full, send the next code
+		if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart){
+			/*     if (keyindex == 0) SendPS2(&keyboard, KEYA_MAKE);
+			else if (keyindex == 1) SendPS2(&keyboard, KEYA_BREAK);
+			else if (keyindex == 2) SendPS2(&keyboard, KEYB_MAKE);
+			else if (keyindex == 3) SendPS2(&keyboard, KEYB_BREAK);
+			else if (keyindex == 4) SendPS2(&keyboard, KEYC_MAKE);
+			else if (keyindex == 5) SendPS2(&keyboard, KEYC_BREAK);
+
+			keyindex++;
+			if (keyindex == 6) keyindex = 0;*/
+
 			SendPS2(&keyboard, KEYA_MAKE);
-			SendPS2(&keyboard, KEYA_BREAK);
 			SendPS2(&keyboard, KEYB_MAKE);
+			SendPS2(&keyboard, KEYC_MAKE);
+			delay(50);
+
+			SendPS2(&keyboard, KEYA_BREAK);
 			SendPS2(&keyboard, KEYB_BREAK);
-			//DEBUG_OUT("Bleah\n");
+			SendPS2(&keyboard, KEYC_BREAK);
+			delay(50);
 		} 
 		//ps2stuff(&keyboard);
     }

@@ -9,13 +9,16 @@ const extern uint8_t KEYA_MAKE[];
 const extern uint8_t KEYA_BREAK[];
 const extern uint8_t KEYB_MAKE[];
 const extern uint8_t KEYB_BREAK[];
+const extern uint8_t KEYC_MAKE[];
+const extern uint8_t KEYC_BREAK[];
 
 typedef struct ps2port {
 	
 	uint8_t state;
 	uint8_t port;
 	uint8_t data;
-	uint8_t bitnum;
+	uint8_t sendbit;
+	uint8_t recvbit;
 	uint8_t parity;
 
 	// byte number within current chunk
@@ -25,7 +28,7 @@ typedef struct ps2port {
 	uint8_t sendBuffStart;
 	uint8_t sendBuffEnd;
 	uint8_t* sendBuff[64];
-	
+	uint8_t recvBuff;
 } ps2port;
 
 
@@ -50,7 +53,8 @@ SEND_CLOCK_HIGH - Make clock high, perhaps calculate next value
 #define S_SEND_CLOCK_HIGH 3
 #define S_RECEIVE_CLOCK_LOW 4
 #define S_RECEIVE_CLOCK_HIGH 5
-#define S_INHIBIT 6
-#define S_WAIT 7
+#define S_RECEIVE_ACK 6
+#define S_INHIBIT 10
+#define S_WAIT 11
 
 void ps2stuff(ps2port *port);

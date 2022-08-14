@@ -20,7 +20,7 @@ SBIT(LED, 0x90, 6);
 __xdata ps2port keyboard = {
 	S_INIT, //state
 	PORT_KEY, //port
-	0x1C, //data
+	0xFF, //data
 	0, //bitnum
 	0, //parity
 
@@ -32,6 +32,9 @@ __xdata ps2port keyboard = {
 
 void mTimer0Interrupt( void) __interrupt (1)
 {	
+	//64735
+	TH0 = 0xff;
+	TL0 = 0x79;
 	/*OutPort(keyboard.port, DATA, 0);
 	OutPort(keyboard.port, CLOCK, 0);*/
 	ps2stuff(&keyboard);
@@ -50,12 +53,12 @@ void main()
 	//port2 setup
 	PORT_CFG |= bP2_OC; // open collector
 	P2_DIR = 0xff; // output
-	P2_PU = 0x00; // pull up - change this to 0x00 when we add the 5v pullup
+	P2_PU = 0xff; // pull up - change this to 0x00 when we add the 5v pullup
 	
 	//timer0 setup
-	TMOD = (TMOD & 0xf0) | 0x02; // mode 2 (8bit auto reload)
-	T2MOD = T2MOD & 0b01101111; // clear bTMR_CLK and bT0_CLK;
-	TH0 = 0x80; // reload to 128
+	TMOD = (TMOD & 0xf0) | 0x01; // mode 1 (16bit no auto reload)
+	//T2MOD = T2MOD & 0b01101111; // clear bTMR_CLK and bT0_CLK;
+	//TH0 = 0x80; // reload to 128
 	TR0 = 1;// start timer0
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1; // enable all interrupts
@@ -75,11 +78,17 @@ void main()
         s = checkRootHubConnections();
         pollHIDdevice();*/
 
-		// if we have at least 2 bytes left, send some codes
+		// if we have at least 4 slots left, send some codes
 		if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart &&
-			(keyboard.sendBuffEnd + 2) % 64 != keyboard.sendBuffStart){
+			(keyboard.sendBuffEnd + 2) % 64 != keyboard.sendBuffStart &&
+			(keyboard.sendBuffEnd + 3) % 64 != keyboard.sendBuffStart &&
+			(keyboard.sendBuffEnd + 4) % 64 != keyboard.sendBuffStart
+			){
 			SendPS2(&keyboard, KEYA_MAKE);
+			SendPS2(&keyboard, KEYA_BREAK);
 			SendPS2(&keyboard, KEYB_MAKE);
+			SendPS2(&keyboard, KEYB_BREAK);
+			//DEBUG_OUT("Bleah\n");
 		} 
 		//ps2stuff(&keyboard);
     }

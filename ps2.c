@@ -55,12 +55,16 @@ void SendPS2(ps2port *port, const uint8_t *chunk){
 	} 
 	else {
 		port->sendBuff[port->sendBuffEnd] = chunk;
-		port->sendBuffEnd++;
+		port->sendBuffEnd = (port->sendBuffEnd + 1) % 64;
 	}
 }
-
+unsigned char del = 0;
 void ps2stuff(ps2port *port){
 	uint8_t *chunk;
+
+	// get current chunk
+	chunk = port->sendBuff[port->sendBuffStart];
+	
 	bool reEnter = 0;
 	do {
 		reEnter = 0;
@@ -72,19 +76,20 @@ void ps2stuff(ps2port *port){
 			
 			case S_IDLE:
 				// check to see if host is trying to inhibit
-				/*if (!GetPort(port->port, CLOCK)){
+				if (!GetPort(port->port, CLOCK)){
 					// host is trying to inhibit, make sure data is high so we can detect it if it goes low
 					OutPort(port->port, DATA, 1);
 					port->state = S_INHIBIT;
+					reEnter = 1;
 				}
 				else {
-					
-				}*/
-
-				//if buffer not empty
-				if (port->sendBuffEnd != port->sendBuffStart){
-					port->state = S_SEND_CLOCK_LOW;
-					reEnter = 1;
+					//if buffer not empty
+					if (port->sendBuffEnd != port->sendBuffStart){
+						port->data = chunk[port->bytenum + 1];
+						port->state = S_SEND_CLOCK_LOW;
+						reEnter = 1;
+						DEBUG_OUT("Not Empty\n");
+					}
 				}
 				
 				
@@ -92,12 +97,13 @@ void ps2stuff(ps2port *port){
 			
 			case S_SEND_CLOCK_LOW:
 				// check to see if host is trying to inhibit
-				/*if (!GetPort(port->port, CLOCK)){
+				if (!GetPort(port->port, CLOCK)){
 					// host is trying to inhibit, make sure data is high so we can detect it if it goes low
 					OutPort(port->port, DATA, 1);
 					port->state = S_INHIBIT;
+					reEnter = 1;
 				}
-				else {*/
+				else {
 					// start bit
 					if (port->bitnum == 0){
 						OutPort(port->port, DATA, 0);
@@ -134,7 +140,6 @@ void ps2stuff(ps2port *port){
 			break;
 			
 			case S_SEND_CLOCK_HIGH:
-				
 				//make clock high
 				OutPort(port->port, CLOCK, 1);
 				
@@ -143,9 +148,6 @@ void ps2stuff(ps2port *port){
 					port->parity = 0;
 					port->bitnum = 0;
 
-					// get current chunk
-					chunk = port->sendBuff[port->sendBuffStart];
-
 					port->bytenum++;
 
 					// if we've run out of bytes in this chunk
@@ -153,21 +155,21 @@ void ps2stuff(ps2port *port){
 						// move onto next chunk
 						port->sendBuffStart = (port->sendBuffStart + 1) % 64;
 						port->bytenum = 0;
-						chunk = port->sendBuff[port->sendBuffStart];
-
-						// if we've run out of chunks, i.e. buffer empty
-						if (port->sendBuffStart == port->sendBuffEnd){
-							port->state = S_IDLE;
-							break;
-						}
-
+						port->state = S_WAIT;
+						break;
 					}
-
-					port->data = chunk[port->bytenum + 1];
-					port->state = S_SEND_CLOCK_LOW;
+					else {
+						port->data = chunk[port->bytenum + 1];
+					}
 				}
 
+
+				port->state = S_SEND_CLOCK_LOW;
 			
+			break;
+
+			case S_RECEIVE_CLOCK_LOW:
+				
 			break;
 			
 			case S_INHIBIT:
@@ -175,11 +177,20 @@ void ps2stuff(ps2port *port){
 				// wait for host to release clock
 				if (GetPort(port->port, CLOCK)){
 					// if data line low then host wants to transmit
-					if (!GetPort(port->port, DATA)){
-						port->state = S_RECIEVE_CLOCK_LOW;
+					if (!GetPort(port->port, DATA)) {
+						port->state = S_RECEIVE_CLOCK_LOW;
 					}
 				}
 			
+			break;
+
+			case S_WAIT:
+				del++;
+				if (del > 250){
+					del = 0;
+					port->state = S_IDLE;
+				}
+
 			break;
 		}
 	} while (reEnter);

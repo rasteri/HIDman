@@ -7,3 +7,6 @@
 *.rst
 *.sym
 build/
+.vscode/
+
+workspace.code-workspace

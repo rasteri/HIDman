@@ -48,8 +48,9 @@ SEND_CLOCK_HIGH - Make clock high, perhaps calculate next value
 #define S_IDLE 1
 #define S_SEND_CLOCK_LOW 2
 #define S_SEND_CLOCK_HIGH 3
-#define S_RECIEVE_CLOCK_LOW 4
-#define S_RECIEVE_CLOCK_HIGH 5
+#define S_RECEIVE_CLOCK_LOW 4
+#define S_RECEIVE_CLOCK_HIGH 5
 #define S_INHIBIT 6
+#define S_WAIT 7
 
 void ps2stuff(ps2port *port);

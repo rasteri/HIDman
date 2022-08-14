@@ -6,3 +6,4 @@
 *.rel
 *.rst
 *.sym
+build/

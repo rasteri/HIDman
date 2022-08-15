@@ -58,6 +58,7 @@ SEND_CLOCK_HIGH - Make clock high, perhaps calculate next value
 #define S_RECEIVE_CLOCK_LOW 4
 #define S_RECEIVE_CLOCK_HIGH 5
 #define S_RECEIVE_ACK 6
+#define S_PAUSE 9
 #define S_INHIBIT 10
 #define S_WAIT 11
 

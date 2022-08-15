@@ -6,5 +6,6 @@
 
 extern const uint8_t * const HIDtoPS2_Make[];
 extern const uint8_t * const HIDtoPS2_Break[];
-
+extern const uint8_t * const ModtoPS2_BREAK[];
+extern const uint8_t * const ModtoPS2_MAKE[];
 #endif

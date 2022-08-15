@@ -85,6 +85,36 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 	{
 	case REPORT_USAGE_KEYBOARD:
 
+		// do special keys first
+		if (msgbuffer[0] != keyboard.prevhid[0])
+		{
+			uint8_t rbits = msgbuffer[0];
+			uint8_t pbits = keyboard.prevhid[0];
+
+			// iterate through bits and compare to previous to see whats changed
+			for (uint8_t j = 0; j < 8; j++)
+			{
+
+				if ((rbits & 0x01) != (pbits & 0x01))
+				{
+
+					if (rbits & 0x01)
+					{
+						SendPS2(&keyboard, ModtoPS2_MAKE[j]);
+					}
+					else
+					{
+						SendPS2(&keyboard, ModtoPS2_BREAK[j]);
+					}
+				}
+
+				rbits = rbits >> 1;
+				pbits = pbits >> 1;
+			}
+
+			keyboard.prevhid[0] = msgbuffer[0];
+		}
+
 		// iterate through all the HID bytes to see what's changed since last time
 		for (uint8_t i = 2; i < 8; i++)
 		{
@@ -108,7 +138,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 				if (brk)
 				{
-					//DEBUG_OUT("Break %x\n", keyboard.prevhid[i]);
+					DEBUG_OUT("Break %x\n", keyboard.prevhid[i]);
 					// no break code for pause key, for some reason
 					if (keyboard.prevhid[i] == 0x48)
 						continue;
@@ -116,7 +146,8 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 					repeat = 0;
 
 					//send the break code
-					SendPS2(&keyboard, HIDtoPS2_Break[keyboard.prevhid[i]]);
+					if (keyboard.prevhid[i] <= 0x67)
+						SendPS2(&keyboard, HIDtoPS2_Break[keyboard.prevhid[i]]);
 				}
 			}
 
@@ -139,12 +170,13 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 				if (make)
 				{
+					DEBUG_OUT("Make %x\n", msgbuffer[i]);
 					repeat = msgbuffer[i];
 					/*if (repeater)
 						cancel_alarm(repeater);
 					repeater = add_alarm_in_ms(delayms, repeat_callback, NULL, false);*/
-
-					SendPS2(&keyboard, HIDtoPS2_Make[msgbuffer[i]]);
+					if (msgbuffer[i] <= 0x67)
+						SendPS2(&keyboard, HIDtoPS2_Make[msgbuffer[i]]);
 				}
 			}
 
@@ -175,7 +207,7 @@ void PS2ProcessPort(ps2port *port)
 			break;
 
 		case S_IDLE:
-
+			//P2 ^= 0b00001000;
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
 			if (!GetPort(port->port, CLOCK))
 			{
@@ -186,11 +218,11 @@ void PS2ProcessPort(ps2port *port)
 			}
 			else
 			{
-				
+
 				//if buffer not empty
 				if (port->sendBuffEnd != port->sendBuffStart)
 				{
-					
+
 					port->data = chunk[port->bytenum + 1];
 					DEBUG_OUT("Consuming %x %x %x %x\n", port->sendBuffStart, port->sendBuffEnd, chunk[0], port->data);
 					port->state = S_SEND_CLOCK_LOW;
@@ -207,7 +239,13 @@ void PS2ProcessPort(ps2port *port)
 				// make sure clock/data are high so we can detect it if it goes low
 				OutPort(port->port, DATA, 1);
 				OutPort(port->port, CLOCK, 1);
-				port->state = S_INHIBIT;
+
+				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
+				if (port->sendbit == 0)
+					port->state = S_PAUSE;
+				// if interrupted halfway through byte, will need to send entire packet again
+				else
+					port->state = S_INHIBIT;
 			}
 			else
 			{
@@ -260,16 +298,20 @@ void PS2ProcessPort(ps2port *port)
 				port->parity = 0;
 				port->sendbit = 0;
 
+
 				port->bytenum++;
+
+
 
 				// if we've run out of bytes in this chunk
 				if (port->bytenum == chunk[0])
 				{
 					// move onto next chunk
-					DEBUG_OUT("Consumed %x %x\n", port->sendBuffStart, port->sendBuffEnd);
+					//DEBUG_OUT("Consumed %x %x\n", port->sendBuffStart, port->sendBuffEnd);
 					port->sendBuffStart = (port->sendBuffStart + 1) % 64;
 					port->bytenum = 0;
 					port->state = S_IDLE;
+
 					break;
 				}
 				else
@@ -300,10 +342,13 @@ void PS2ProcessPort(ps2port *port)
 			// bit 8 is parity
 			else if (port->recvbit == 8)
 			{
-				if (port->parity & 0x01 == GetPort(port->port, DATA)) {
+				if (port->parity & 0x01 == GetPort(port->port, DATA))
+				{
 					// parity ok - reuse variable
 					port->parity = 1;
-				} else {
+				}
+				else
+				{
 					// abort if not
 					port->parity = 0;
 				}
@@ -314,7 +359,8 @@ void PS2ProcessPort(ps2port *port)
 			{
 				// only accept data if stop bit is high
 				// should check parity too but it's not calcing properly lol
-				if (GetPort(port->port, DATA)){
+				if (GetPort(port->port, DATA))
+				{
 					port->recvout = port->recvBuff;
 					port->recvvalid = 1;
 				}
@@ -322,7 +368,6 @@ void PS2ProcessPort(ps2port *port)
 				// send ACK bit
 				port->state = S_RECEIVE_ACK;
 				break;
-
 			}
 
 			port->recvbit++;
@@ -340,11 +385,33 @@ void PS2ProcessPort(ps2port *port)
 			port->state = S_IDLE;
 			break;
 
+		case S_PAUSE:
+
+			// wait for host to release clock
+			if (GetPort(port->port, CLOCK))
+			{
+				// if data line low then host wants to transmit 
+				if (!GetPort(port->port, DATA))
+				{
+					// go to full inhibit mode (to clear counters etc)
+					port->state = S_INHIBIT;
+				}
+				else
+				{
+					//otherwise, just get on with it as normal
+					port->state = S_IDLE;
+				}
+			}
+
+			break;
+
 		case S_INHIBIT:
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
 			port->sendbit = 0;
 			port->bytenum = 0;
 			port->parity = 0;
+
+
 
 			// wait for host to release clock
 			if (GetPort(port->port, CLOCK))
@@ -355,11 +422,10 @@ void PS2ProcessPort(ps2port *port)
 					port->recvbit = 0;
 					port->recvBuff = 0;
 					port->state = S_RECEIVE_CLOCK_LOW;
-
 				}
 				else
 				{
-					//otherwise, just get on with it as normal
+					//otherwise, restart sending current chunk
 					port->state = S_IDLE;
 				}
 			}

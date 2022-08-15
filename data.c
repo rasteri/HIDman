@@ -82,7 +82,7 @@ __code uint8_t KEY_DELETE_MAKE[] = {2, 0xE0, 0x71};
 __code uint8_t KEY_END_MAKE[] = {2, 0xE0, 0x69};
 __code uint8_t KEY_PGDN_MAKE[] = {2, 0xE0, 0x7A};
 __code uint8_t KEY_UP_MAKE[] = {2, 0xE0, 0x75};
-__code uint8_t KEY_LEFT_MAKE[] = {2, 0xE0, 0x68};
+__code uint8_t KEY_LEFT_MAKE[] = {2, 0xE0, 0x6B};
 __code uint8_t KEY_DOWN_MAKE[] = {2, 0xE0, 0x72};
 __code uint8_t KEY_RIGHT_MAKE[] = {2, 0xE0, 0x74};
 __code uint8_t KEY_NUM_MAKE[] = {1, 0x77};
@@ -188,7 +188,7 @@ __code uint8_t KEY_DELETE_BREAK[] = {3, 0xE0, 0xF0, 0x71};
 __code uint8_t KEY_END_BREAK[] = {3, 0xE0, 0xF0, 0x69};
 __code uint8_t KEY_PGDN_BREAK[] = {3, 0xE0, 0xF0, 0x7A};
 __code uint8_t KEY_UP_BREAK[] = {3, 0xE0, 0xF0, 0x75};
-__code uint8_t KEY_LEFT_BREAK[] = {3, 0xE0, 0xF0, 0x68};
+__code uint8_t KEY_LEFT_BREAK[] = {3, 0xE0, 0xF0, 0x6B};
 __code uint8_t KEY_DOWN_BREAK[] = {3, 0xE0, 0xF0, 0x72};
 __code uint8_t KEY_RIGHT_BREAK[] = {3, 0xE0, 0xF0, 0x74};
 __code uint8_t KEY_NUM_BREAK[] = {2, 0xF0, 0x77};
@@ -215,7 +215,29 @@ __code uint8_t KEY_COMMA_BREAK[] = {2, 0xF0, 0x41};
 __code uint8_t KEY_PERIOD_BREAK[] = {2, 0xF0, 0x49};
 __code uint8_t KEY_FWSLASH_BREAK[] = {2, 0xF0, 0x4A};
 
+const uint8_t * const ModtoPS2_MAKE[] =
+{
+    KEY_LCTRL_MAKE,
+    KEY_LSHIFT_MAKE,
+    KEY_LALT_MAKE,
+    NULL,
+    KEY_RCTRL_MAKE,
+    KEY_RSHIFT_MAKE,
+    KEY_RALT_MAKE,
+    NULL
+};
 
+const uint8_t * const ModtoPS2_BREAK[] =
+{
+    KEY_LCTRL_BREAK,
+    KEY_LSHIFT_BREAK,
+    KEY_LALT_BREAK,
+    NULL,
+    KEY_RCTRL_BREAK,
+    KEY_RSHIFT_BREAK,
+    KEY_RALT_BREAK,
+    NULL
+};
 
 const uint8_t * const HIDtoPS2_Make[] =
     {

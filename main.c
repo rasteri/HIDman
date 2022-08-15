@@ -1,10 +1,3 @@
-typedef unsigned char *PUINT8;
-typedef unsigned char __xdata *PUINT8X;
-typedef const unsigned char __code *PUINT8C;
-typedef unsigned char __xdata UINT8X;
-typedef unsigned char  __data             UINT8D;
-
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -16,8 +9,6 @@ typedef unsigned char  __data             UINT8D;
 #include "ps2.h"
 
 SBIT(LED, 0x90, 6);
-
-
 
 void mTimer0Interrupt( void) __interrupt (1)
 {	
@@ -64,6 +55,11 @@ void main()
         processUart();
         s = checkRootHubConnections();
         pollHIDdevice();
+
+		if (keyboard.recvvalid){
+			DEBUG_OUT("Received %x\n", keyboard.recvout);
+			keyboard.recvvalid =0;
+		}
 
 		// if buffer isn't full, send the next code
 		/*if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart){

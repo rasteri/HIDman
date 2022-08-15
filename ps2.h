@@ -8,14 +8,6 @@
 #define CLOCK 0
 #define DATA 1
 
-const extern uint8_t KEYA_MAKE[];
-const extern uint8_t KEYA_BREAK[];
-const extern uint8_t KEYB_MAKE[];
-const extern uint8_t KEYB_BREAK[];
-const extern uint8_t KEYC_MAKE[];
-const extern uint8_t KEYC_BREAK[];
-
-
 typedef struct ps2port
 {
 	uint8_t state;
@@ -28,10 +20,14 @@ typedef struct ps2port
 	// byte number within current chunk
 	uint8_t bytenum;
 
+	uint8_t recvvalid;
+	uint8_t recvout;
+	uint8_t recverror;
+
 	// ring buffer (pointers to chunks)
 	uint8_t sendBuffStart;
 	uint8_t sendBuffEnd;
-	uint8_t *sendBuff[64];
+	const uint8_t *sendBuff[64];
 	uint8_t recvBuff;
 	uint8_t prevhid[8];
 } ps2port;

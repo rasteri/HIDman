@@ -1,6 +1,7 @@
 #include "CH559.h"
 #include "USBHost.h"
 #include "util.h"
+#include "ps2.h"
 #include "uart.h"
 #include <string.h>
 #include <stdbool.h>
@@ -454,51 +455,7 @@ unsigned char getInterfaceDescriptor(unsigned char index)
 	return s;                          
 }
 
-#define REPORT_USAGE_PAGE 		0x04
-#define REPORT_USAGE 			0x08
-#define REPORT_LOCAL_MINIMUM 	0x14
-#define REPORT_LOCAL_MAXIMUM 	0x24
-#define REPORT_PHYSICAL_MINIMUM 0x34
-#define REPORT_PHYSICAL_MAXIMUM 0x44
-#define REPORT_USAGE_MINIMUM	0x18
-#define REPORT_USAGE_MAXIMUM	0x28
 
-#define REPORT_UNIT				0x64
-#define REPORT_INPUT			0x80
-#define REPORT_OUTPUT 			0x90
-#define REPORT_FEATURE			0xB0
-
-#define REPORT_REPORT_SIZE		0x74
-#define REPORT_REPORT_ID		0x84
-#define REPORT_REPORT_COUNT		0x94
-
-#define REPORT_COLLECTION		0xA0
-#define REPORT_COLLECTION_END	0xC0
-
-#define REPORT_USAGE_UNKNOWN	0x00
-#define REPORT_USAGE_POINTER	0x01
-#define REPORT_USAGE_MOUSE		0x02
-#define REPORT_USAGE_RESERVED	0x03
-#define REPORT_USAGE_JOYSTICK	0x04
-#define REPORT_USAGE_GAMEPAD	0x05
-#define REPORT_USAGE_KEYBOARD	0x06
-#define REPORT_USAGE_KEYPAD		0x07
-#define REPORT_USAGE_MULTI_AXIS	0x08
-#define REPORT_USAGE_SYSTEM		0x09
-
-#define REPORT_USAGE_X			0x30
-#define REPORT_USAGE_Y			0x31
-#define REPORT_USAGE_Z			0x32
-#define REPORT_USAGE_Rx			0x33
-#define REPORT_USAGE_Ry			0x34
-#define REPORT_USAGE_Rz			0x35
-#define REPORT_USAGE_WHEEL		0x38
-
-#define REPORT_USAGE_PAGE_GENERIC	0x01
-#define REPORT_USAGE_PAGE_KEYBOARD 	0x07
-#define REPORT_USAGE_PAGE_LEDS		0x08
-#define REPORT_USAGE_PAGE_BUTTON	0x09
-#define REPORT_USAGE_PAGE_VENDOR	0xff00
 
 #define MAX_HID_DEVICES 8
 struct 
@@ -574,7 +531,8 @@ void pollHIDdevice()
 				VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,
 				VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,
 				VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);*/
-				
+
+				SendHIDPS2(len, HIDdevice[hiddevice].type, RxBuffer);
 				sendHidPollMSG(MSG_TYPE_DEVICE_POLL,len, HIDdevice[hiddevice].type, hiddevice, HIDdevice[hiddevice].endPoint & 0x7F, RxBuffer,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorL,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);
 			}
 		}

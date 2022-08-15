@@ -1,4 +1,7 @@
 
+#ifndef __PS2_H__
+#define __PS2_H__
+#include <stdbool.h>
 #define PORT_KEY 0
 #define PORT_MOUSE 1
 
@@ -12,8 +15,9 @@ const extern uint8_t KEYB_BREAK[];
 const extern uint8_t KEYC_MAKE[];
 const extern uint8_t KEYC_BREAK[];
 
-typedef struct ps2port {
-	
+
+typedef struct ps2port
+{
 	uint8_t state;
 	uint8_t port;
 	uint8_t data;
@@ -27,14 +31,18 @@ typedef struct ps2port {
 	// ring buffer (pointers to chunks)
 	uint8_t sendBuffStart;
 	uint8_t sendBuffEnd;
-	uint8_t* sendBuff[64];
+	uint8_t *sendBuff[64];
 	uint8_t recvBuff;
+	uint8_t prevhid[8];
 } ps2port;
 
+extern __xdata ps2port keyboard;
 
-void OutPort (unsigned char port, unsigned char channel, bool val);
+void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata *msgbuffer);
 
-bool GetPort (unsigned char port, unsigned char channel);
+void OutPort(unsigned char port, unsigned char channel, bool val);
+
+bool GetPort(unsigned char port, unsigned char channel);
 
 void SendPS2(ps2port *port, const uint8_t *chunk);
 
@@ -57,4 +65,5 @@ SEND_CLOCK_HIGH - Make clock high, perhaps calculate next value
 #define S_INHIBIT 10
 #define S_WAIT 11
 
-void ps2stuff(ps2port *port);
+void PS2ProcessPort(ps2port *port);
+#endif

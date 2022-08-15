@@ -17,27 +17,13 @@ typedef unsigned char  __data             UINT8D;
 
 SBIT(LED, 0x90, 6);
 
-__xdata ps2port keyboard = {
-	S_INIT, //state
-	PORT_KEY, //port
-	0xFF, //data
-	0, //bitnum
-	0, //parity
 
-	0, //bytenum
-
-	0, //sendBuffStart
-	0 //sendBuffEnd
-};
 
 void mTimer0Interrupt( void) __interrupt (1)
 {	
-	//64735
 	TH0 = 0xff;
 	TL0 = 0x79;
-	/*OutPort(keyboard.port, DATA, 0);
-	OutPort(keyboard.port, CLOCK, 0);*/
-	ps2stuff(&keyboard);
+	PS2ProcessPort(&keyboard);
 }
 
 void main()
@@ -75,21 +61,12 @@ void main()
     {
         if(!(P4_IN & (1 << 6)))
             runBootloader();
-        /*processUart();
+        processUart();
         s = checkRootHubConnections();
-        pollHIDdevice();*/
+        pollHIDdevice();
 
 		// if buffer isn't full, send the next code
-		if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart){
-			/*     if (keyindex == 0) SendPS2(&keyboard, KEYA_MAKE);
-			else if (keyindex == 1) SendPS2(&keyboard, KEYA_BREAK);
-			else if (keyindex == 2) SendPS2(&keyboard, KEYB_MAKE);
-			else if (keyindex == 3) SendPS2(&keyboard, KEYB_BREAK);
-			else if (keyindex == 4) SendPS2(&keyboard, KEYC_MAKE);
-			else if (keyindex == 5) SendPS2(&keyboard, KEYC_BREAK);
-
-			keyindex++;
-			if (keyindex == 6) keyindex = 0;*/
+		/*if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart){
 
 			SendPS2(&keyboard, KEYA_MAKE);
 			SendPS2(&keyboard, KEYB_MAKE);
@@ -100,7 +77,6 @@ void main()
 			SendPS2(&keyboard, KEYB_BREAK);
 			SendPS2(&keyboard, KEYC_BREAK);
 			delay(50);
-		} 
-		//ps2stuff(&keyboard);
+		} */
     }
 }

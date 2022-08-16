@@ -1,7 +1,7 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 #include <stdio.h>
-#if 0
+#if 1
 #define DEBUG_OUT(...) printf(__VA_ARGS__);
 #else
 #define DEBUG_OUT(...) (void)0;

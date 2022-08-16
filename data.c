@@ -215,6 +215,10 @@ __code uint8_t KEY_COMMA_BREAK[] = {2, 0xF0, 0x41};
 __code uint8_t KEY_PERIOD_BREAK[] = {2, 0xF0, 0x49};
 __code uint8_t KEY_FWSLASH_BREAK[] = {2, 0xF0, 0x4A};
 
+__code uint8_t KEY_ACKNOWLEDGE[] = {1, 0xFA};
+__code uint8_t KEY_ID[] = {3, 0xFA, 0xAB, 0x83};
+__code uint8_t BAT_OK[] = {1, 0xAA};
+
 const uint8_t * const ModtoPS2_MAKE[] =
 {
     KEY_LCTRL_MAKE,

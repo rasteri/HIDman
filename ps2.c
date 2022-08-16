@@ -20,13 +20,39 @@ __xdata ps2port keyboard = {
 	PORT_KEY, //port
 	0xFF,	  //data
 	0,		  //sendbit
-	0x01,	  //recvbit
+	0,		  //recvbit
 	0,		  //parity
+	0,		//sendingCustom
 
 	0, //bytenum
+
 	0, //recvvalid
 	0, //recvout
 	0, //recverror
+
+	0, // lastByte
+
+	0, //sendBuffStart
+	0  //sendBuffEnd
+
+};
+
+__xdata ps2port mouse = {
+	S_INIT,		//state
+	PORT_MOUSE, //port
+	0xFF,		//data
+0,		  //sendbit
+	0,		  //recvbit
+	0,		  //parity
+	0,		//sendingCustom
+
+	0, //bytenum
+
+	0, //recvvalid
+	0, //recvout
+	0, //recverror
+
+	0, // lastByte
 
 	0, //sendBuffStart
 	0  //sendBuffEnd
@@ -39,11 +65,11 @@ void OutPort(unsigned char port, unsigned char channel, bool val)
 			KEY_CLOCK = val;
 		else
 			KEY_DATA = val;
-
-	else if (channel == CLOCK)
-		MOUSE_CLOCK = val;
-	else
-		MOUSE_DATA = val;
+	else if (port == PORT_MOUSE)
+		if (channel == CLOCK)
+			MOUSE_CLOCK = val;
+		else
+			MOUSE_DATA = val;
 }
 
 bool GetPort(unsigned char port, unsigned char channel)
@@ -54,10 +80,11 @@ bool GetPort(unsigned char port, unsigned char channel)
 		else
 			return KEY_DATA;
 
-	else if (channel == CLOCK)
-		return MOUSE_CLOCK;
-	else
-		return MOUSE_DATA;
+	else if (port == PORT_MOUSE)
+		if (channel == CLOCK)
+			return MOUSE_CLOCK;
+		else
+			return MOUSE_DATA;
 }
 
 void SendPS2(ps2port *port, const uint8_t *chunk)
@@ -183,10 +210,30 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 			keyboard.prevhid[i] = msgbuffer[i];
 		}
 		break;
+
+	case REPORT_USAGE_MOUSE:
+		DEBUG_OUT("Mouse : ");
+		for (int p = 0; p < length; p++)
+			DEBUG_OUT("%x ", msgbuffer[p]);
+		DEBUG_OUT("\n");
+
+		//byte 0 appears to always be 1
+		//byte 1 is buttons
+		//byte 2 is x movement (8 bit signed)
+		//byte 3 is y movement (8 bit signed)
+
+
+
+			
+		}
+		
+		break;
 	}
 }
 
-void PS2ProcessPort(ps2port *port)
+void PS2ProcessPort
+
+void PS2BitBang(ps2port *port)
 {
 	const uint8_t *chunk;
 
@@ -207,7 +254,6 @@ void PS2ProcessPort(ps2port *port)
 			break;
 
 		case S_IDLE:
-			//P2 ^= 0b00001000;
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
 			if (!GetPort(port->port, CLOCK))
 			{
@@ -297,11 +343,8 @@ void PS2ProcessPort(ps2port *port)
 			{
 				port->parity = 0;
 				port->sendbit = 0;
-
-
+				port->lastByte = port->data;
 				port->bytenum++;
-
-
 
 				// if we've run out of bytes in this chunk
 				if (port->bytenum == chunk[0])
@@ -390,7 +433,7 @@ void PS2ProcessPort(ps2port *port)
 			// wait for host to release clock
 			if (GetPort(port->port, CLOCK))
 			{
-				// if data line low then host wants to transmit 
+				// if data line low then host wants to transmit
 				if (!GetPort(port->port, DATA))
 				{
 					// go to full inhibit mode (to clear counters etc)
@@ -410,8 +453,6 @@ void PS2ProcessPort(ps2port *port)
 			port->sendbit = 0;
 			port->bytenum = 0;
 			port->parity = 0;
-
-
 
 			// wait for host to release clock
 			if (GetPort(port->port, CLOCK))

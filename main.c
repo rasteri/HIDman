@@ -14,7 +14,8 @@ void mTimer0Interrupt( void) __interrupt (1)
 {	
 	TH0 = 0xff;
 	TL0 = 0x79;
-	PS2ProcessPort(&keyboard);
+	//PS2ProcessPort(&keyboard);
+	PS2ProcessPort(&mouse);
 }
 
 void main()
@@ -43,7 +44,7 @@ void main()
 	
 	
     DEBUG_OUT("Ready\n");
-	sendProtocolMSG(MSG_TYPE_STARTUP,0, 0x00, 0x00, 0x00, 0);
+	//sendProtocolMSG(MSG_TYPE_STARTUP,0, 0x00, 0x00, 0x00, 0);
 	
 	OutPort(keyboard.port, DATA, 1);
 	OutPort(keyboard.port, CLOCK, 1);
@@ -56,9 +57,9 @@ void main()
         s = checkRootHubConnections();
         pollHIDdevice();
 
-		if (keyboard.recvvalid){
-			DEBUG_OUT("Received %x\n", keyboard.recvout);
-			keyboard.recvvalid =0;
+		if (mouse.recvvalid){
+			DEBUG_OUT("Received %x\n", mouse.recvout);
+			mouse.recvvalid = 0;
 		}
 
 		// if buffer isn't full, send the next code

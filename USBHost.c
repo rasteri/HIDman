@@ -404,7 +404,7 @@ char convertStringDescriptor(unsigned char __xdata *usbBuffer, unsigned char __x
 		else
 			strBuffer[i] = usbBuffer[2 + (i << 1)];
 	strBuffer[i] = 0;
-	sendProtocolMSG(MSG_TYPE_DEVICE_STRING,(unsigned short)len, index+1, 0x34, 0x56, strBuffer);
+	//sendProtocolMSG(MSG_TYPE_DEVICE_STRING,(unsigned short)len, index+1, 0x34, 0x56, strBuffer);
 	return 1;
 }
 
@@ -533,7 +533,7 @@ void pollHIDdevice()
 				VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);*/
 
 				SendHIDPS2(len, HIDdevice[hiddevice].type, RxBuffer);
-				sendHidPollMSG(MSG_TYPE_DEVICE_POLL,len, HIDdevice[hiddevice].type, hiddevice, HIDdevice[hiddevice].endPoint & 0x7F, RxBuffer,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorL,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);
+				//sendHidPollMSG(MSG_TYPE_DEVICE_POLL,len, HIDdevice[hiddevice].type, hiddevice, HIDdevice[hiddevice].endPoint & 0x7F, RxBuffer,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorL,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);
 			}
 		}
 		}
@@ -723,7 +723,7 @@ unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 		DEBUG_OUT("0x%02X ", receiveDataBuffer[i]);
 	}
 	DEBUG_OUT("\n");
-	sendProtocolMSG(MSG_TYPE_HID_INFO, len, CurrentDevive, HIDdevice[CurrentDevive].interface, HIDdevice[CurrentDevive].rootHub, receiveDataBuffer);
+	//sendProtocolMSG(MSG_TYPE_HID_INFO, len, CurrentDevive, HIDdevice[CurrentDevive].interface, HIDdevice[CurrentDevive].rootHub, receiveDataBuffer);
 	parseHIDDeviceReport(receiveDataBuffer, len, CurrentDevive);
 	return (ERR_SUCCESS);
 }
@@ -802,7 +802,7 @@ unsigned char initializeRootHubConnection(unsigned char rootHubIndex)
 					s = getConfigurationDescriptor();
 					if ( s == ERR_SUCCESS )
 					{
-						sendProtocolMSG(MSG_TYPE_DEVICE_INFO, (receiveDataBuffer[2] + (receiveDataBuffer[3] << 8)), addr, rootHubIndex+1, 0xAA, receiveDataBuffer);
+						//sendProtocolMSG(MSG_TYPE_DEVICE_INFO, (receiveDataBuffer[2] + (receiveDataBuffer[3] << 8)), addr, rootHubIndex+1, 0xAA, receiveDataBuffer);
 						unsigned short i, total;
 						unsigned char __xdata temp[512];
 						PXUSB_ITF_DESCR currentInterface = 0;
@@ -889,7 +889,7 @@ unsigned char initializeRootHubConnection(unsigned char rootHubIndex)
 			}
 		}
 		DEBUG_OUT( "Error = %02X\n", s);
-		sendProtocolMSG(MSG_TYPE_ERROR,0, rootHubIndex+1, s, 0xEE, 0);
+		//sendProtocolMSG(MSG_TYPE_ERROR,0, rootHubIndex+1, s, 0xEE, 0);
 		rootHubDevice[rootHubIndex].status = ROOT_DEVICE_FAILED;
 		setUsbSpeed(1);	//TODO define speeds
 	}
@@ -910,7 +910,7 @@ unsigned char checkRootHubConnections()
 					disableRootHubPort(0);	//todo really need to reset register?
 					rootHubDevice[0].status = ROOT_DEVICE_CONNECTED;
 					DEBUG_OUT("Device at root hub %i connected\n", 0);
-					sendProtocolMSG(MSG_TYPE_CONNECTED,0, 0x01, 0x01, 0x01, 0);
+					//sendProtocolMSG(MSG_TYPE_CONNECTED,0, 0x01, 0x01, 0x01, 0);
 					s = initializeRootHubConnection(0);
 				}
 			}
@@ -920,7 +920,7 @@ unsigned char checkRootHubConnections()
     			resetHubDevices(0);
 				disableRootHubPort(0);
 				DEBUG_OUT("Device at root hub %i disconnected\n", 0);
-					sendProtocolMSG(MSG_TYPE_DISCONNECTED,0, 0x01, 0x01, 0x01, 0);
+					//sendProtocolMSG(MSG_TYPE_DISCONNECTED,0, 0x01, 0x01, 0x01, 0);
 				s = ERR_USB_DISCON;
 			}
 			if(USB_HUB_ST & bUHS_H1_ATTACH)
@@ -931,7 +931,7 @@ unsigned char checkRootHubConnections()
 					disableRootHubPort(1);	//todo really need to reset register?
 					rootHubDevice[1].status = ROOT_DEVICE_CONNECTED;
 					DEBUG_OUT("Device at root hub %i connected\n", 1);
-					sendProtocolMSG(MSG_TYPE_CONNECTED,0, 0x02, 0x02, 0x02, 0);
+					//sendProtocolMSG(MSG_TYPE_CONNECTED,0, 0x02, 0x02, 0x02, 0);
 					s = initializeRootHubConnection(1);
 				}
 			}
@@ -941,7 +941,7 @@ unsigned char checkRootHubConnections()
     			resetHubDevices(1);
 				disableRootHubPort(1);
 				DEBUG_OUT("Device at root hub %i disconnected\n", 1);
-					sendProtocolMSG(MSG_TYPE_DISCONNECTED,0, 0x02, 0x02, 0x02, 0);
+					//sendProtocolMSG(MSG_TYPE_DISCONNECTED,0, 0x02, 0x02, 0x02, 0);
 				s = ERR_USB_DISCON;
 			}
 	}

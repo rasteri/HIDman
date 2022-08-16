@@ -16,6 +16,7 @@ typedef struct ps2port
 	uint8_t sendbit;
 	uint8_t recvbit;
 	uint8_t parity;
+	uint8_t sendingCustom;
 
 	// byte number within current chunk
 	uint8_t bytenum;
@@ -24,15 +25,23 @@ typedef struct ps2port
 	uint8_t recvout;
 	uint8_t recverror;
 
+	uint8_t lastByte;
+
 	// ring buffer (pointers to chunks)
 	uint8_t sendBuffStart;
 	uint8_t sendBuffEnd;
+
 	const uint8_t *sendBuff[64];
 	uint8_t recvBuff;
 	uint8_t prevhid[8];
+
+	// temporary buffer to hold a custom chunk
+	// (i.e. one defined in RAM rather than code)
+	uint8_t customChunk[8];
 } ps2port;
 
 extern __xdata ps2port keyboard;
+extern __xdata ps2port mouse;
 
 void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata *msgbuffer);
 

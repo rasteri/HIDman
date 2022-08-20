@@ -262,6 +262,11 @@ void HandleReceived(ps2port *port)
 		case 0xF4:
 			SendPS2(port, KEY_ACK);
 			break;
+		
+		// Disable
+		case 0xF5:
+			SendPS2(port, KEY_ACK);
+			break;
 		}
 
 		break;

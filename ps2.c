@@ -12,8 +12,8 @@
 SBIT(KEY_CLOCK, 0xA0, 0); 
 SBIT(KEY_DATA, 0xA0, 1);  
 
-SBIT(MOUSE_CLOCK, 0xA0, 0);
-SBIT(MOUSE_DATA, 0xA0, 1);
+SBIT(MOUSE_CLOCK, 0xA0, 2);
+SBIT(MOUSE_DATA, 0xA0, 3);
 
 __xdata ps2port ports[] = {
 	// keyboard
@@ -238,10 +238,37 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 			DEBUG_OUT("%x ", msgbuffer[p]);
 		DEBUG_OUT("\n");
 
+		//HID :
 		//byte 0 appears to always be 1
 		//byte 1 is buttons
 		//byte 2 is x movement (8 bit signed)
 		//byte 3 is y movement (8 bit signed)
+
+		signed char x = (signed char)msgbuffer[2], y = (signed char)msgbuffer[3];
+
+		// PS2 mice have the y-axis inverted from HID
+		y = -y;
+
+		// First PS2 byte
+		// bit3 always set
+		uint8_t tmp = 0x08;
+
+		// bottom 3 bits of button format is the same
+		tmp |= msgbuffer[1] & 0x07;
+
+		// X sign
+		tmp |= ((x & 0x80) >> 3);
+		
+		// Y sign
+		tmp |= ((y & 0x80) >> 2);
+
+		SendMouse(tmp);
+
+		//Second PS2 byte (X movement)
+		SendMouse((uint8_t) x);
+
+		//Third PS2 byte (Y movement)
+		SendMouse((uint8_t) y);
 
 		break;
 	}

@@ -14,15 +14,15 @@ void mTimer0Interrupt( void) __interrupt (1)
 {	
 	TH0 = 0xff;
 	TL0 = 0xB8;
-	//PS2ProcessPort(PORT_KEY);
+	PS2ProcessPort(PORT_KEY);
 	PS2ProcessPort(PORT_MOUSE);
 }
 
 SBIT(KEY_CLOCK, 0xA0, 0); // port 2.0
 SBIT(KEY_DATA, 0xA0, 1);  // port 2.1
 
-SBIT(MOUSE_CLOCK, 0xA0, 0);
-SBIT(MOUSE_DATA, 0xA0, 1);
+SBIT(MOUSE_CLOCK, 0xA0, 2);
+SBIT(MOUSE_DATA, 0xA0, 3);
 
 void main()
 {

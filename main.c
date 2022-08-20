@@ -13,7 +13,7 @@ SBIT(LED, 0x90, 6);
 void mTimer0Interrupt( void) __interrupt (1)
 {	
 	TH0 = 0xff;
-	TL0 = 0x70;
+	TL0 = 0xB8;
 	PS2ProcessPort(PORT_KEY);
 	//PS2ProcessPort(&mouse);
 }

@@ -18,12 +18,12 @@ SBIT(MOUSE_DATA, 0xA0, 3);	// port 2.3
 __xdata ps2port ports[] = {
 	// keyboard
 	{
-		S_INIT,	  //state
-		0xFF,	  //data
-		0,		  //sendbit
-		0x01,	  //recvbit
-		1,		  //parity
-		0,		  //recvstate
+		S_INIT, //state
+		0xFF,	//data
+		0,		//sendbit
+		0x01,	//recvbit
+		1,		//parity
+		0,		//recvstate
 
 		0, //bytenum
 
@@ -40,25 +40,25 @@ __xdata ps2port ports[] = {
 
 	//mouse
 	{
-	S_INIT,	  //state
-	0xFF,	  //data
-	0,		  //sendbit
-	0x01,	  //recvbit
-	1,		  //parity
-	0,		  //recvstate
+		S_INIT, //state
+		0xFF,	//data
+		0,		//sendbit
+		0x01,	//recvbit
+		1,		//parity
+		0,		//recvstate
 
-	0, //bytenum
+		0, //bytenum
 
-	0, //recvvalid
-	0, //recvout
-	0, //recverror
+		0, //recvvalid
+		0, //recvout
+		0, //recverror
 
-	0, // lastByte
+		0, // lastByte
 
-	0, //sendBuffStart
-	0  //sendBuffEnd
-}
-	
+		0, //sendBuffStart
+		0  //sendBuffEnd
+	}
+
 };
 
 /*
@@ -347,7 +347,7 @@ void PS2ProcessPort(uint8_t port)
 				// make sure data is high so we can detect it if it goes low
 				OutPort(port, DATA, 1);
 				OutPort(port, CLOCK, 1);
-				ports[port].state = S_INHIBIT;
+				ports[port].state = S_PAUSE;
 			}
 			else
 			{
@@ -360,14 +360,13 @@ void PS2ProcessPort(uint8_t port)
 						chunk = ports[port].sendBuff.chunky[ports[port].sendBuffStart];
 						ports[port].data = chunk[ports[port].bytenum + 1];
 						//DEBUG_OUT("Consuming %x %x %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd, chunk[0], ports[port].data);
-						ports[port].state = S_SEND_CLOCK_LOW;
-						P2=P2 ^ 0b10000;
+						ports[port].state = S_SEND_CLOCK_HIGH;
 						//reEnter = 1;
 					}
 					else
 					{ //mouse
 						ports[port].data = ports[port].sendBuff.arbitrary[ports[port].sendBuffStart];
-						ports[port].state = S_SEND_CLOCK_LOW;
+						ports[port].state = S_SEND_CLOCK_HIGH;
 						//reEnter = 1;
 					}
 				}
@@ -375,9 +374,48 @@ void PS2ProcessPort(uint8_t port)
 
 			break;
 
-		case S_SEND_CLOCK_LOW:
+		// clock is high and we are sending, so set next data bit
+		case S_SEND_CLOCK_HIGH:
 
-			// check to see if host is trying to inhibit (i.e. pulling clock low)
+			// bit 0 is start bit (low)
+			if (sb == 0)
+			{
+				OutPort(port, DATA, 0);
+			}
+
+			// bits 1-8 are data bits
+			else if (sb > 0 && sb < 9)
+			{
+				// set current bit data
+				OutPort(port, DATA, ports[port].data & 0x01);
+
+				// calc parity and shift in preperation for next bit
+				ports[port].parity = ports[port].parity ^ (ports[port].data & 0x01);
+				ports[port].data = ports[port].data >> 1;
+			}
+
+			// bit 9 is parity
+			else if (sb == 9)
+			{
+				OutPort(port, DATA, ports[port].parity & 0x01);
+			}
+
+			// bit 10 is stop bit (high)
+			else if (sb == 10)
+			{
+				OutPort(port, DATA, 1);
+			}
+
+			ports[port].sendbit++;
+
+			ports[port].state = S_SEND_CLOCK_FALL;
+
+			break;
+
+		// data has been set, send falling edge of clock
+		case S_SEND_CLOCK_FALL:
+
+			// if clock is already low, host is trying to inhibit
 			if (!GetPort(port, CLOCK))
 			{
 				// make sure clock/data are high so we can detect it if it goes low
@@ -385,55 +423,27 @@ void PS2ProcessPort(uint8_t port)
 				OutPort(port, CLOCK, 1);
 
 				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
-				if (sb == 0)
+				if (sb == 1)
 					ports[port].state = S_PAUSE;
 				// if interrupted halfway through byte, will need to send entire packet again
 				else
+				{
 					ports[port].state = S_INHIBIT;
+				}
 			}
 			else
 			{
-				
-				// bit 0 is start bit (low)
-				if (sb == 0)
-				{
-					OutPort(port, DATA, 0);
-				}
-
-				// bits 1-8 are data bits
-				else if (sb > 0 && sb < 9)
-				{
-					// set current bit data
-					OutPort(port, DATA, ports[port].data & 0x01);
-
-					// calc parity and shift in preperation for next bit
-					ports[port].parity = ports[port].parity ^ (ports[port].data & 0x01);
-					ports[port].data = ports[port].data >> 1;
-				}
-
-				// bit 9 is parity
-				else if (sb == 9)
-				{
-					OutPort(port, DATA, ports[port].parity & 0x01);
-				}
-
-				// bit 10 is stop bit (high)
-				else if (sb == 10)
-				{
-					OutPort(port, DATA, 1);
-				}
-
-				// make clock low
 				OutPort(port, CLOCK, 0);
-
-				ports[port].sendbit++;
-
-				ports[port].state = S_SEND_CLOCK_HIGH;
+				ports[port].state = S_SEND_CLOCK_LOW;
 			}
 
 			break;
 
-		case S_SEND_CLOCK_HIGH:
+		case S_SEND_CLOCK_LOW:
+			ports[port].state = S_SEND_CLOCK_RISE;
+			break;
+
+		case S_SEND_CLOCK_RISE:
 			//make clock high
 			OutPort(port, CLOCK, 1);
 
@@ -476,28 +486,28 @@ void PS2ProcessPort(uint8_t port)
 			}
 			else
 			{
-				ports[port].state = S_SEND_CLOCK_LOW;
+				ports[port].state = S_SEND_CLOCK_HIGH;
 			}
 
-			break;
-
-		case S_RECEIVE_CLOCK_LOW:
-			OutPort(port, CLOCK, 0);
-			ports[port].state = S_RECEIVE_CLOCK_HIGH;
 			break;
 
 		case S_RECEIVE_CLOCK_HIGH:
-			OutPort(port, CLOCK, 1);
 
-			// bits 0-7 are data bits (start bit has already been done by this point)
-			if (ports[port].recvbit < 8)
+			// bit 0 is start bit
+			if (ports[port].recvbit == 0)
 			{
-				ports[port].recvBuff |= (GetPort(port, DATA) << ports[port].recvbit);
+				// do nothing, we've already checked it's ok (otherwise we wouldn't be in this state)
+			}
+
+			// bits 1-8 are data bits
+			else if (ports[port].recvbit > 0 && ports[port].recvbit < 9)
+			{
+				ports[port].recvBuff |= (GetPort(port, DATA) << (ports[port].recvbit - 1));
 				ports[port].parity = ports[port].parity ^ (GetPort(port, DATA) & 0x01);
 			}
 
-			// bit 8 is parity
-			else if (ports[port].recvbit == 8)
+			// bit 9 is parity
+			else if (ports[port].recvbit == 9)
 			{
 				if (ports[port].parity & 0x01 == GetPort(port, DATA))
 				{
@@ -511,9 +521,10 @@ void PS2ProcessPort(uint8_t port)
 				}
 			}
 
-			// bit 9 is stop bit (high)
-			else if (ports[port].recvbit == 9)
+			// bit 10 is stop bit (high)
+			else if (ports[port].recvbit == 10)
 			{
+				P2 ^= 0b10000;
 				// only accept data if stop bit is high and parity valid
 				if (GetPort(port, DATA)) // && ports[port].parity) // lol it still isn't working
 				{
@@ -526,22 +537,51 @@ void PS2ProcessPort(uint8_t port)
 				ports[port].recvbit = 0;
 
 				// send ACK bit
-				ports[port].state = S_RECEIVE_ACK;
+				ports[port].state = S_RECEIVE_ACK_HIGH;
+				P2 ^= 0b10000;
+				reEnter = 1;
 				break;
 			}
 
 			ports[port].recvbit++;
 
+			ports[port].state = S_RECEIVE_CLOCK_FALL;
+			break;
+
+		case S_RECEIVE_CLOCK_FALL:
+			OutPort(port, CLOCK, 0);
 			ports[port].state = S_RECEIVE_CLOCK_LOW;
 			break;
 
-		case S_RECEIVE_ACK:
+		case S_RECEIVE_CLOCK_LOW:
+			ports[port].state = S_RECEIVE_CLOCK_RISE;
+			break;
+
+		case S_RECEIVE_CLOCK_RISE:
+			OutPort(port, CLOCK, 1);
+			ports[port].state = S_RECEIVE_CLOCK_HIGH;
+			break;
+
+		case S_RECEIVE_ACK_HIGH:
 			// ACK bit is low
 			OutPort(port, DATA, 0);
+			ports[port].state = S_RECEIVE_ACK_FALL;
+			break;
+		case S_RECEIVE_ACK_FALL:
 			// Send it (make clock low)
 			OutPort(port, CLOCK, 0);
-
-			// next time round clock will rise and we can go back to normal
+			ports[port].state = S_RECEIVE_ACK_LOW;
+			break;
+		case S_RECEIVE_ACK_LOW:
+			ports[port].state = S_RECEIVE_ACK_RISE;
+			break;
+		case S_RECEIVE_ACK_RISE:
+			OutPort(port, CLOCK, 1);
+			ports[port].state = S_IDLE;
+			break;
+		case S_RECEIVE_ACK_HIGH_DONE:
+			// release data
+			OutPort(port, DATA, 1);
 			ports[port].state = S_IDLE;
 			break;
 
@@ -581,7 +621,7 @@ void PS2ProcessPort(uint8_t port)
 					ports[port].recvBuff = 0;
 					// empty send buffer
 					ports[port].sendBuffStart = ports[port].sendBuffEnd;
-					ports[port].state = S_RECEIVE_CLOCK_LOW;
+					ports[port].state = S_RECEIVE_CLOCK_HIGH;
 				}
 				else
 				{
@@ -601,7 +641,6 @@ void PS2ProcessPort(uint8_t port)
 					OutPort(port, CLOCK, 1);
 					ports[port].state = S_INHIBIT;
 					reEnter = 1;
-					P2 ^= 0b00001000;
 					del=1;
 				} else {
 

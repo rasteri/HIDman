@@ -52,7 +52,8 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 bool GetPort(unsigned char port, unsigned char channel);
 
-void SendPS2(uint8_t port, const uint8_t *chunk);
+void SendKeyboard(const uint8_t *chunk);
+void SendMouse(uint8_t byte);
 void PS2ProcessPort(uint8_t port);
 
 

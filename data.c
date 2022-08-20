@@ -219,9 +219,7 @@ __code uint8_t KEY_ACK[] = {1, 0xFA};
 __code uint8_t KEY_BATCOMPLETE[] = {1, 0xAA};
 __code uint8_t KEY_ID[] = {2, 0xAB, 0x83};
 
-__code uint8_t MOUSE_ACK[] = {1, 0xFA};
-__code uint8_t MOUSE_BATCOMPLETE[] = {2, 0xAA, 0x00};
-__code uint8_t MOUSE_ID[] = {2, 0xAB, 0x83};
+
 
 const uint8_t * const ModtoPS2_MAKE[] =
 {

@@ -9,11 +9,11 @@
 #include "ps2.h"
 #include "data.h"
 
-SBIT(KEY_CLOCK, 0xA0, 0); // port 2.0
-SBIT(KEY_DATA, 0xA0, 1);  // port 2.1
+SBIT(KEY_CLOCK, 0xA0, 0); 
+SBIT(KEY_DATA, 0xA0, 1);  
 
-SBIT(MOUSE_CLOCK, 0xA0, 2); // port 2.2
-SBIT(MOUSE_DATA, 0xA0, 3);	// port 2.3
+SBIT(MOUSE_CLOCK, 0xA0, 0);
+SBIT(MOUSE_DATA, 0xA0, 1);
 
 __xdata ps2port ports[] = {
 	// keyboard
@@ -92,18 +92,34 @@ bool GetPort(uint8_t port, uint8_t channel)
 			return MOUSE_DATA;
 }
 
-void SendPS2(uint8_t port, const uint8_t *chunk)
+void SendKeyboard(const uint8_t *chunk)
 {
 	// check for full
-	if ((ports[port].sendBuffEnd + 1) % 64 == ports[port].sendBuffStart)
+	if ((ports[PORT_KEY].sendBuffEnd + 1) % 64 == ports[PORT_KEY].sendBuffStart)
 	{
 		// do nothing
 		//DEBUG_OUT("Full\n");
 	}
 	else
 	{
-		ports[port].sendBuff.chunky[ports[port].sendBuffEnd] = chunk;
-		ports[port].sendBuffEnd = (ports[port].sendBuffEnd + 1) % 64;
+		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
+		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
+		//DEBUG_OUT("Produced %x %x\n", ports[PORT_KEY].sendBuffStart, ports[PORT_KEY].sendBuffEnd);
+	}
+}
+
+void SendMouse(uint8_t byte)
+{
+	// check for full
+	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 64 == ports[PORT_MOUSE].sendBuffStart)
+	{
+		// do nothing
+		//DEBUG_OUT("Full\n");
+	}
+	else
+	{
+		ports[PORT_MOUSE].sendBuff.arbitrary[ports[PORT_MOUSE].sendBuffEnd] = byte;
+		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 64;
 		//DEBUG_OUT("Produced %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
 	}
 }
@@ -132,11 +148,11 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 					if (rbits & 0x01)
 					{
-						SendPS2(PORT_KEY, ModtoPS2_MAKE[j]);
+						SendKeyboard(ModtoPS2_MAKE[j]);
 					}
 					else
 					{
-						SendPS2(PORT_KEY, ModtoPS2_BREAK[j]);
+						SendKeyboard(ModtoPS2_BREAK[j]);
 					}
 				}
 
@@ -179,7 +195,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 					//send the break code
 					if (ports[PORT_KEY].prevhid[i] <= 0x67)
-						SendPS2(PORT_KEY, HIDtoPS2_Break[ports[PORT_KEY].prevhid[i]]);
+						SendKeyboard(HIDtoPS2_Break[ports[PORT_KEY].prevhid[i]]);
 				}
 			}
 
@@ -208,7 +224,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 						cancel_alarm(repeater);
 					repeater = add_alarm_in_ms(delayms, repeat_callback, NULL, false);*/
 					if (msgbuffer[i] <= 0x67)
-						SendPS2(PORT_KEY, HIDtoPS2_Make[msgbuffer[i]]);
+						SendKeyboard(HIDtoPS2_Make[msgbuffer[i]]);
 				}
 			}
 
@@ -242,36 +258,36 @@ inline void HandleReceived(uint8_t port)
 			switch (ports[port].recvout)
 			{
 			case 0xFF:
-				SendPS2(port, KEY_ACK);
-				SendPS2(port, KEY_BATCOMPLETE);
+				SendKeyboard(KEY_ACK);
+				SendKeyboard(KEY_BATCOMPLETE);
 				break;
 
 			// set LEDs
 			case 0xED:
-				SendPS2(port, KEY_ACK);
+				SendKeyboard(KEY_ACK);
 				ports[port].recvstate = R_LEDS;
 				break;
 
 			// set repeat
 			case 0xF3:
-				SendPS2(port, KEY_ACK);
+				SendKeyboard(KEY_ACK);
 				ports[port].recvstate = R_REPEAT;
 				break;
 
 			// ID
 			case 0xF2:
-				SendPS2(port, KEY_ACK);
-				SendPS2(port, KEY_ID);
+				SendKeyboard(KEY_ACK);
+				SendKeyboard(KEY_ID);
 				break;
 
 			// Enable
 			case 0xF4:
-				SendPS2(port, KEY_ACK);
+				SendKeyboard(KEY_ACK);
 				break;
 
 			// Disable
 			case 0xF5:
-				SendPS2(port, KEY_ACK);
+				SendKeyboard(KEY_ACK);
 				break;
 			}
 
@@ -280,44 +296,41 @@ inline void HandleReceived(uint8_t port)
 		case R_LEDS:
 			// TODO blinkenlights
 			ports[port].recvstate = R_IDLE;
-			SendPS2(port, KEY_ACK);
+			SendKeyboard(KEY_ACK);
 			break;
 
 		case R_REPEAT:
 			// TODO repeat
 			ports[port].recvstate = R_IDLE;
-			SendPS2(port, KEY_ACK);
+			SendKeyboard(KEY_ACK);
 			break;
 		}
 	}
 
+/*
+__code uint8_t MOUSE_ACK[] = {1, 0xFA};
+__code uint8_t MOUSE_BATCOMPLETE[] = {2, 0xAA, 0x00};
+__code uint8_t MOUSE_ID[] = {2, 0xAB, 0x83};
+*/
+
 	else if (port == PORT_MOUSE)
 	{
-		switch (ports[port].recvstate)
-		{
-		case R_IDLE:
-			switch (ports[port].recvout)
-			{
+
+		switch (ports[port].recvout) {
+			// Reset
 			case 0xFF:
-				SendPS2(port, MOUSE_ACK);
-				SendPS2(port, MOUSE_BATCOMPLETE);
-				break;
-
-			// ID
-			case 0xF2:
-				SendPS2(port, MOUSE_ACK);
-				SendPS2(port, MOUSE_ID);
-				break;
-
-			//codes that will get a second byte
-			case 0xE8: // Set resolution
-			case 0xF3:
-				SendPS2(port, MOUSE_ACK);
-				ports[port].recvstate = R_SECONDBYTE;
-				break;
-			}
+				SendMouse(0xFA); // ACK
+				SendMouse(0xAA); // POST OK
+				SendMouse(0x00); // Squeek Squeek I'm a mouse
 			break;
+
+
+			default:
+				SendMouse(0xFA); // ACK
+			break;
+		
 		}
+
 	}
 }
 
@@ -539,7 +552,7 @@ void PS2ProcessPort(uint8_t port)
 
 				// send ACK bit
 				ports[port].state = S_RECEIVE_ACK_HIGH;
-				P2 ^= 0b10000;
+				
 				reEnter = 1;
 				break;
 			}

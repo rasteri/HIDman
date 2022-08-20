@@ -524,13 +524,14 @@ void PS2ProcessPort(uint8_t port)
 			// bit 10 is stop bit (high)
 			else if (ports[port].recvbit == 10)
 			{
-				P2 ^= 0b10000;
 				// only accept data if stop bit is high and parity valid
 				if (GetPort(port, DATA)) // && ports[port].parity) // lol it still isn't working
 				{
 					ports[port].recvout = ports[port].recvBuff;
 					ports[port].recvvalid = 1;
-					HandleReceived(port);
+					//
+					
+					//delayUs(20);
 				}
 
 				ports[port].parity = 1;
@@ -577,11 +578,12 @@ void PS2ProcessPort(uint8_t port)
 			break;
 		case S_RECEIVE_ACK_RISE:
 			OutPort(port, CLOCK, 1);
-			ports[port].state = S_IDLE;
+			ports[port].state = S_RECEIVE_ACK_HIGH_DONE;
 			break;
 		case S_RECEIVE_ACK_HIGH_DONE:
 			// release data
 			OutPort(port, DATA, 1);
+			HandleReceived(port);
 			ports[port].state = S_IDLE;
 			break;
 

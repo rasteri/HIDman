@@ -8,6 +8,11 @@
 #define CLOCK 0
 #define DATA 1
 
+typedef union sendbuffer {
+	const uint8_t *chunky[64];
+	uint8_t arbitrary[64];
+} sendbuffer;
+
 typedef struct ps2port
 {
 	uint8_t state;
@@ -17,6 +22,8 @@ typedef struct ps2port
 	uint8_t recvbit;
 	uint8_t parity;
 	uint8_t sendingCustom;
+
+	uint8_t recvstate;
 
 	// byte number within current chunk
 	uint8_t bytenum;
@@ -30,8 +37,7 @@ typedef struct ps2port
 	// ring buffer (pointers to chunks)
 	uint8_t sendBuffStart;
 	uint8_t sendBuffEnd;
-
-	const uint8_t *sendBuff[64];
+	sendbuffer sendBuff;
 	uint8_t recvBuff;
 	uint8_t prevhid[8];
 
@@ -51,15 +57,6 @@ bool GetPort(unsigned char port, unsigned char channel);
 
 void SendPS2(ps2port *port, const uint8_t *chunk);
 
-/*States
-
-IDLE - CLOCK/DATA high
-
-SEND_CLOCK_LOW - Check for host transmission - if not, Write next value to data, drive clock line low, set state to SEND_CLOCK_HIGH
-SEND_CLOCK_HIGH - Make clock high, perhaps calculate next value
-
-*/
-
 #define S_INIT 0
 #define S_IDLE 1
 #define S_SEND_CLOCK_LOW 2
@@ -70,6 +67,10 @@ SEND_CLOCK_HIGH - Make clock high, perhaps calculate next value
 #define S_PAUSE 9
 #define S_INHIBIT 10
 #define S_WAIT 11
+
+#define R_IDLE 0
+#define R_LEDS 1
+#define R_REPEAT 2
 
 void PS2ProcessPort(ps2port *port);
 #endif

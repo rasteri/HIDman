@@ -14,8 +14,8 @@ void mTimer0Interrupt( void) __interrupt (1)
 {	
 	TH0 = 0xff;
 	TL0 = 0x79;
-	//PS2ProcessPort(&keyboard);
-	PS2ProcessPort(&mouse);
+	PS2ProcessPort(&keyboard);
+	//PS2ProcessPort(&mouse);
 }
 
 void main()

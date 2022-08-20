@@ -20,9 +20,9 @@ __xdata ps2port keyboard = {
 	PORT_KEY, //port
 	0xFF,	  //data
 	0,		  //sendbit
-	0,		  //recvbit
-	0,		  //parity
-	0,		//sendingCustom
+	0x01,	  //recvbit
+	1,		  //parity
+	0,		  //recvstate
 
 	0, //bytenum
 
@@ -41,10 +41,10 @@ __xdata ps2port mouse = {
 	S_INIT,		//state
 	PORT_MOUSE, //port
 	0xFF,		//data
-0,		  //sendbit
-	0,		  //recvbit
-	0,		  //parity
-	0,		//sendingCustom
+	0,			//sendbit
+	0,			//recvbit
+	0,			//parity
+	0,			//sendingCustom
 
 	0, //bytenum
 
@@ -93,11 +93,11 @@ void SendPS2(ps2port *port, const uint8_t *chunk)
 	if ((port->sendBuffEnd + 1) % 64 == port->sendBuffStart)
 	{
 		// do nothing
-		DEBUG_OUT("Full\n");
+		//DEBUG_OUT("Full\n");
 	}
 	else
 	{
-		port->sendBuff[port->sendBuffEnd] = chunk;
+		port->sendBuff.chunky[port->sendBuffEnd] = chunk;
 		port->sendBuffEnd = (port->sendBuffEnd + 1) % 64;
 		//DEBUG_OUT("Produced %x %x\n", port->sendBuffStart, port->sendBuffEnd);
 	}
@@ -165,7 +165,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 				if (brk)
 				{
-					DEBUG_OUT("Break %x\n", keyboard.prevhid[i]);
+					//DEBUG_OUT("Break %x\n", keyboard.prevhid[i]);
 					// no break code for pause key, for some reason
 					if (keyboard.prevhid[i] == 0x48)
 						continue;
@@ -197,7 +197,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 				if (make)
 				{
-					DEBUG_OUT("Make %x\n", msgbuffer[i]);
+					//DEBUG_OUT("Make %x\n", msgbuffer[i]);
 					repeat = msgbuffer[i];
 					/*if (repeater)
 						cancel_alarm(repeater);
@@ -222,23 +222,67 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 		//byte 2 is x movement (8 bit signed)
 		//byte 3 is y movement (8 bit signed)
 
-
-
-			
-		}
-		
 		break;
 	}
 }
 
-void PS2ProcessPort
+void HandleReceived(ps2port *port)
+{
 
-void PS2BitBang(ps2port *port)
+	switch (port->recvstate)
+	{
+	case R_IDLE:
+
+		switch (port->recvout)
+		{
+		case 0xFF:
+			SendPS2(port, KEY_ACK);
+			SendPS2(port, KEY_BATCOMPLETE);
+			break;
+
+		// set LEDs
+		case 0xED:
+			SendPS2(port, KEY_ACK);
+			port->recvstate = R_LEDS;
+			break;
+
+		// set repeat
+		case 0xF3:
+			SendPS2(port, KEY_ACK);
+			port->recvstate = R_REPEAT;
+			break;
+
+		// ID
+		case 0xF2:
+			SendPS2(port, KEY_ACK);
+			SendPS2(port, KEY_ID);
+			break;
+
+		// Enable
+		case 0xF4:
+			SendPS2(port, KEY_ACK);
+			break;
+		}
+
+		break;
+
+	case R_LEDS:
+		// TODO blinkenlights
+		port->recvstate = R_IDLE;
+		SendPS2(port, KEY_ACK);
+		break;
+
+	case R_REPEAT:
+		// TODO repeat
+		port->recvstate = R_IDLE;
+		SendPS2(port, KEY_ACK);
+		break;
+	}
+}
+
+void PS2ProcessPort(ps2port *port)
 {
 	const uint8_t *chunk;
-
-	// get current chunk
-	chunk = port->sendBuff[port->sendBuffStart];
 
 	bool reEnter = 0;
 	do
@@ -268,11 +312,20 @@ void PS2BitBang(ps2port *port)
 				//if buffer not empty
 				if (port->sendBuffEnd != port->sendBuffStart)
 				{
-
-					port->data = chunk[port->bytenum + 1];
-					DEBUG_OUT("Consuming %x %x %x %x\n", port->sendBuffStart, port->sendBuffEnd, chunk[0], port->data);
-					port->state = S_SEND_CLOCK_LOW;
-					reEnter = 1;
+					if (port->port == PORT_KEY)
+					{
+						chunk = port->sendBuff.chunky[port->sendBuffStart];
+						port->data = chunk[port->bytenum + 1];
+						//DEBUG_OUT("Consuming %x %x %x %x\n", port->sendBuffStart, port->sendBuffEnd, chunk[0], port->data);
+						port->state = S_SEND_CLOCK_LOW;
+						reEnter = 1;
+					}
+					else
+					{ //mouse
+						port->data = port->sendBuff.arbitrary[port->sendBuffStart];
+						port->state = S_SEND_CLOCK_LOW;
+						reEnter = 1;
+					}
 				}
 			}
 
@@ -341,29 +394,43 @@ void PS2BitBang(ps2port *port)
 			// if final bit, move onto next byte
 			if (port->sendbit == 11)
 			{
-				port->parity = 0;
+				port->parity = 1;
 				port->sendbit = 0;
-				port->lastByte = port->data;
-				port->bytenum++;
 
-				// if we've run out of bytes in this chunk
-				if (port->bytenum == chunk[0])
+				// for keyboard get the next byte in the chunk
+				if (port->port == PORT_KEY)
 				{
-					// move onto next chunk
-					//DEBUG_OUT("Consumed %x %x\n", port->sendBuffStart, port->sendBuffEnd);
-					port->sendBuffStart = (port->sendBuffStart + 1) % 64;
-					port->bytenum = 0;
-					port->state = S_IDLE;
 
-					break;
+					chunk = port->sendBuff.chunky[port->sendBuffStart];
+
+					port->bytenum++;
+
+					// if we've run out of bytes in this chunk
+					if (port->bytenum == chunk[0])
+					{
+						// move onto next chunk
+						//DEBUG_OUT("Consumed %x %x\n", port->sendBuffStart, port->sendBuffEnd);
+						port->sendBuffStart = (port->sendBuffStart + 1) % 64;
+						port->bytenum = 0;
+						port->state = S_IDLE;
+					}
+					else
+					{
+						port->data = chunk[port->bytenum + 1];
+						port->state = S_SEND_CLOCK_LOW;
+					}
 				}
-				else
+				else /*if (port->port = PORT_MOUSE)*/
 				{
-					port->data = chunk[port->bytenum + 1];
+					// move onto next byte
+					port->sendBuffStart = (port->sendBuffStart + 1) % 64;
+					port->state = S_IDLE;
 				}
 			}
-
-			port->state = S_SEND_CLOCK_LOW;
+			else
+			{
+				port->state = S_SEND_CLOCK_LOW;
+			}
 
 			break;
 
@@ -400,13 +467,16 @@ void PS2BitBang(ps2port *port)
 			// bit 9 is stop bit (high)
 			else if (port->recvbit == 9)
 			{
-				// only accept data if stop bit is high
-				// should check parity too but it's not calcing properly lol
-				if (GetPort(port->port, DATA))
+				// only accept data if stop bit is high and parity valid
+				if (GetPort(port->port, DATA)) // && port->parity) // lol it still isn't working
 				{
 					port->recvout = port->recvBuff;
 					port->recvvalid = 1;
+					HandleReceived(port);
 				}
+
+				port->parity = 1;
+				port->recvbit = 0;
 
 				// send ACK bit
 				port->state = S_RECEIVE_ACK;
@@ -452,7 +522,7 @@ void PS2BitBang(ps2port *port)
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
 			port->sendbit = 0;
 			port->bytenum = 0;
-			port->parity = 0;
+			port->parity = 1;
 
 			// wait for host to release clock
 			if (GetPort(port->port, CLOCK))
@@ -462,6 +532,8 @@ void PS2BitBang(ps2port *port)
 				{
 					port->recvbit = 0;
 					port->recvBuff = 0;
+					// empty send buffer
+					port->sendBuffStart = port->sendBuffEnd;
 					port->state = S_RECEIVE_CLOCK_LOW;
 				}
 				else

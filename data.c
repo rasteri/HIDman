@@ -215,9 +215,9 @@ __code uint8_t KEY_COMMA_BREAK[] = {2, 0xF0, 0x41};
 __code uint8_t KEY_PERIOD_BREAK[] = {2, 0xF0, 0x49};
 __code uint8_t KEY_FWSLASH_BREAK[] = {2, 0xF0, 0x4A};
 
-__code uint8_t KEY_ACKNOWLEDGE[] = {1, 0xFA};
-__code uint8_t KEY_ID[] = {3, 0xFA, 0xAB, 0x83};
-__code uint8_t BAT_OK[] = {1, 0xAA};
+__code uint8_t KEY_ACK[] = {1, 0xFA};
+__code uint8_t KEY_BATCOMPLETE[] = {1, 0xAA};
+__code uint8_t KEY_ID[] = {2, 0xAB, 0x83};
 
 const uint8_t * const ModtoPS2_MAKE[] =
 {

@@ -15,9 +15,32 @@ SBIT(KEY_DATA, 0xA0, 1);  // port 2.1
 SBIT(MOUSE_CLOCK, 0xA0, 2); // port 2.2
 SBIT(MOUSE_DATA, 0xA0, 3);	// port 2.3
 
-__xdata ps2port keyboard = {
+__xdata ps2port ports[] = {
+	// keyboard
+	{
+		S_INIT,	  //state
+		0xFF,	  //data
+		0,		  //sendbit
+		0x01,	  //recvbit
+		1,		  //parity
+		0,		  //recvstate
+
+		0, //bytenum
+
+		0, //recvvalid
+		0, //recvout
+		0, //recverror
+
+		0, // lastByte
+
+		0, //sendBuffStart
+		0  //sendBuffEnd
+
+	},
+
+	//mouse
+	{
 	S_INIT,	  //state
-	PORT_KEY, //port
 	0xFF,	  //data
 	0,		  //sendbit
 	0x01,	  //recvbit
@@ -34,31 +57,12 @@ __xdata ps2port keyboard = {
 
 	0, //sendBuffStart
 	0  //sendBuffEnd
-
+}
+	
 };
 
-__xdata ps2port mouse = {
-	S_INIT,		//state
-	PORT_MOUSE, //port
-	0xFF,		//data
-	0,			//sendbit
-	0,			//recvbit
-	0,			//parity
-	0,			//sendingCustom
-
-	0, //bytenum
-
-	0, //recvvalid
-	0, //recvout
-	0, //recverror
-
-	0, // lastByte
-
-	0, //sendBuffStart
-	0  //sendBuffEnd
-};
-
-void OutPort(unsigned char port, unsigned char channel, bool val)
+/*
+void OutPort2(unsigned char port, unsigned char channel, bool val)
 {
 	if (port == PORT_KEY)
 		if (channel == CLOCK)
@@ -71,8 +75,9 @@ void OutPort(unsigned char port, unsigned char channel, bool val)
 		else
 			MOUSE_DATA = val;
 }
+*/
 
-bool GetPort(unsigned char port, unsigned char channel)
+bool GetPort(uint8_t port, uint8_t channel)
 {
 	if (port == PORT_KEY)
 		if (channel == CLOCK)
@@ -87,19 +92,19 @@ bool GetPort(unsigned char port, unsigned char channel)
 			return MOUSE_DATA;
 }
 
-void SendPS2(ps2port *port, const uint8_t *chunk)
+void SendPS2(uint8_t port, const uint8_t *chunk)
 {
 	// check for full
-	if ((port->sendBuffEnd + 1) % 64 == port->sendBuffStart)
+	if ((ports[port].sendBuffEnd + 1) % 64 == ports[port].sendBuffStart)
 	{
 		// do nothing
 		//DEBUG_OUT("Full\n");
 	}
 	else
 	{
-		port->sendBuff.chunky[port->sendBuffEnd] = chunk;
-		port->sendBuffEnd = (port->sendBuffEnd + 1) % 64;
-		//DEBUG_OUT("Produced %x %x\n", port->sendBuffStart, port->sendBuffEnd);
+		ports[port].sendBuff.chunky[ports[port].sendBuffEnd] = chunk;
+		ports[port].sendBuffEnd = (ports[port].sendBuffEnd + 1) % 64;
+		//DEBUG_OUT("Produced %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
 	}
 }
 
@@ -113,10 +118,10 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 	case REPORT_USAGE_KEYBOARD:
 
 		// do special keys first
-		if (msgbuffer[0] != keyboard.prevhid[0])
+		if (msgbuffer[0] != ports[PORT_KEY].prevhid[0])
 		{
 			uint8_t rbits = msgbuffer[0];
-			uint8_t pbits = keyboard.prevhid[0];
+			uint8_t pbits = ports[PORT_KEY].prevhid[0];
 
 			// iterate through bits and compare to previous to see whats changed
 			for (uint8_t j = 0; j < 8; j++)
@@ -127,11 +132,11 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 					if (rbits & 0x01)
 					{
-						SendPS2(&keyboard, ModtoPS2_MAKE[j]);
+						SendPS2(PORT_KEY, ModtoPS2_MAKE[j]);
 					}
 					else
 					{
-						SendPS2(&keyboard, ModtoPS2_BREAK[j]);
+						SendPS2(PORT_KEY, ModtoPS2_BREAK[j]);
 					}
 				}
 
@@ -139,14 +144,14 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 				pbits = pbits >> 1;
 			}
 
-			keyboard.prevhid[0] = msgbuffer[0];
+			ports[PORT_KEY].prevhid[0] = msgbuffer[0];
 		}
 
 		// iterate through all the HID bytes to see what's changed since last time
 		for (uint8_t i = 2; i < 8; i++)
 		{
 			// key was pressed last time
-			if (keyboard.prevhid[i])
+			if (ports[PORT_KEY].prevhid[i])
 			{
 
 				// assume this will be a break code
@@ -155,7 +160,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 				// see if this code is still present in current poll
 				for (uint8_t j = 2; j < 8; j++)
 				{
-					if (keyboard.prevhid[i] == msgbuffer[j])
+					if (ports[PORT_KEY].prevhid[i] == msgbuffer[j])
 					{
 						// if so, do not break
 						brk = 0;
@@ -167,14 +172,14 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 				{
 					//DEBUG_OUT("Break %x\n", keyboard.prevhid[i]);
 					// no break code for pause key, for some reason
-					if (keyboard.prevhid[i] == 0x48)
+					if (ports[PORT_KEY].prevhid[i] == 0x48)
 						continue;
 
 					repeat = 0;
 
 					//send the break code
-					if (keyboard.prevhid[i] <= 0x67)
-						SendPS2(&keyboard, HIDtoPS2_Break[keyboard.prevhid[i]]);
+					if (ports[PORT_KEY].prevhid[i] <= 0x67)
+						SendPS2(PORT_KEY, HIDtoPS2_Break[ports[PORT_KEY].prevhid[i]]);
 				}
 			}
 
@@ -187,7 +192,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 				// see if key was present in previous poll
 				for (uint8_t j = 2; j < 8; j++)
 				{
-					if (msgbuffer[i] == keyboard.prevhid[j])
+					if (msgbuffer[i] == ports[PORT_KEY].prevhid[j])
 					{
 						// if so, no need to make
 						make = false;
@@ -203,11 +208,11 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 						cancel_alarm(repeater);
 					repeater = add_alarm_in_ms(delayms, repeat_callback, NULL, false);*/
 					if (msgbuffer[i] <= 0x67)
-						SendPS2(&keyboard, HIDtoPS2_Make[msgbuffer[i]]);
+						SendPS2(PORT_KEY, HIDtoPS2_Make[msgbuffer[i]]);
 				}
 			}
 
-			keyboard.prevhid[i] = msgbuffer[i];
+			ports[PORT_KEY].prevhid[i] = msgbuffer[i];
 		}
 		break;
 
@@ -226,110 +231,144 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 	}
 }
 
-void HandleReceived(ps2port *port)
+inline void HandleReceived(uint8_t port)
 {
-
-	switch (port->recvstate)
+	if (port == PORT_KEY)
 	{
-	case R_IDLE:
-
-		switch (port->recvout)
+		switch (ports[port].recvstate)
 		{
-		case 0xFF:
-			SendPS2(port, KEY_ACK);
-			SendPS2(port, KEY_BATCOMPLETE);
+		case R_IDLE:
+
+			switch (ports[port].recvout)
+			{
+			case 0xFF:
+				SendPS2(port, KEY_ACK);
+				SendPS2(port, KEY_BATCOMPLETE);
+				break;
+
+			// set LEDs
+			case 0xED:
+				SendPS2(port, KEY_ACK);
+				ports[port].recvstate = R_LEDS;
+				break;
+
+			// set repeat
+			case 0xF3:
+				SendPS2(port, KEY_ACK);
+				ports[port].recvstate = R_REPEAT;
+				break;
+
+			// ID
+			case 0xF2:
+				SendPS2(port, KEY_ACK);
+				SendPS2(port, KEY_ID);
+				break;
+
+			// Enable
+			case 0xF4:
+				SendPS2(port, KEY_ACK);
+				break;
+
+			// Disable
+			case 0xF5:
+				SendPS2(port, KEY_ACK);
+				break;
+			}
+
 			break;
 
-		// set LEDs
-		case 0xED:
+		case R_LEDS:
+			// TODO blinkenlights
+			ports[port].recvstate = R_IDLE;
 			SendPS2(port, KEY_ACK);
-			port->recvstate = R_LEDS;
 			break;
 
-		// set repeat
-		case 0xF3:
-			SendPS2(port, KEY_ACK);
-			port->recvstate = R_REPEAT;
-			break;
-
-		// ID
-		case 0xF2:
-			SendPS2(port, KEY_ACK);
-			SendPS2(port, KEY_ID);
-			break;
-
-		// Enable
-		case 0xF4:
-			SendPS2(port, KEY_ACK);
-			break;
-		
-		// Disable
-		case 0xF5:
+		case R_REPEAT:
+			// TODO repeat
+			ports[port].recvstate = R_IDLE;
 			SendPS2(port, KEY_ACK);
 			break;
 		}
+	}
 
-		break;
+	else if (port == PORT_MOUSE)
+	{
+		switch (ports[port].recvstate)
+		{
+		case R_IDLE:
+			switch (ports[port].recvout)
+			{
+			case 0xFF:
+				SendPS2(port, MOUSE_ACK);
+				SendPS2(port, MOUSE_BATCOMPLETE);
+				break;
 
-	case R_LEDS:
-		// TODO blinkenlights
-		port->recvstate = R_IDLE;
-		SendPS2(port, KEY_ACK);
-		break;
+			// ID
+			case 0xF2:
+				SendPS2(port, MOUSE_ACK);
+				SendPS2(port, MOUSE_ID);
+				break;
 
-	case R_REPEAT:
-		// TODO repeat
-		port->recvstate = R_IDLE;
-		SendPS2(port, KEY_ACK);
-		break;
+			//codes that will get a second byte
+			case 0xE8: // Set resolution
+			case 0xF3:
+				SendPS2(port, MOUSE_ACK);
+				ports[port].recvstate = R_SECONDBYTE;
+				break;
+			}
+			break;
+		}
 	}
 }
 
-void PS2ProcessPort(ps2port *port)
+void PS2ProcessPort(uint8_t port)
 {
 	const uint8_t *chunk;
+	__data uint8_t sb;
 
 	bool reEnter = 0;
 	do
 	{
+		sb = ports[port].sendbit;
 		reEnter = 0;
 
 		// PS2 bit-bang state machine
-		switch (port->state)
+		switch (ports[port].state)
 		{
 		case S_INIT:
-			port->state = S_IDLE;
+			ports[port].state = S_IDLE;
 			reEnter = 1;
 			break;
 
 		case S_IDLE:
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
-			if (!GetPort(port->port, CLOCK))
+			if (!GetPort(port, CLOCK))
 			{
 				// make sure data is high so we can detect it if it goes low
-				OutPort(port->port, DATA, 1);
-				OutPort(port->port, CLOCK, 1);
-				port->state = S_INHIBIT;
+				OutPort(port, DATA, 1);
+				OutPort(port, CLOCK, 1);
+				ports[port].state = S_INHIBIT;
 			}
 			else
 			{
 
 				//if buffer not empty
-				if (port->sendBuffEnd != port->sendBuffStart)
+				if (ports[port].sendBuffEnd != ports[port].sendBuffStart)
 				{
-					if (port->port == PORT_KEY)
+					if (port == PORT_KEY)
 					{
-						chunk = port->sendBuff.chunky[port->sendBuffStart];
-						port->data = chunk[port->bytenum + 1];
-						//DEBUG_OUT("Consuming %x %x %x %x\n", port->sendBuffStart, port->sendBuffEnd, chunk[0], port->data);
-						port->state = S_SEND_CLOCK_LOW;
-						reEnter = 1;
+						chunk = ports[port].sendBuff.chunky[ports[port].sendBuffStart];
+						ports[port].data = chunk[ports[port].bytenum + 1];
+						//DEBUG_OUT("Consuming %x %x %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd, chunk[0], ports[port].data);
+						ports[port].state = S_SEND_CLOCK_LOW;
+						P2=P2 ^ 0b10000;
+						//reEnter = 1;
 					}
 					else
 					{ //mouse
-						port->data = port->sendBuff.arbitrary[port->sendBuffStart];
-						port->state = S_SEND_CLOCK_LOW;
-						reEnter = 1;
+						ports[port].data = ports[port].sendBuff.arbitrary[ports[port].sendBuffStart];
+						ports[port].state = S_SEND_CLOCK_LOW;
+						//reEnter = 1;
 					}
 				}
 			}
@@ -337,187 +376,190 @@ void PS2ProcessPort(ps2port *port)
 			break;
 
 		case S_SEND_CLOCK_LOW:
+
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
-			if (!GetPort(port->port, CLOCK))
+			if (!GetPort(port, CLOCK))
 			{
 				// make sure clock/data are high so we can detect it if it goes low
-				OutPort(port->port, DATA, 1);
-				OutPort(port->port, CLOCK, 1);
+				OutPort(port, DATA, 1);
+				OutPort(port, CLOCK, 1);
 
 				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
-				if (port->sendbit == 0)
-					port->state = S_PAUSE;
+				if (sb == 0)
+					ports[port].state = S_PAUSE;
 				// if interrupted halfway through byte, will need to send entire packet again
 				else
-					port->state = S_INHIBIT;
+					ports[port].state = S_INHIBIT;
 			}
 			else
 			{
+				
 				// bit 0 is start bit (low)
-				if (port->sendbit == 0)
+				if (sb == 0)
 				{
-					OutPort(port->port, DATA, 0);
+					OutPort(port, DATA, 0);
 				}
 
 				// bits 1-8 are data bits
-				else if (port->sendbit > 0 && port->sendbit < 9)
+				else if (sb > 0 && sb < 9)
 				{
 					// set current bit data
-					OutPort(port->port, DATA, port->data & 0x01);
+					OutPort(port, DATA, ports[port].data & 0x01);
 
 					// calc parity and shift in preperation for next bit
-					port->parity = port->parity ^ (port->data & 0x01);
-					port->data = port->data >> 1;
+					ports[port].parity = ports[port].parity ^ (ports[port].data & 0x01);
+					ports[port].data = ports[port].data >> 1;
 				}
 
 				// bit 9 is parity
-				else if (port->sendbit == 9)
+				else if (sb == 9)
 				{
-					OutPort(port->port, DATA, port->parity & 0x01);
+					OutPort(port, DATA, ports[port].parity & 0x01);
 				}
 
 				// bit 10 is stop bit (high)
-				else if (port->sendbit == 10)
+				else if (sb == 10)
 				{
-					OutPort(port->port, DATA, 1);
+					OutPort(port, DATA, 1);
 				}
 
 				// make clock low
-				OutPort(port->port, CLOCK, 0);
+				OutPort(port, CLOCK, 0);
 
-				port->sendbit++;
+				ports[port].sendbit++;
 
-				port->state = S_SEND_CLOCK_HIGH;
+				ports[port].state = S_SEND_CLOCK_HIGH;
 			}
 
 			break;
 
 		case S_SEND_CLOCK_HIGH:
 			//make clock high
-			OutPort(port->port, CLOCK, 1);
+			OutPort(port, CLOCK, 1);
 
 			// if final bit, move onto next byte
-			if (port->sendbit == 11)
+			if (sb == 11)
 			{
-				port->parity = 1;
-				port->sendbit = 0;
+				ports[port].parity = 1;
+				ports[port].sendbit = 0;
 
 				// for keyboard get the next byte in the chunk
-				if (port->port == PORT_KEY)
+				if (port == PORT_KEY)
 				{
 
-					chunk = port->sendBuff.chunky[port->sendBuffStart];
+					chunk = ports[port].sendBuff.chunky[ports[port].sendBuffStart];
 
-					port->bytenum++;
+					ports[port].bytenum++;
 
 					// if we've run out of bytes in this chunk
-					if (port->bytenum == chunk[0])
+					if (ports[port].bytenum == chunk[0])
 					{
 						// move onto next chunk
-						//DEBUG_OUT("Consumed %x %x\n", port->sendBuffStart, port->sendBuffEnd);
-						port->sendBuffStart = (port->sendBuffStart + 1) % 64;
-						port->bytenum = 0;
-						port->state = S_IDLE;
+						//DEBUG_OUT("Consumed %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
+						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 64;
+						ports[port].bytenum = 0;
 					}
 					else
 					{
-						port->data = chunk[port->bytenum + 1];
-						port->state = S_SEND_CLOCK_LOW;
+						ports[port].data = chunk[ports[port].bytenum + 1];
 					}
+
+					// give ourselves a little break between bytes
+					ports[port].state = S_IDLE;
 				}
-				else /*if (port->port = PORT_MOUSE)*/
+				else /*if (port = PORT_MOUSE)*/
 				{
 					// move onto next byte
-					port->sendBuffStart = (port->sendBuffStart + 1) % 64;
-					port->state = S_IDLE;
+					ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 64;
+					ports[port].state = S_IDLE;
 				}
 			}
 			else
 			{
-				port->state = S_SEND_CLOCK_LOW;
+				ports[port].state = S_SEND_CLOCK_LOW;
 			}
 
 			break;
 
 		case S_RECEIVE_CLOCK_LOW:
-			OutPort(port->port, CLOCK, 0);
-			port->state = S_RECEIVE_CLOCK_HIGH;
+			OutPort(port, CLOCK, 0);
+			ports[port].state = S_RECEIVE_CLOCK_HIGH;
 			break;
 
 		case S_RECEIVE_CLOCK_HIGH:
-			OutPort(port->port, CLOCK, 1);
+			OutPort(port, CLOCK, 1);
 
 			// bits 0-7 are data bits (start bit has already been done by this point)
-			if (port->recvbit < 8)
+			if (ports[port].recvbit < 8)
 			{
-				port->recvBuff |= (GetPort(port->port, DATA) << port->recvbit);
-				port->parity = port->parity ^ (GetPort(port->port, DATA) & 0x01);
+				ports[port].recvBuff |= (GetPort(port, DATA) << ports[port].recvbit);
+				ports[port].parity = ports[port].parity ^ (GetPort(port, DATA) & 0x01);
 			}
 
 			// bit 8 is parity
-			else if (port->recvbit == 8)
+			else if (ports[port].recvbit == 8)
 			{
-				if (port->parity & 0x01 == GetPort(port->port, DATA))
+				if (ports[port].parity & 0x01 == GetPort(port, DATA))
 				{
 					// parity ok - reuse variable
-					port->parity = 1;
+					ports[port].parity = 1;
 				}
 				else
 				{
 					// abort if not
-					port->parity = 0;
+					ports[port].parity = 0;
 				}
 			}
 
 			// bit 9 is stop bit (high)
-			else if (port->recvbit == 9)
+			else if (ports[port].recvbit == 9)
 			{
 				// only accept data if stop bit is high and parity valid
-				if (GetPort(port->port, DATA)) // && port->parity) // lol it still isn't working
+				if (GetPort(port, DATA)) // && ports[port].parity) // lol it still isn't working
 				{
-					port->recvout = port->recvBuff;
-					port->recvvalid = 1;
+					ports[port].recvout = ports[port].recvBuff;
+					ports[port].recvvalid = 1;
 					HandleReceived(port);
 				}
 
-				port->parity = 1;
-				port->recvbit = 0;
+				ports[port].parity = 1;
+				ports[port].recvbit = 0;
 
 				// send ACK bit
-				port->state = S_RECEIVE_ACK;
+				ports[port].state = S_RECEIVE_ACK;
 				break;
 			}
 
-			port->recvbit++;
+			ports[port].recvbit++;
 
-			port->state = S_RECEIVE_CLOCK_LOW;
+			ports[port].state = S_RECEIVE_CLOCK_LOW;
 			break;
 
 		case S_RECEIVE_ACK:
 			// ACK bit is low
-			OutPort(port->port, DATA, 0);
+			OutPort(port, DATA, 0);
 			// Send it (make clock low)
-			OutPort(port->port, CLOCK, 0);
+			OutPort(port, CLOCK, 0);
 
 			// next time round clock will rise and we can go back to normal
-			port->state = S_IDLE;
+			ports[port].state = S_IDLE;
 			break;
 
 		case S_PAUSE:
 
 			// wait for host to release clock
-			if (GetPort(port->port, CLOCK))
+			if (GetPort(port, CLOCK))
 			{
 				// if data line low then host wants to transmit
-				if (!GetPort(port->port, DATA))
+				if (!GetPort(port, DATA))
 				{
 					// go to full inhibit mode (to clear counters etc)
-					port->state = S_INHIBIT;
+					ports[port].state = S_INHIBIT;
 				}
 				else
 				{
 					//otherwise, just get on with it as normal
-					port->state = S_IDLE;
+					ports[port].state = S_IDLE;
 				}
 			}
 
@@ -525,26 +567,26 @@ void PS2ProcessPort(ps2port *port)
 
 		case S_INHIBIT:
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
-			port->sendbit = 0;
-			port->bytenum = 0;
-			port->parity = 1;
+			ports[port].sendbit = 0;
+			ports[port].bytenum = 0;
+			ports[port].parity = 1;
 
 			// wait for host to release clock
-			if (GetPort(port->port, CLOCK))
+			if (GetPort(port, CLOCK))
 			{
 				// if data line low then host wants to transmit
-				if (!GetPort(port->port, DATA))
+				if (!GetPort(port, DATA))
 				{
-					port->recvbit = 0;
-					port->recvBuff = 0;
+					ports[port].recvbit = 0;
+					ports[port].recvBuff = 0;
 					// empty send buffer
-					port->sendBuffStart = port->sendBuffEnd;
-					port->state = S_RECEIVE_CLOCK_LOW;
+					ports[port].sendBuffStart = ports[port].sendBuffEnd;
+					ports[port].state = S_RECEIVE_CLOCK_LOW;
 				}
 				else
 				{
 					//otherwise, restart sending current chunk
-					port->state = S_IDLE;
+					ports[port].state = S_IDLE;
 				}
 			}
 
@@ -553,11 +595,11 @@ void PS2ProcessPort(ps2port *port)
 		case S_WAIT:
 
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
-			/*if (!GetPort(port->port, CLOCK)){
+			/*if (!GetPort(port, CLOCK)){
 					// make sure data is high so we can detect it if it goes low
-					OutPort(port->port, DATA, 1);
-					OutPort(port->port, CLOCK, 1);
-					port->state = S_INHIBIT;
+					OutPort(port, DATA, 1);
+					OutPort(port, CLOCK, 1);
+					ports[port].state = S_INHIBIT;
 					reEnter = 1;
 					P2 ^= 0b00001000;
 					del=1;
@@ -566,7 +608,7 @@ void PS2ProcessPort(ps2port *port)
 					del++;
 					if (del > 100){
 						del = 0;
-						port->state = S_IDLE;
+						ports[port].state = S_IDLE;
 					}
 				}*/
 

@@ -13,10 +13,16 @@ SBIT(LED, 0x90, 6);
 void mTimer0Interrupt( void) __interrupt (1)
 {	
 	TH0 = 0xff;
-	TL0 = 0x79;
-	PS2ProcessPort(&keyboard);
+	TL0 = 0x70;
+	PS2ProcessPort(PORT_KEY);
 	//PS2ProcessPort(&mouse);
 }
+
+SBIT(KEY_CLOCK, 0xA0, 0); // port 2.0
+SBIT(KEY_DATA, 0xA0, 1);  // port 2.1
+
+SBIT(MOUSE_CLOCK, 0xA0, 2); // port 2.2
+SBIT(MOUSE_DATA, 0xA0, 3);	// port 2.3
 
 void main()
 {
@@ -46,8 +52,8 @@ void main()
     DEBUG_OUT("Ready\n");
 	//sendProtocolMSG(MSG_TYPE_STARTUP,0, 0x00, 0x00, 0x00, 0);
 	
-	OutPort(keyboard.port, DATA, 1);
-	OutPort(keyboard.port, CLOCK, 1);
+	OutPort(PORT_KEY, DATA, 1);
+	OutPort(PORT_KEY, CLOCK, 1);
 	
     while(1)
     {
@@ -57,9 +63,9 @@ void main()
         s = checkRootHubConnections();
         pollHIDdevice();
 
-		if (mouse.recvvalid){
+		if (ports[PORT_MOUSE].recvvalid){
 			DEBUG_OUT("Received %x\n", mouse.recvout);
-			mouse.recvvalid = 0;
+			ports[PORT_MOUSE].recvvalid = 0;
 		}
 
 		// if buffer isn't full, send the next code

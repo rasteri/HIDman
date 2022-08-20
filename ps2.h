@@ -46,16 +46,18 @@ typedef struct ps2port
 	uint8_t customChunk[8];
 } ps2port;
 
-extern __xdata ps2port keyboard;
-extern __xdata ps2port mouse;
+extern __xdata ps2port ports[];
 
 void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata *msgbuffer);
 
-void OutPort(unsigned char port, unsigned char channel, bool val);
-
 bool GetPort(unsigned char port, unsigned char channel);
 
-void SendPS2(ps2port *port, const uint8_t *chunk);
+void SendPS2(uint8_t port, const uint8_t *chunk);
+void PS2ProcessPort(uint8_t port);
+
+
+
+#define OutPort(port, channel, val) if (port == PORT_KEY) if (channel == CLOCK) KEY_CLOCK = val; else KEY_DATA = val;  else if (port == PORT_MOUSE) if (channel == CLOCK) MOUSE_CLOCK = val; else MOUSE_DATA = val;
 
 #define S_INIT 0
 #define S_IDLE 1
@@ -71,6 +73,7 @@ void SendPS2(ps2port *port, const uint8_t *chunk);
 #define R_IDLE 0
 #define R_LEDS 1
 #define R_REPEAT 2
+#define R_SECONDBYTE 3
 
-void PS2ProcessPort(ps2port *port);
+
 #endif

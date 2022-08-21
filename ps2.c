@@ -9,8 +9,8 @@
 #include "ps2.h"
 #include "data.h"
 
-SBIT(KEY_CLOCK, 0xA0, 0); 
-SBIT(KEY_DATA, 0xA0, 1);  
+SBIT(KEY_CLOCK, 0xA0, 0);
+SBIT(KEY_DATA, 0xA0, 1);
 
 SBIT(MOUSE_CLOCK, 0xA0, 2);
 SBIT(MOUSE_DATA, 0xA0, 3);
@@ -233,6 +233,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 		break;
 
 	case REPORT_USAGE_MOUSE:
+
 		DEBUG_OUT("Mouse : ");
 		for (int p = 0; p < length; p++)
 			DEBUG_OUT("%x ", msgbuffer[p]);
@@ -258,26 +259,109 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 		// X sign
 		tmp |= ((x & 0x80) >> 3);
-		
+
 		// Y sign
 		tmp |= ((y & 0x80) >> 2);
 
 		SendMouse(tmp);
 
 		//Second PS2 byte (X movement)
-		SendMouse((uint8_t) x);
+		SendMouse((uint8_t)x);
 
 		//Third PS2 byte (Y movement)
-		SendMouse((uint8_t) y);
+		SendMouse((uint8_t)y);
 
 		break;
 
-		default:
+	case 0x04: //joystick
+
+		if (msgbuffer[0] == 1)
+		{
+			// iterate through all the HID bytes to see what's changed since last time
+			for (uint8_t i = 1; i < 8; i++)
+			{
+				if (ports[PORT_KEY].prevhid[i] != msgbuffer[i])
+				{
+					switch (i)
+					{
+					case 1: // right analog stick Y
+						break;
+					case 2: // right analog stick X
+						break;
+					case 3: // left analog stick X
+						// breaks
+						if (msgbuffer[3] >= 64 && ports[PORT_KEY].prevhid[3] < 64) // not left but left last time
+							SendKeyboard(KEY_LEFT_BREAK);
+						if (msgbuffer[3] <= 192 && ports[PORT_KEY].prevhid[3] > 192) // not right but right last time
+							SendKeyboard(KEY_RIGHT_BREAK);
+						// makes
+						if (msgbuffer[3] < 64 && ports[PORT_KEY].prevhid[3] >= 64) // left and not left last time
+							SendKeyboard(KEY_LEFT_MAKE);
+						if (msgbuffer[3] > 192 && ports[PORT_KEY].prevhid[3] <= 192) // right and not right last time
+							SendKeyboard(KEY_RIGHT_MAKE);
+
+						break;
+					case 4: // left analog stick Y
+						// breaks
+						if (msgbuffer[4] >= 64 && ports[PORT_KEY].prevhid[4] < 64) // not up but up last time
+							SendKeyboard(KEY_UP_BREAK);
+						if (msgbuffer[4] <= 192 && ports[PORT_KEY].prevhid[4] > 192) // not down but down last time
+							SendKeyboard(KEY_DOWN_BREAK);
+						// makes
+						if (msgbuffer[4] < 64 && ports[PORT_KEY].prevhid[4] >= 64) // up and not up last time
+							SendKeyboard(KEY_UP_MAKE);
+						if (msgbuffer[4] > 192 && ports[PORT_KEY].prevhid[4] <= 192) // down and not down last time
+							SendKeyboard(KEY_DOWN_MAKE);
+						break;
+					case 5:
+						// breaks
+						if (msgbuffer[5] & 0x10 && !(ports[PORT_KEY].prevhid[5] & 0x10))
+							SendKeyboard(KEY_LCTRL_MAKE);
+						if (msgbuffer[5] & 0x20 && !(ports[PORT_KEY].prevhid[5] & 0x20))
+							SendKeyboard(KEY_SPACE_MAKE);
+						if (msgbuffer[5] & 0x40 && !(ports[PORT_KEY].prevhid[5] & 0x40))
+							SendKeyboard(KEY_LALT_MAKE);
+						if (msgbuffer[5] & 0x80 && !(ports[PORT_KEY].prevhid[5] & 0x80))
+							SendKeyboard(KEY_ENTER_MAKE);
+						// makes
+						if (!(msgbuffer[5] & 0x10) && ports[PORT_KEY].prevhid[5] & 0x10)
+							SendKeyboard(KEY_LCTRL_BREAK);
+						if (!(msgbuffer[5] & 0x20) && ports[PORT_KEY].prevhid[5] & 0x20)
+							SendKeyboard(KEY_SPACE_BREAK);
+						if (!(msgbuffer[5] & 0x40) && ports[PORT_KEY].prevhid[5] & 0x40)
+							SendKeyboard(KEY_LALT_BREAK);
+						if (!(msgbuffer[5] & 0x80) && ports[PORT_KEY].prevhid[5] & 0x80)
+							SendKeyboard(KEY_ENTER_BREAK);
+						break;
+					case 6:
+					break;
+					}
+				}
+
+				ports[PORT_KEY].prevhid[i] = msgbuffer[i];
+			}
+		}
+		break;
+
+	default:
+		// byte 0 is the number of controller
+		// byte 1/2 are right analog stick Y/X
+		// byte 3/4 are left analog stick/DPAD X/Y
+		// byte 5 -
+		//   bits 0-3 are always 1
+		//   bits 4-7 are thumb buttons
+		// byte 6 -
+		//   bits 0-3 are shoulder buttons
+		//   bits 4-7 are always 0
+
+		if (msgbuffer[0] == 1)
+		{
 			ANDYS_DEBUG_OUT("dunno %x : ", type);
 			for (int p = 0; p < length; p++)
 				ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
 			ANDYS_DEBUG_OUT("\n");
-		break;
+			break;
+		}
 	}
 }
 
@@ -341,7 +425,7 @@ inline void HandleReceived(uint8_t port)
 		}
 	}
 
-/*
+	/*
 __code uint8_t MOUSE_ACK[] = {1, 0xFA};
 __code uint8_t MOUSE_BATCOMPLETE[] = {2, 0xAA, 0x00};
 __code uint8_t MOUSE_ID[] = {2, 0xAB, 0x83};
@@ -350,21 +434,19 @@ __code uint8_t MOUSE_ID[] = {2, 0xAB, 0x83};
 	else if (port == PORT_MOUSE)
 	{
 
-		switch (ports[port].recvout) {
-			// Reset
-			case 0xFF:
-				SendMouse(0xFA); // ACK
-				SendMouse(0xAA); // POST OK
-				SendMouse(0x00); // Squeek Squeek I'm a mouse
+		switch (ports[port].recvout)
+		{
+		// Reset
+		case 0xFF:
+			SendMouse(0xFA); // ACK
+			SendMouse(0xAA); // POST OK
+			SendMouse(0x00); // Squeek Squeek I'm a mouse
 			break;
 
-
-			default:
-				SendMouse(0xFA); // ACK
+		default:
+			SendMouse(0xFA); // ACK
 			break;
-		
 		}
-
 	}
 }
 
@@ -577,7 +659,7 @@ void PS2ProcessPort(uint8_t port)
 					ports[port].recvout = ports[port].recvBuff;
 					ports[port].recvvalid = 1;
 					//
-					
+
 					//delayUs(20);
 				}
 
@@ -586,7 +668,7 @@ void PS2ProcessPort(uint8_t port)
 
 				// send ACK bit
 				ports[port].state = S_RECEIVE_ACK_HIGH;
-				
+
 				reEnter = 1;
 				break;
 			}

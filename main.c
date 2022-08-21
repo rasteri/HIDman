@@ -66,11 +66,6 @@ void main()
         s = checkRootHubConnections();
         pollHIDdevice();
 
-		if (ports[PORT_MOUSE].recvvalid){
-			DEBUG_OUT("Received %x\n", mouse.recvout);
-			ports[PORT_MOUSE].recvvalid = 0;
-		}
-
 		// if buffer isn't full, send the next code
 		/*if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart){
 

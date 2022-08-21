@@ -1,6 +1,7 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 #include <stdio.h>
+#define ANDYS_DEBUG_OUT(...) printf(__VA_ARGS__);
 #if 0
 #define DEBUG_OUT(...) printf(__VA_ARGS__);
 #else

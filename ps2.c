@@ -271,6 +271,13 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 		SendMouse((uint8_t) y);
 
 		break;
+
+		default:
+			ANDYS_DEBUG_OUT("dunno %x : ", type);
+			for (int p = 0; p < length; p++)
+				ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
+			ANDYS_DEBUG_OUT("\n");
+		break;
 	}
 }
 

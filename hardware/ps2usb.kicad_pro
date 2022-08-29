@@ -45,7 +45,7 @@
         "silk_text_upright": false,
         "zones": {
           "45_degree_only": false,
-          "min_clearance": 0.01
+          "min_clearance": 0.0
         }
       },
       "diff_pair_dimensions": [
@@ -393,7 +393,7 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "ps2usb.step",
+      "step": "G:/My Drive/ps2 usb adapter/3d/final question mark/ps2usb.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""

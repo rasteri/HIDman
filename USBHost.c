@@ -5,7 +5,7 @@
 #include "uart.h"
 #include <string.h>
 #include <stdbool.h>
-
+#include "protocol.h"
 SBIT(LED, 0x90, 6);
 
 typedef const unsigned char __code *PUINT8C;

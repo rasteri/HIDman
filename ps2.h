@@ -8,6 +8,12 @@
 #define CLOCK 0
 #define DATA 1
 
+SBIT(KEY_CLOCK, 0xB0, 4);
+SBIT(KEY_DATA, 0xB0, 5);
+
+SBIT(MOUSE_CLOCK, 0xA0, 0);
+SBIT(MOUSE_DATA, 0xA0, 1);
+
 typedef union sendbuffer {
 	const uint8_t *chunky[64];
 	uint8_t arbitrary[64];

@@ -1,3 +1,10 @@
+/*
+	ps2.c
+	
+	Handles the low-level parts of the PS/2 protocol
+	I.e. buffers and bit-bang state machine
+*/
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -10,11 +17,7 @@
 #include "data.h"
 #include "protocol.h"
 
-SBIT(KEY_CLOCK, 0xA0, 0);
-SBIT(KEY_DATA, 0xA0, 1);
 
-SBIT(MOUSE_CLOCK, 0xA0, 2);
-SBIT(MOUSE_DATA, 0xA0, 3);
 
 __xdata ps2port ports[] = {
 	// keyboard
@@ -79,6 +82,8 @@ bool GetPort(uint8_t port, uint8_t channel)
 
 void SendKeyboard(const uint8_t *chunk)
 {
+	if (chunk == NULL) return;
+
 	// check for full
 	if ((ports[PORT_KEY].sendBuffEnd + 1) % 64 == ports[PORT_KEY].sendBuffStart)
 	{

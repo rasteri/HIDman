@@ -1,3 +1,11 @@
+/*
+	protocol.c
+	
+	Handles the higher-level parts of the PS/2 protocol
+	HID conversion, responding to host commands
+
+*/
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -9,17 +17,12 @@
 #include "ps2.h"
 #include "data.h"
 
-SBIT(KEY_CLOCK, 0xA0, 0);
-SBIT(KEY_DATA, 0xA0, 1);
-
-SBIT(MOUSE_CLOCK, 0xA0, 2);
-SBIT(MOUSE_DATA, 0xA0, 3);
-
 bool repeat;
 
 void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata *msgbuffer)
 {
 	bool brk = 0, make = 0;
+	uint8_t currcode;
 	switch (type)
 	{
 	case REPORT_USAGE_KEYBOARD:
@@ -33,7 +36,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 			// iterate through bits and compare to previous to see whats changed
 			for (uint8_t j = 0; j < 8; j++)
 			{
-
+				// this bit has changed
 				if ((rbits & 0x01) != (pbits & 0x01))
 				{
 

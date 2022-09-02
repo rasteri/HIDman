@@ -17,8 +17,6 @@
 #include "data.h"
 #include "protocol.h"
 
-
-
 __xdata ps2port ports[] = {
 	// keyboard
 	{
@@ -33,7 +31,7 @@ __xdata ps2port ports[] = {
 
 		0, //recvvalid
 		0, //recvout
-		0, //recverror
+		0, //sendDisabled
 
 		0, // lastByte
 
@@ -55,7 +53,7 @@ __xdata ps2port ports[] = {
 
 		0, //recvvalid
 		0, //recvout
-		0, //recverror
+		0, //sendDisabled
 
 		0, // lastByte
 
@@ -82,36 +80,32 @@ bool GetPort(uint8_t port, uint8_t channel)
 
 void SendKeyboard(const uint8_t *chunk)
 {
-	if (chunk == NULL) return;
 
-	// check for full
-	if ((ports[PORT_KEY].sendBuffEnd + 1) % 64 == ports[PORT_KEY].sendBuffStart)
-	{
-		// do nothing
-		//DEBUG_OUT("Full\n");
-	}
-	else
+	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
+
+	if (!ports[PORT_KEY].sendDisabled &&										 // send disabled by timer task, better not step on its toes
+		chunk != NULL &&														 // chunk is valid
+		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
 	{
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
 		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
-		//DEBUG_OUT("Produced %x %x\n", ports[PORT_KEY].sendBuffStart, ports[PORT_KEY].sendBuffEnd);
 	}
+
+	TR0 = 1; // re-enable timer interrupt
 }
 
 void SendMouse(uint8_t byte)
 {
-	// check for full
-	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 64 == ports[PORT_MOUSE].sendBuffStart)
-	{
-		// do nothing
-		//DEBUG_OUT("Full\n");
-	}
-	else
+	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
+
+	if (!ports[PORT_MOUSE].sendDisabled &&											 // send disabled by timer task, better not step on its toes
+		(ports[PORT_MOUSE].sendBuffEnd + 1) % 64 != ports[PORT_MOUSE].sendBuffStart) // not full
 	{
 		ports[PORT_MOUSE].sendBuff.arbitrary[ports[PORT_MOUSE].sendBuffEnd] = byte;
 		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 64;
-		//DEBUG_OUT("Produced %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
 	}
+
+	TR0 = 1; // re-enable timer interrupt
 }
 
 void PS2ProcessPort(uint8_t port)
@@ -416,6 +410,7 @@ void PS2ProcessPort(uint8_t port)
 					ports[port].recvBuff = 0;
 					// empty send buffer
 					ports[port].sendBuffStart = ports[port].sendBuffEnd;
+					ports[port].sendDisabled = 1;
 					ports[port].state = S_RECEIVE_CLOCK_HIGH;
 				}
 				else

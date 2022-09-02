@@ -36,8 +36,10 @@ void main()
 
 	//timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x01; // mode 1 (16bit no auto reload)
-	//T2MOD = T2MOD & 0b01101111; // clear bTMR_CLK and bT0_CLK;
-	//TH0 = 0x80; // reload to 128
+
+	// preload timer
+	TH0 = 0xff;
+	TL0 = 0xB8;
 	TR0 = 1; // start timer0
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
@@ -64,18 +66,5 @@ void main()
 		s = checkRootHubConnections();
 		pollHIDdevice();
 
-		// if buffer isn't full, send the next code
-		/*if ((keyboard.sendBuffEnd + 1) % 64 != keyboard.sendBuffStart){
-
-			SendPS2(&keyboard, KEYA_MAKE);
-			SendPS2(&keyboard, KEYB_MAKE);
-			SendPS2(&keyboard, KEYC_MAKE);
-			delay(50);
-
-			SendPS2(&keyboard, KEYA_BREAK);
-			SendPS2(&keyboard, KEYB_BREAK);
-			SendPS2(&keyboard, KEYC_BREAK);
-			delay(50);
-		} */
 	}
 }

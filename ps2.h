@@ -36,7 +36,7 @@ typedef struct ps2port
 
 	uint8_t recvvalid;
 	uint8_t recvout;
-	uint8_t recverror;
+	uint8_t sendDisabled;
 
 	uint8_t lastByte;
 

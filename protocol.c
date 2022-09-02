@@ -228,7 +228,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 							SendKeyboard(KEY_ENTER_BREAK);
 						break;
 					case 6:
-					break;
+						break;
 					}
 				}
 
@@ -263,43 +263,43 @@ void HandleReceived(uint8_t port)
 {
 	if (port == PORT_KEY)
 	{
-		switch (ports[port].recvstate)
+		switch (ports[PORT_KEY].recvstate)
 		{
 		case R_IDLE:
 
-			switch (ports[port].recvout)
+			switch (ports[PORT_KEY].recvout)
 			{
 			case 0xFF:
-				SendKeyboard(KEY_ACK);
-				SendKeyboard(KEY_BATCOMPLETE);
+				SimonSaysSendKeyboard(KEY_ACK);
+				SimonSaysSendKeyboard(KEY_BATCOMPLETE);
 				break;
 
 			// set LEDs
 			case 0xED:
-				SendKeyboard(KEY_ACK);
-				ports[port].recvstate = R_LEDS;
+				SimonSaysSendKeyboard(KEY_ACK);
+				ports[PORT_KEY].recvstate = R_LEDS;
 				break;
 
 			// set repeat
 			case 0xF3:
-				SendKeyboard(KEY_ACK);
-				ports[port].recvstate = R_REPEAT;
+				SimonSaysSendKeyboard(KEY_ACK);
+				ports[PORT_KEY].recvstate = R_REPEAT;
 				break;
 
 			// ID
 			case 0xF2:
-				SendKeyboard(KEY_ACK);
-				SendKeyboard(KEY_ID);
+				SimonSaysSendKeyboard(KEY_ACK);
+				SimonSaysSendKeyboard(KEY_ID);
 				break;
 
 			// Enable
 			case 0xF4:
-				SendKeyboard(KEY_ACK);
+				SimonSaysSendKeyboard(KEY_ACK);
 				break;
 
 			// Disable
 			case 0xF5:
-				SendKeyboard(KEY_ACK);
+				SimonSaysSendKeyboard(KEY_ACK);
 				break;
 			}
 
@@ -307,33 +307,53 @@ void HandleReceived(uint8_t port)
 
 		case R_LEDS:
 			// TODO blinkenlights
-			ports[port].recvstate = R_IDLE;
-			SendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_IDLE;
+			SimonSaysSendKeyboard(KEY_ACK);
 			break;
 
 		case R_REPEAT:
 			// TODO repeat
-			ports[port].recvstate = R_IDLE;
-			SendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_IDLE;
+			SimonSaysSendKeyboard(KEY_ACK);
 			break;
+		}
+		// If we're not expecting more stuff,
+		// unlock the send buffer so main loop can send stuff again
+		if (ports[PORT_KEY].recvstate == R_IDLE)
+		{
+			ports[PORT_KEY].sendDisabled = 0;
 		}
 	}
 
 	else if (port == PORT_MOUSE)
 	{
-
-		switch (ports[port].recvout)
+		switch (ports[PORT_KEY].recvstate)
 		{
-		// Reset
-		case 0xFF:
-			SendMouse(0xFA); // ACK
-			SendMouse(0xAA); // POST OK
-			SendMouse(0x00); // Squeek Squeek I'm a mouse
+		case R_IDLE:
+
+			switch (ports[port].recvout)
+			{
+			// Reset
+			case 0xFF:
+				SimonSaysSendMouse(0xFA); // ACK
+				SimonSaysSendMouse(0xAA); // POST OK
+				SimonSaysSendMouse(0x00); // Squeek Squeek I'm a mouse
+				break;
+
+			default:
+				SimonSaysSendMouse(0xFA); // ACK
+				break;
+			}
+			ports[PORT_MOUSE].sendDisabled = 0;
 			break;
 
-		default:
-			SendMouse(0xFA); // ACK
-			break;
+			//TODO : two byte commands
+		}
+		// If we're not expecting more stuff,
+		// unlock the send buffer so main loop can send stuff again
+		if (ports[PORT_MOUSE].recvstate == R_IDLE)
+		{
+			ports[PORT_MOUSE].sendDisabled = 0;
 		}
 	}
 }

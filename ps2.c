@@ -17,6 +17,12 @@
 #include "data.h"
 #include "protocol.h"
 
+SBIT(KEY_CLOCK, 0xB0, 4);
+SBIT(KEY_DATA, 0xB0, 5);
+
+SBIT(MOUSE_CLOCK, 0xA0, 0);
+SBIT(MOUSE_DATA, 0xA0, 1);
+
 __xdata ps2port ports[] = {
 	// keyboard
 	{
@@ -76,6 +82,29 @@ bool GetPort(uint8_t port, uint8_t channel)
 			return MOUSE_CLOCK;
 		else
 			return MOUSE_DATA;
+}
+
+void SimonSaysSendKeyboard(const uint8_t *chunk)
+{
+
+	if (chunk != NULL &&														 // chunk is valid
+		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
+	{
+		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
+		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
+	}
+
+}
+
+void SimonSaysSendMouse(uint8_t byte)
+{
+
+	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 64 != ports[PORT_MOUSE].sendBuffStart) // not full
+	{
+		ports[PORT_MOUSE].sendBuff.arbitrary[ports[PORT_MOUSE].sendBuffEnd] = byte;
+		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 64;
+	}
+
 }
 
 void SendKeyboard(const uint8_t *chunk)

@@ -421,6 +421,12 @@ void HandleReceived(uint8_t port)
 				SimonSaysSendMouse(0x00); // Squeek Squeek I'm a mouse
 				break;
 
+			// ID
+			case 0xF2:
+				SimonSaysSendMouse(0xFA); // ACK
+				SimonSaysSendMouse(0x00); // Standard mouse
+				break;
+
 			default:
 				SimonSaysSendMouse(0xFA); // ACK
 				break;

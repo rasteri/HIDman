@@ -42,9 +42,10 @@ void main()
 {
 	unsigned char s;
 	uint8_t keyindex;
+	uint8_t init = 0;
 	initClock();
-	initUART0(1000000, 1);
-	DEBUG_OUT("Startup\n");
+	initUART0(1000000, 0);
+	ANDYS_DEBUG_OUT("Startup\n");
 	resetHubDevices(0);
 	resetHubDevices(1);
 	initUSB_Host();
@@ -85,7 +86,7 @@ void main()
 	{
 		if (!(P4_IN & (1 << 6)))
 			runBootloader();
-		processUart();
+		//processUart();
 		s = checkRootHubConnections();
 		pollHIDdevice();
 		HandleRepeats();

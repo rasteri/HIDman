@@ -42,43 +42,41 @@ __code int16_t DelayConv[] = {
 	3750,
 	7500,
 	11250,
-	15000
-};
+	15000};
 
 __code int16_t RateConv[] = {
--500,
--562,
--625,
--688,
--725,
--811,
--877,
--938,
--1000,
--1128,
--1250,
--1376,
--1500,
--1630,
--1744,
--1875,
--2000,
--2239,
--2500,
--2727,
--3000,
--3261,
--3488,
--3750,
--4054,
--4545,
--5000,
--5556,
--6000,
--6522,
--7143,
--7500
-};
+	-500,
+	-562,
+	-625,
+	-688,
+	-725,
+	-811,
+	-877,
+	-938,
+	-1000,
+	-1128,
+	-1250,
+	-1376,
+	-1500,
+	-1630,
+	-1744,
+	-1875,
+	-2000,
+	-2239,
+	-2500,
+	-2727,
+	-3000,
+	-3261,
+	-3488,
+	-3750,
+	-4054,
+	-4545,
+	-5000,
+	-5556,
+	-6000,
+	-6522,
+	-7143,
+	-7500};
 
 // Runs in main loop
 void HandleRepeats()
@@ -98,10 +96,14 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 {
 	bool brk = 0, make = 0;
 	uint8_t currcode;
+	signed char x,y;
 	switch (type)
 	{
 	case REPORT_USAGE_KEYBOARD:
-
+		/*ANDYS_DEBUG_OUT("dunno %x %x : ", type, length);
+		for (int p = 0; p < length; p++)
+			ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
+		ANDYS_DEBUG_OUT("\n");*/
 		// do special keys first
 		if (msgbuffer[0] != lastKeyboardHID[0])
 		{
@@ -128,8 +130,6 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 				rbits = rbits >> 1;
 				pbits = pbits >> 1;
 			}
-
-			lastKeyboardHID[0] = msgbuffer[0];
 		}
 
 		// iterate through all the HID bytes to see what's changed since last time
@@ -201,17 +201,20 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 					}
 				}
 			}
+		}
 
+		for (int i=0; i < length; i++){
 			lastKeyboardHID[i] = msgbuffer[i];
 		}
+
 		break;
 
 	case REPORT_USAGE_MOUSE:
 
-		DEBUG_OUT("Mouse : ");
+		/*DEBUG_OUT("Mouse : ");
 		for (int p = 0; p < length; p++)
 			DEBUG_OUT("%x ", msgbuffer[p]);
-		DEBUG_OUT("\n");
+		DEBUG_OUT("\n");*/
 
 		//HID :
 		//byte 0 appears to always be 1
@@ -219,7 +222,8 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 		//byte 2 is x movement (8 bit signed)
 		//byte 3 is y movement (8 bit signed)
 
-		signed char x = (signed char)msgbuffer[2], y = (signed char)msgbuffer[3];
+		x = (signed char)msgbuffer[2];
+		y = (signed char)msgbuffer[3];
 
 		// PS2 mice have the y-axis inverted from HID
 		y = -y;
@@ -247,7 +251,7 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 
 		break;
 
-/*	case 0x04: //joystick
+		/*	case 0x04: //joystick
 
 		if (msgbuffer[0] == 1)
 		{
@@ -330,10 +334,7 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 
 		/*if (msgbuffer[0] == 1)
 		{
-			ANDYS_DEBUG_OUT("dunno %x : ", type);
-			for (int p = 0; p < length; p++)
-				ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
-			ANDYS_DEBUG_OUT("\n");
+
 			
 		}*/
 		break;

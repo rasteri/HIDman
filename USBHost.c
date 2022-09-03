@@ -497,6 +497,7 @@ void resetHubDevices(unsigned char hubindex)
 void pollHIDdevice()
 {
 	 __xdata unsigned char s, hiddevice, len;
+	 //ANDYS_DEBUG_OUT("Start poll\n");
 	for (hiddevice = 0; hiddevice < MAX_HID_DEVICES; hiddevice++)
 	{
 		if(HIDdevice[hiddevice].connected){
@@ -538,6 +539,7 @@ void pollHIDdevice()
 		}
 		}
 	}
+	//ANDYS_DEBUG_OUT("End poll\n\n");
 }
 
 

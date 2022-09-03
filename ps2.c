@@ -35,7 +35,6 @@ __xdata ps2port ports[] = {
 
 		0, //bytenum
 
-		0, //recvvalid
 		0, //recvout
 		0, //sendDisabled
 
@@ -57,7 +56,6 @@ __xdata ps2port ports[] = {
 
 		0, //bytenum
 
-		0, //recvvalid
 		0, //recvout
 		0, //sendDisabled
 
@@ -344,10 +342,6 @@ void PS2ProcessPort(uint8_t port)
 				if (GetPort(port, DATA)) // && ports[port].parity) // lol it still isn't working
 				{
 					ports[port].recvout = ports[port].recvBuff;
-					ports[port].recvvalid = 1;
-					//
-
-					//delayUs(20);
 				}
 
 				ports[port].parity = 1;
@@ -473,4 +467,5 @@ void PS2ProcessPort(uint8_t port)
 			break;
 		}
 	} while (reEnter);
+
 }

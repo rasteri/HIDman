@@ -12,9 +12,14 @@ void initClock()
     SAFE_MOD = 0x55;
     SAFE_MOD = 0xAA;
 
+	// MASK_SYS_CK_DIV = 6 - sets FSYS to 48MHz
 	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
-	CLOCK_CFG |= 6; 															  
-	PLL_CFG = ((24 << 0) | (6 << 5)) & 255;
+	CLOCK_CFG |= 6; 						
+
+	// MASK_PLL_MULT = 24 - sets FPLL to 288MHz
+	// USB clock div = 6 - sets Fusb4x to 48MHz
+	PLL_CFG = ((24 << 0) | (6 << 5)) & 255; 
+	
 
     SAFE_MOD = 0xFF;
 

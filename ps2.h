@@ -30,7 +30,6 @@ typedef struct ps2port
 	// byte number within current chunk
 	uint8_t bytenum;
 
-	uint8_t recvvalid;
 	uint8_t recvout;
 	uint8_t sendDisabled;
 
@@ -41,16 +40,10 @@ typedef struct ps2port
 	uint8_t sendBuffEnd;
 	sendbuffer sendBuff;
 	uint8_t recvBuff;
-	uint8_t prevhid[8];
 
-	// temporary buffer to hold a custom chunk
-	// (i.e. one defined in RAM rather than code)
-	uint8_t customChunk[8];
 } ps2port;
 
 extern __xdata ps2port ports[];
-
-void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata *msgbuffer);
 
 bool GetPort(unsigned char port, unsigned char channel);
 

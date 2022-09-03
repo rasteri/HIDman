@@ -457,7 +457,7 @@ unsigned char getInterfaceDescriptor(unsigned char index)
 
 
 
-#define MAX_HID_DEVICES 8
+
 struct 
 {
 	unsigned char connected;
@@ -532,7 +532,7 @@ void pollHIDdevice()
 				VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,
 				VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);*/
 
-				SendHIDPS2(len, HIDdevice[hiddevice].type, RxBuffer);
+				SendHIDPS2(len, hiddevice, HIDdevice[hiddevice].type, RxBuffer);
 				//sendHidPollMSG(MSG_TYPE_DEVICE_POLL,len, HIDdevice[hiddevice].type, hiddevice, HIDdevice[hiddevice].endPoint & 0x7F, RxBuffer,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorL,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);
 			}
 		}

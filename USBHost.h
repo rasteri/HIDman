@@ -85,6 +85,8 @@
 #define REPORT_USAGE_PAGE_BUTTON	0x09
 #define REPORT_USAGE_PAGE_VENDOR	0xff00
 
+#define MAX_HID_DEVICES 8
+
 typedef struct _EndPoint
 {
 	unsigned char EndpointAddr;

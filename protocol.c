@@ -16,10 +16,85 @@
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
+#include "protocol.h"
 
-bool repeat;
+// repeatState -
+// if positive, we're delaying - count up to repeatDelay then go negative
+// if negative, we're repeating - count down to repeatRate then return to -1
+// if zero, we ain't repeating
+__xdata volatile int16_t repeatState = 0;
 
-void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata *msgbuffer)
+__xdata volatile uint8_t repeatKey = 0x00;
+__xdata int16_t repeatDelay = 7500;
+__xdata int16_t repeatRate = -1000;
+
+__xdata char lastKeyboardHID[8];
+
+// runs in interupt to keep timings
+void RepeatTimer()
+{
+	if (repeatState > 0)
+		repeatState++;
+	else if (repeatState < 0)
+		repeatState--;
+}
+__code int16_t DelayConv[] = {
+	3750,
+	7500,
+	11250,
+	15000
+};
+
+__code int16_t RateConv[] = {
+-500,
+-562,
+-625,
+-688,
+-725,
+-811,
+-877,
+-938,
+-1000,
+-1128,
+-1250,
+-1376,
+-1500,
+-1630,
+-1744,
+-1875,
+-2000,
+-2239,
+-2500,
+-2727,
+-3000,
+-3261,
+-3488,
+-3750,
+-4054,
+-4545,
+-5000,
+-5556,
+-6000,
+-6522,
+-7143,
+-7500
+};
+
+// Runs in main loop
+void HandleRepeats()
+{
+	if (repeatState > repeatDelay)
+	{
+		SetRepeatState(-1);
+	}
+	else if (repeatState < repeatRate)
+	{
+		SendKeyboard(HIDtoPS2_Make[repeatKey]);
+		SetRepeatState(-1);
+	}
+}
+
+void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned char type, unsigned char __xdata *msgbuffer)
 {
 	bool brk = 0, make = 0;
 	uint8_t currcode;
@@ -28,10 +103,10 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 	case REPORT_USAGE_KEYBOARD:
 
 		// do special keys first
-		if (msgbuffer[0] != ports[PORT_KEY].prevhid[0])
+		if (msgbuffer[0] != lastKeyboardHID[0])
 		{
 			uint8_t rbits = msgbuffer[0];
-			uint8_t pbits = ports[PORT_KEY].prevhid[0];
+			uint8_t pbits = lastKeyboardHID[0];
 
 			// iterate through bits and compare to previous to see whats changed
 			for (uint8_t j = 0; j < 8; j++)
@@ -54,14 +129,14 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 				pbits = pbits >> 1;
 			}
 
-			ports[PORT_KEY].prevhid[0] = msgbuffer[0];
+			lastKeyboardHID[0] = msgbuffer[0];
 		}
 
 		// iterate through all the HID bytes to see what's changed since last time
 		for (uint8_t i = 2; i < 8; i++)
 		{
 			// key was pressed last time
-			if (ports[PORT_KEY].prevhid[i])
+			if (lastKeyboardHID[i])
 			{
 
 				// assume this will be a break code
@@ -70,7 +145,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 				// see if this code is still present in current poll
 				for (uint8_t j = 2; j < 8; j++)
 				{
-					if (ports[PORT_KEY].prevhid[i] == msgbuffer[j])
+					if (lastKeyboardHID[i] == msgbuffer[j])
 					{
 						// if so, do not break
 						brk = 0;
@@ -80,16 +155,21 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 				if (brk)
 				{
-					//DEBUG_OUT("Break %x\n", keyboard.prevhid[i]);
+					// if the key we just released is the one that's repeating then stop
+					if (lastKeyboardHID[i] == repeatKey)
+					{
+						repeatKey = 0;
+						SetRepeatState(0);
+					}
+
+					//DEBUG_OUT("Break %x\n", lastHID[devnum][i]);
 					// no break code for pause key, for some reason
-					if (ports[PORT_KEY].prevhid[i] == 0x48)
+					if (lastKeyboardHID[i] == 0x48)
 						continue;
 
-					repeat = 0;
-
 					//send the break code
-					if (ports[PORT_KEY].prevhid[i] <= 0x67)
-						SendKeyboard(HIDtoPS2_Break[ports[PORT_KEY].prevhid[i]]);
+					if (lastKeyboardHID[i] <= 0x67)
+						SendKeyboard(HIDtoPS2_Break[lastKeyboardHID[i]]);
 				}
 			}
 
@@ -102,7 +182,7 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 				// see if key was present in previous poll
 				for (uint8_t j = 2; j < 8; j++)
 				{
-					if (msgbuffer[i] == ports[PORT_KEY].prevhid[j])
+					if (msgbuffer[i] == lastKeyboardHID[j])
 					{
 						// if so, no need to make
 						make = false;
@@ -112,17 +192,17 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 				if (make)
 				{
-					//DEBUG_OUT("Make %x\n", msgbuffer[i]);
-					repeat = msgbuffer[i];
-					/*if (repeater)
-						cancel_alarm(repeater);
-					repeater = add_alarm_in_ms(delayms, repeat_callback, NULL, false);*/
+
 					if (msgbuffer[i] <= 0x67)
+					{
 						SendKeyboard(HIDtoPS2_Make[msgbuffer[i]]);
+						repeatKey = msgbuffer[i];
+						SetRepeatState(1);
+					}
 				}
 			}
 
-			ports[PORT_KEY].prevhid[i] = msgbuffer[i];
+			lastKeyboardHID[i] = msgbuffer[i];
 		}
 		break;
 
@@ -167,14 +247,14 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 
 		break;
 
-	case 0x04: //joystick
+/*	case 0x04: //joystick
 
 		if (msgbuffer[0] == 1)
 		{
 			// iterate through all the HID bytes to see what's changed since last time
 			for (uint8_t i = 1; i < 8; i++)
 			{
-				if (ports[PORT_KEY].prevhid[i] != msgbuffer[i])
+				if (lastHID[devnum][i] != msgbuffer[i])
 				{
 					switch (i)
 					{
@@ -184,47 +264,47 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 						break;
 					case 3: // left analog stick X
 						// breaks
-						if (msgbuffer[3] >= 64 && ports[PORT_KEY].prevhid[3] < 64) // not left but left last time
+						if (msgbuffer[3] >= 64 && lastHID[devnum][3] < 64) // not left but left last time
 							SendKeyboard(KEY_LEFT_BREAK);
-						if (msgbuffer[3] <= 192 && ports[PORT_KEY].prevhid[3] > 192) // not right but right last time
+						if (msgbuffer[3] <= 192 && lastHID[devnum][3] > 192) // not right but right last time
 							SendKeyboard(KEY_RIGHT_BREAK);
 						// makes
-						if (msgbuffer[3] < 64 && ports[PORT_KEY].prevhid[3] >= 64) // left and not left last time
+						if (msgbuffer[3] < 64 && lastHID[devnum][3] >= 64) // left and not left last time
 							SendKeyboard(KEY_LEFT_MAKE);
-						if (msgbuffer[3] > 192 && ports[PORT_KEY].prevhid[3] <= 192) // right and not right last time
+						if (msgbuffer[3] > 192 && lastHID[devnum][3] <= 192) // right and not right last time
 							SendKeyboard(KEY_RIGHT_MAKE);
 
 						break;
 					case 4: // left analog stick Y
 						// breaks
-						if (msgbuffer[4] >= 64 && ports[PORT_KEY].prevhid[4] < 64) // not up but up last time
+						if (msgbuffer[4] >= 64 && lastHID[devnum][4] < 64) // not up but up last time
 							SendKeyboard(KEY_UP_BREAK);
-						if (msgbuffer[4] <= 192 && ports[PORT_KEY].prevhid[4] > 192) // not down but down last time
+						if (msgbuffer[4] <= 192 && lastHID[devnum][4] > 192) // not down but down last time
 							SendKeyboard(KEY_DOWN_BREAK);
 						// makes
-						if (msgbuffer[4] < 64 && ports[PORT_KEY].prevhid[4] >= 64) // up and not up last time
+						if (msgbuffer[4] < 64 && lastHID[devnum][4] >= 64) // up and not up last time
 							SendKeyboard(KEY_UP_MAKE);
-						if (msgbuffer[4] > 192 && ports[PORT_KEY].prevhid[4] <= 192) // down and not down last time
+						if (msgbuffer[4] > 192 && lastHID[devnum][4] <= 192) // down and not down last time
 							SendKeyboard(KEY_DOWN_MAKE);
 						break;
 					case 5:
 						// breaks
-						if (msgbuffer[5] & 0x10 && !(ports[PORT_KEY].prevhid[5] & 0x10))
+						if (msgbuffer[5] & 0x10 && !(lastHID[devnum][5] & 0x10))
 							SendKeyboard(KEY_LCTRL_MAKE);
-						if (msgbuffer[5] & 0x20 && !(ports[PORT_KEY].prevhid[5] & 0x20))
+						if (msgbuffer[5] & 0x20 && !(lastHID[devnum][5] & 0x20))
 							SendKeyboard(KEY_SPACE_MAKE);
-						if (msgbuffer[5] & 0x40 && !(ports[PORT_KEY].prevhid[5] & 0x40))
+						if (msgbuffer[5] & 0x40 && !(lastHID[devnum][5] & 0x40))
 							SendKeyboard(KEY_LALT_MAKE);
-						if (msgbuffer[5] & 0x80 && !(ports[PORT_KEY].prevhid[5] & 0x80))
+						if (msgbuffer[5] & 0x80 && !(lastHID[devnum][5] & 0x80))
 							SendKeyboard(KEY_ENTER_MAKE);
 						// makes
-						if (!(msgbuffer[5] & 0x10) && ports[PORT_KEY].prevhid[5] & 0x10)
+						if (!(msgbuffer[5] & 0x10) && lastHID[devnum][5] & 0x10)
 							SendKeyboard(KEY_LCTRL_BREAK);
-						if (!(msgbuffer[5] & 0x20) && ports[PORT_KEY].prevhid[5] & 0x20)
+						if (!(msgbuffer[5] & 0x20) && lastHID[devnum][5] & 0x20)
 							SendKeyboard(KEY_SPACE_BREAK);
-						if (!(msgbuffer[5] & 0x40) && ports[PORT_KEY].prevhid[5] & 0x40)
+						if (!(msgbuffer[5] & 0x40) && lastHID[devnum][5] & 0x40)
 							SendKeyboard(KEY_LALT_BREAK);
-						if (!(msgbuffer[5] & 0x80) && ports[PORT_KEY].prevhid[5] & 0x80)
+						if (!(msgbuffer[5] & 0x80) && lastHID[devnum][5] & 0x80)
 							SendKeyboard(KEY_ENTER_BREAK);
 						break;
 					case 6:
@@ -232,13 +312,13 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 					}
 				}
 
-				ports[PORT_KEY].prevhid[i] = msgbuffer[i];
+				lastHID[devnum][i] = msgbuffer[i];
 			}
 		}
-		break;
+		break;*/
 
 	default:
-		// byte 0 is the number of controller
+		// byte 0 is the subdevice number
 		// byte 1/2 are right analog stick Y/X
 		// byte 3/4 are left analog stick/DPAD X/Y
 		// byte 5 -
@@ -248,14 +328,15 @@ void SendHIDPS2(unsigned short length, unsigned char type, unsigned char __xdata
 		//   bits 0-3 are shoulder buttons
 		//   bits 4-7 are always 0
 
-		if (msgbuffer[0] == 1)
+		/*if (msgbuffer[0] == 1)
 		{
 			ANDYS_DEBUG_OUT("dunno %x : ", type);
 			for (int p = 0; p < length; p++)
 				ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
 			ANDYS_DEBUG_OUT("\n");
-			break;
-		}
+			
+		}*/
+		break;
 	}
 }
 

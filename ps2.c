@@ -91,7 +91,6 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
 		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
 	}
-
 }
 
 void SimonSaysSendMouse(uint8_t byte)
@@ -102,7 +101,6 @@ void SimonSaysSendMouse(uint8_t byte)
 		ports[PORT_MOUSE].sendBuff.arbitrary[ports[PORT_MOUSE].sendBuffEnd] = byte;
 		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 64;
 	}
-
 }
 
 void SendKeyboard(const uint8_t *chunk)
@@ -238,17 +236,55 @@ void PS2ProcessPort(uint8_t port)
 
 				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
 				if (sb == 1)
-					ports[port].state = S_PAUSE;
+				{
+					ports[port].sendbit--; // we will need to resend so go back one bit
+					ports[port].state = S_MIDSEND_PAUSE;
+					if (port == PORT_MOUSE)
+						P3 ^= 0b10000000;
+				}
 				// if interrupted halfway through byte, will need to send entire packet again
 				else
 				{
 					ports[port].state = S_INHIBIT;
+					if (port == PORT_MOUSE)
+						P3 ^= 0b01000000;
 				}
+
+				// ALWAYS just resume?!
+				/*ports[port].sendbit--; // we will need to resend so go back one bit
+				ports[port].state = S_MIDSEND_PAUSE;
+				if (port == PORT_MOUSE)
+					P3 ^= 0b10000000;
+
+				if (port == PORT_MOUSE)
+					P3 ^= 0b01000000;*/
 			}
 			else
 			{
 				OutPort(port, CLOCK, 0);
+
 				ports[port].state = S_SEND_CLOCK_LOW;
+			}
+
+			break;
+
+		// clock was already low when we tried to send it low, pause until it goes high again
+		case S_MIDSEND_PAUSE:
+
+			// wait for host to release clock
+			if (GetPort(port, CLOCK))
+			{
+				// if data line low then host wants to transmit
+				if (!GetPort(port, DATA))
+				{
+					// go to full inhibit mode (to clear counters etc)
+					ports[port].state = S_INHIBIT;
+				}
+				else
+				{
+					//otherwise, resent the bit and start again
+					ports[port].state = S_SEND_CLOCK_HIGH;
+				}
 			}
 
 			break;
@@ -467,5 +503,4 @@ void PS2ProcessPort(uint8_t port)
 			break;
 		}
 	} while (reEnter);
-
 }

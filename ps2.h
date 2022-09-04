@@ -77,6 +77,7 @@ void PS2ProcessPort(uint8_t port);
 #define S_PAUSE 9
 #define S_INHIBIT 10
 #define S_WAIT 11
+#define S_MIDSEND_PAUSE 18
 
 #define R_IDLE 0
 #define R_LEDS 1

@@ -219,6 +219,9 @@ __code uint8_t KEY_ACK[] = {1, 0xFA};
 __code uint8_t KEY_BATCOMPLETE[] = {1, 0xAA};
 __code uint8_t KEY_ID[] = {2, 0xAB, 0x83};
 
+__code uint8_t KEY_SCANCODE_2[] = {1, 0x02};
+__code uint8_t KEY_ECHO[] = {1, 0xEE};
+__code uint8_t KEY_ERROR[] = {1, 0xFE};
 
 
 const uint8_t * const ModtoPS2_MAKE[] =

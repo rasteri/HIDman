@@ -81,7 +81,7 @@ void PS2ProcessPort(uint8_t port);
 #define R_IDLE 0
 #define R_LEDS 1
 #define R_REPEAT 2
-#define R_SECONDBYTE 3
-
+#define R_SCANCODESET 3
+#define R_KEYLIST 4
 
 #endif

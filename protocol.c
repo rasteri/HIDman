@@ -22,21 +22,21 @@
 // if positive, we're delaying - count up to repeatDelay then go negative
 // if negative, we're repeating - count down to repeatRate then return to -1
 // if zero, we ain't repeating
-__xdata volatile int16_t repeatState = 0;
+__xdata volatile int16_t RepeatState = 0;
 
-__xdata volatile uint8_t repeatKey = 0x00;
-__xdata int16_t repeatDelay = 7500;
-__xdata int16_t repeatRate = -1000;
+__xdata volatile uint8_t RepeatKey = 0x00;
+__xdata int16_t RepeatDelay = 7500;
+__xdata int16_t RepeatRate = -1000;
 
 __xdata char lastKeyboardHID[8];
 
 // runs in interupt to keep timings
 void RepeatTimer()
 {
-	if (repeatState > 0)
-		repeatState++;
-	else if (repeatState < 0)
-		repeatState--;
+	if (RepeatState > 0)
+		RepeatState++;
+	else if (RepeatState < 0)
+		RepeatState--;
 }
 __code int16_t DelayConv[] = {
 	3750,
@@ -81,13 +81,13 @@ __code int16_t RateConv[] = {
 // Runs in main loop
 void HandleRepeats()
 {
-	if (repeatState > repeatDelay)
+	if (RepeatState > RepeatDelay)
 	{
 		SetRepeatState(-1);
 	}
-	else if (repeatState < repeatRate)
+	else if (RepeatState < RepeatRate)
 	{
-		SendKeyboard(HIDtoPS2_Make[repeatKey]);
+		SendKeyboard(HIDtoPS2_Make[RepeatKey]);
 		SetRepeatState(-1);
 	}
 }
@@ -96,7 +96,7 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 {
 	bool brk = 0, make = 0;
 	uint8_t currcode;
-	signed char x,y;
+	signed char x, y;
 	switch (type)
 	{
 	case REPORT_USAGE_KEYBOARD:
@@ -156,9 +156,9 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 				if (brk)
 				{
 					// if the key we just released is the one that's repeating then stop
-					if (lastKeyboardHID[i] == repeatKey)
+					if (lastKeyboardHID[i] == RepeatKey)
 					{
-						repeatKey = 0;
+						RepeatKey = 0;
 						SetRepeatState(0);
 					}
 
@@ -196,14 +196,15 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 					if (msgbuffer[i] <= 0x67)
 					{
 						SendKeyboard(HIDtoPS2_Make[msgbuffer[i]]);
-						repeatKey = msgbuffer[i];
+						RepeatKey = msgbuffer[i];
 						SetRepeatState(1);
 					}
 				}
 			}
 		}
 
-		for (int i=0; i < length; i++){
+		for (int i = 0; i < length; i++)
+		{
 			lastKeyboardHID[i] = msgbuffer[i];
 		}
 
@@ -341,64 +342,150 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 	}
 }
 
+void TypematicDefaults()
+{
+	RepeatDelay = DelayConv[0x01]; // 500ms
+	RepeatRate = RateConv[0x0B];   // 10.9cps
+}
+
 void HandleReceived(uint8_t port)
 {
 	if (port == PORT_KEY)
 	{
-		switch (ports[PORT_KEY].recvstate)
+		// see if this is a command byte - these should override any state we're already in so check these first
+		switch (ports[PORT_KEY].recvout)
 		{
-		case R_IDLE:
 
-			switch (ports[PORT_KEY].recvout)
+		// set LEDs
+		case 0xED:
+			SimonSaysSendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_LEDS;
+			break;
+
+		// Echo
+		case 0xEE:
+			SimonSaysSendKeyboard(KEY_ECHO);
+			ports[PORT_KEY].recvstate = R_IDLE;
+			break;
+
+		// Set/Get scancode set
+		case 0xF0:
+			SimonSaysSendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_SCANCODESET;
+			break;
+
+		// ID
+		case 0xF2:
+			SimonSaysSendKeyboard(KEY_ACK);
+			SimonSaysSendKeyboard(KEY_ID);
+			ports[PORT_KEY].recvstate = R_IDLE;
+			break;
+
+		// set repeat
+		case 0xF3:
+			SimonSaysSendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_REPEAT;
+			break;
+
+		// Enable (TODO : actually do this)
+		case 0xF4:
+			SimonSaysSendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_IDLE;
+			break;
+
+		// Disable (TODO : actually do this)
+		case 0xF5:
+			SimonSaysSendKeyboard(KEY_ACK);
+			TypematicDefaults();
+			ports[PORT_KEY].recvstate = R_IDLE;
+			break;
+
+		// Set Default
+		case 0xF6:
+			SimonSaysSendKeyboard(KEY_ACK);
+			TypematicDefaults();
+			ports[PORT_KEY].recvstate = R_IDLE;
+			break;
+
+		// Set All Keys whatever (TODO : Actually do this)
+		case 0xF7:
+		case 0xF8:
+		case 0xF9:
+		case 0xFA:
+			SimonSaysSendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_IDLE;
+			break;
+
+		// Set specific Keys whatever (TODO : Actually do this)
+		case 0xFB:
+		case 0xFC:
+		case 0xFD:
+			SimonSaysSendKeyboard(KEY_ACK);
+			ports[PORT_KEY].recvstate = R_KEYLIST;
+			break;
+
+		// resend - TODO figure out how to deal with this
+		case 0xFE:
+			SimonSaysSendKeyboard(KEY_ACK);
+			break;
+
+		// reset
+		case 0xFF:
+			SimonSaysSendKeyboard(KEY_ACK);
+			TypematicDefaults();
+			SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+			ports[PORT_KEY].recvstate = R_IDLE;
+			break;
+
+		// not a command byte - this is fine if we're in another state, otherwise we send an error
+		default:
+			switch (ports[PORT_KEY].recvstate)
 			{
-			case 0xFF:
+
+			case R_LEDS:
+				// TODO blinkenlights
 				SimonSaysSendKeyboard(KEY_ACK);
-				SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 
-			// set LEDs
-			case 0xED:
+			case R_REPEAT:
 				SimonSaysSendKeyboard(KEY_ACK);
-				ports[PORT_KEY].recvstate = R_LEDS;
+				// Bottom 5 bits are repeate rate
+				RepeatRate = RateConv[ports[PORT_KEY].recvout & 0x1F];
+
+				// top 3 bits are delay time
+				RepeatDelay = DelayConv[(ports[PORT_KEY].recvout >> 5) & 0x03];
+
+				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 
-			// set repeat
-			case 0xF3:
+			case R_SCANCODESET:
 				SimonSaysSendKeyboard(KEY_ACK);
-				ports[PORT_KEY].recvstate = R_REPEAT;
+
+				// if request is zero then PC is expecting us to send current scan code set number#
+				// TODO : allow changing scancode set and reporting correctly
+				if (ports[PORT_KEY].recvout == 0)
+					SimonSaysSendKeyboard(KEY_SCANCODE_2);
+
+				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 
-			// ID
-			case 0xF2:
-				SimonSaysSendKeyboard(KEY_ACK);
-				SimonSaysSendKeyboard(KEY_ID);
-				break;
-
-			// Enable
-			case 0xF4:
+			case R_KEYLIST:
+				// Keep sending ACKs until we get a valid command scancode (which will be dealt with by the previous section)
+				// TODO : actually log these keys and apply their settings appropriately
+				// (not that I've ever seen any programs actually require this)
 				SimonSaysSendKeyboard(KEY_ACK);
 				break;
 
-			// Disable
-			case 0xF5:
-				SimonSaysSendKeyboard(KEY_ACK);
+			case R_IDLE:
+			default:
+				// this means we receieved a non-command byte when we are expecting one, send error
+				SimonSaysSendKeyboard(KEY_ERROR);
+				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 			}
-
-			break;
-
-		case R_LEDS:
-			// TODO blinkenlights
-			ports[PORT_KEY].recvstate = R_IDLE;
-			SimonSaysSendKeyboard(KEY_ACK);
-			break;
-
-		case R_REPEAT:
-			// TODO repeat
-			ports[PORT_KEY].recvstate = R_IDLE;
-			SimonSaysSendKeyboard(KEY_ACK);
-			break;
 		}
+
 		// If we're not expecting more stuff,
 		// unlock the send buffer so main loop can send stuff again
 		if (ports[PORT_KEY].recvstate == R_IDLE)
@@ -415,11 +502,11 @@ void HandleReceived(uint8_t port)
 
 			switch (ports[port].recvout)
 			{
-			// Reset
-			case 0xFF:
-				SimonSaysSendMouse(0xFA); // ACK
-				SimonSaysSendMouse(0xAA); // POST OK
-				SimonSaysSendMouse(0x00); // Squeek Squeek I'm a mouse
+			case 0xE9:							// Status Request
+				SimonSaysSendMouse(0xFA);		// ACK
+				SimonSaysSendMouse(0b00100000); // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
+				SimonSaysSendMouse(0x02);		// Resolution 4 counts/mm
+				SimonSaysSendMouse(100);		// Sample rate 100/sec
 				break;
 
 			// ID
@@ -428,14 +515,32 @@ void HandleReceived(uint8_t port)
 				SimonSaysSendMouse(0x00); // Standard mouse
 				break;
 
-			default:
+			// Reset
+			case 0xFF:
+				SimonSaysSendMouse(0xFA); // ACK
+				SimonSaysSendMouse(0xAA); // POST OK
+				SimonSaysSendMouse(0x00); // Squeek Squeek I'm a mouse
+				break;
+
+			// unimplemented stuff, bluff it
+			case 0xE6: // Set Scaling 1:1
+			case 0xE7: // Set Scaling 2:1
+			case 0xE8: // Set Resolution
+			case 0xEA: // Set Stream Mode
+			case 0xEB: // Read Data
+			case 0xEC: // Reset Wrap Mode
+			case 0xEE: // Set Wrap Mode
+			case 0xF0: // Remote Mode
+			case 0xF3: // Set Sample Rate
+			case 0xF4: // Enable Reporting
+			case 0xF5: // Disable Reporting
+			case 0xF6: // Set Defaults
+			case 0xFE: // Resend
+			default:   // argument from command?
+
 				SimonSaysSendMouse(0xFA); // ACK
 				break;
 			}
-			ports[PORT_MOUSE].sendDisabled = 0;
-			break;
-
-			//TODO : two byte commands
 		}
 		// If we're not expecting more stuff,
 		// unlock the send buffer so main loop can send stuff again

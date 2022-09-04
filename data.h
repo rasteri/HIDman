@@ -32,6 +32,10 @@ extern __code uint8_t KEY_LALT_BREAK[];
 extern __code uint8_t KEY_SPACE_BREAK[];
 extern __code uint8_t KEY_ENTER_BREAK[];
 
+extern __code uint8_t KEY_SCANCODE_2[];
+extern __code uint8_t KEY_ECHO[];
+extern __code uint8_t KEY_ERROR[];
+
 extern const uint8_t * const HIDtoPS2_Make[];
 extern const uint8_t * const HIDtoPS2_Break[];
 extern const uint8_t * const ModtoPS2_BREAK[];

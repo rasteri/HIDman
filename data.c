@@ -229,11 +229,11 @@ const uint8_t * const ModtoPS2_MAKE[] =
     KEY_LCTRL_MAKE,
     KEY_LSHIFT_MAKE,
     KEY_LALT_MAKE,
-    NULL,
+    KEY_LGUI_MAKE,
     KEY_RCTRL_MAKE,
     KEY_RSHIFT_MAKE,
     KEY_RALT_MAKE,
-    NULL
+    KEY_RGUI_MAKE
 };
 
 const uint8_t * const ModtoPS2_BREAK[] =
@@ -241,11 +241,11 @@ const uint8_t * const ModtoPS2_BREAK[] =
     KEY_LCTRL_BREAK,
     KEY_LSHIFT_BREAK,
     KEY_LALT_BREAK,
-    NULL,
+    KEY_LGUI_BREAK,
     KEY_RCTRL_BREAK,
     KEY_RSHIFT_BREAK,
     KEY_RALT_BREAK,
-    NULL
+    KEY_RGUI_BREAK
 };
 
 const uint8_t * const HIDtoPS2_Make[] =
@@ -308,47 +308,47 @@ const uint8_t * const HIDtoPS2_Make[] =
         KEY_PERIOD_MAKE,
         KEY_FWSLASH_MAKE,
         KEY_CAPS_MAKE,
-        KEY_F1_MAKE,// = {1, 0x05};
-        KEY_F2_MAKE,// = {1, 0x06};
-        KEY_F3_MAKE,// = {1, 0x04};
-        KEY_F4_MAKE,// = {1, 0x0C};
-        KEY_F5_MAKE,// = {1, 0x03};
-        KEY_F6_MAKE,// = {1, 0x0B};
-        KEY_F7_MAKE,// = {1, 0x83}; 40
-        KEY_F8_MAKE,// = {1, 0x0A};
-        KEY_F9_MAKE,// = {1, 0x01};
-        KEY_F10_MAKE,// = {1, 0x09};
-        KEY_F11_MAKE,// = {1, 0x78};
-        KEY_F12_MAKE,// = {1, 0x07};
-        KEY_PRTSC_MAKE,// = {4, 0xE0, 0x12, 0xE0, 0x7C};
-        KEY_SCROLL_MAKE,// = {1, 0x7E};
-        KEY_PAUSE_MAKE,// = {8, 0xE1, 0x14, 0x77, 0xE1, 0xF0, 0x14, 0xF0, 0x77};
-        KEY_INSERT_MAKE,// = {2, 0xE0, 0x70};
-        KEY_HOME_MAKE,// = {2, 0xE0, 0x6C};
-        KEY_PGUP_MAKE,// = {2, 0xE0, 0x7D};
-        KEY_DELETE_MAKE,// = {2, 0xE0, 0x71};
-        KEY_END_MAKE,// = {2, 0xE0, 0x69};
-        KEY_PGDN_MAKE,// = {2, 0xE0, 0x7A};
+        KEY_F1_MAKE,
+        KEY_F2_MAKE,
+        KEY_F3_MAKE,
+        KEY_F4_MAKE,
+        KEY_F5_MAKE,
+        KEY_F6_MAKE,
+        KEY_F7_MAKE,//40
+        KEY_F8_MAKE,
+        KEY_F9_MAKE,
+        KEY_F10_MAKE,
+        KEY_F11_MAKE,
+        KEY_F12_MAKE,
+        KEY_PRTSC_MAKE,
+        KEY_SCROLL_MAKE,
+        KEY_PAUSE_MAKE,
+        KEY_INSERT_MAKE,
+        KEY_HOME_MAKE,
+        KEY_PGUP_MAKE,
+        KEY_DELETE_MAKE,
+        KEY_END_MAKE,
+        KEY_PGDN_MAKE,
         KEY_RIGHT_MAKE,
         KEY_LEFT_MAKE, // 50
         KEY_DOWN_MAKE,
         KEY_UP_MAKE,
-        KEY_NUM_MAKE,// = {1, 0x77};
-        KEY_PADFWSLASH_MAKE,// = {2, 0xE0, 0x4A};
-        KEY_PADASTERISK_MAKE,// = {1, 0x7C};
-        KEY_PADMINUS_MAKE,// = {1, 0x7B};
-        KEY_PADPLUS_MAKE,// = {1, 0x79};
-        KEY_PADEN_MAKE,// = {2, 0xE0, 0x5A};
-        KEY_PAD1_MAKE,// = {1, 0x69};
-        KEY_PAD2_MAKE,// = {1, 0x71};
-        KEY_PAD3_MAKE,// = {1, 0x7A};
-        KEY_PAD4_MAKE,// = {1, 0x6B};
-        KEY_PAD5_MAKE,// = {1, 0x73};
-        KEY_PAD6_MAKE,// = {1, 0x74};
-        KEY_PAD7_MAKE,// = {1, 0x6C};
-        KEY_PAD8_MAKE,// = {1, 0x75}; 60
-        KEY_PAD9_MAKE,// = {1, 0x7D};
-        KEY_PAD0_MAKE,// = {1, 0x70};
+        KEY_NUM_MAKE,
+        KEY_PADFWSLASH_MAKE,
+        KEY_PADASTERISK_MAKE,
+        KEY_PADMINUS_MAKE,
+        KEY_PADPLUS_MAKE,
+        KEY_PADEN_MAKE,
+        KEY_PAD1_MAKE,
+        KEY_PAD2_MAKE,
+        KEY_PAD3_MAKE,
+        KEY_PAD4_MAKE,
+        KEY_PAD5_MAKE,
+        KEY_PAD6_MAKE,
+        KEY_PAD7_MAKE,
+        KEY_PAD8_MAKE,// 60
+        KEY_PAD9_MAKE,
+        KEY_PAD0_MAKE,
         KEY_PADDOT_MAKE,
         NULL,
         KEY_APPS_MAKE,

@@ -93,16 +93,6 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 	}
 }
 
-void SimonSaysSendMouse(uint8_t byte)
-{
-
-	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 64 != ports[PORT_MOUSE].sendBuffStart) // not full
-	{
-		ports[PORT_MOUSE].sendBuff.arbitrary[ports[PORT_MOUSE].sendBuffEnd] = byte;
-		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 64;
-	}
-}
-
 void SendKeyboard(const uint8_t *chunk)
 {
 
@@ -119,23 +109,13 @@ void SendKeyboard(const uint8_t *chunk)
 	TR0 = 1; // re-enable timer interrupt
 }
 
-void SendMouse(uint8_t byte)
-{
-	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 
-	if (!ports[PORT_MOUSE].sendDisabled &&											 // send disabled by timer task, better not step on its toes
-		(ports[PORT_MOUSE].sendBuffEnd + 1) % 64 != ports[PORT_MOUSE].sendBuffStart) // not full
-	{
-		ports[PORT_MOUSE].sendBuff.arbitrary[ports[PORT_MOUSE].sendBuffEnd] = byte;
-		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 64;
-	}
-
-	TR0 = 1; // re-enable timer interrupt
-}
+uint8_t GlobalSendBuff[8];
 
 void PS2ProcessPort(uint8_t port)
 {
 	const uint8_t *chunk;
+	uint8_t *chonk;
 	__data uint8_t sb;
 
 	bool reEnter = 0;
@@ -169,16 +149,18 @@ void PS2ProcessPort(uint8_t port)
 				{
 					if (port == PORT_KEY)
 					{
-						chunk = ports[port].sendBuff.chunky[ports[port].sendBuffStart];
-						ports[port].data = chunk[ports[port].bytenum + 1];
+						chunk = ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffStart];
+						ports[PORT_KEY].data = chunk[ports[PORT_KEY].bytenum + 1];
 						//DEBUG_OUT("Consuming %x %x %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd, chunk[0], ports[port].data);
-						ports[port].state = S_SEND_CLOCK_HIGH;
+						ports[PORT_KEY].state = S_SEND_CLOCK_HIGH;
 						//reEnter = 1;
 					}
 					else
 					{ //mouse
-						ports[port].data = ports[port].sendBuff.arbitrary[ports[port].sendBuffStart];
-						ports[port].state = S_SEND_CLOCK_HIGH;
+						chonk = ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffStart];
+						ports[PORT_MOUSE].data = chonk[ports[PORT_MOUSE].bytenum + 1];
+						//DEBUG_OUT("Consuming %x %x %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd, chonk[0], ports[port].data);
+						ports[PORT_MOUSE].state = S_SEND_CLOCK_HIGH;
 						//reEnter = 1;
 					}
 				}
@@ -237,27 +219,18 @@ void PS2ProcessPort(uint8_t port)
 				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
 				if (sb == 1)
 				{
-					ports[port].sendbit--; // we will need to resend so go back one bit
-					ports[port].state = S_MIDSEND_PAUSE;
 					if (port == PORT_MOUSE)
 						P3 ^= 0b10000000;
+					ports[port].sendbit--; // we will need to resend so go back one bit
+					ports[port].state = S_MIDSEND_PAUSE;
 				}
 				// if interrupted halfway through byte, will need to send entire packet again
 				else
 				{
-					ports[port].state = S_INHIBIT;
 					if (port == PORT_MOUSE)
 						P3 ^= 0b01000000;
+					ports[port].state = S_INHIBIT;
 				}
-
-				// ALWAYS just resume?!
-				/*ports[port].sendbit--; // we will need to resend so go back one bit
-				ports[port].state = S_MIDSEND_PAUSE;
-				if (port == PORT_MOUSE)
-					P3 ^= 0b10000000;
-
-				if (port == PORT_MOUSE)
-					P3 ^= 0b01000000;*/
 			}
 			else
 			{
@@ -329,8 +302,24 @@ void PS2ProcessPort(uint8_t port)
 				}
 				else /*if (port = PORT_MOUSE)*/
 				{
-					// move onto next byte
-					ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 64;
+					chonk = ports[port].sendBuff.chonky[ports[port].sendBuffStart];
+
+					ports[port].bytenum++;
+
+					// if we've run out of bytes in this chonk
+					if (ports[port].bytenum == chonk[0])
+					{
+						// move onto next chonk
+						//DEBUG_OUT("Consumed %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
+						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 8;
+						ports[port].bytenum = 0;
+					}
+					else
+					{
+						ports[port].data = chonk[ports[port].bytenum + 1];
+					}
+
+					// give ourselves a little break between bytes
 					ports[port].state = S_IDLE;
 				}
 			}
@@ -456,7 +445,7 @@ void PS2ProcessPort(uint8_t port)
 		case S_INHIBIT:
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
 			ports[port].sendbit = 0;
-			ports[port].bytenum = 0;
+			if (port == PORT_KEY) ports[port].bytenum = 0;
 			ports[port].parity = 1;
 
 			// wait for host to release clock

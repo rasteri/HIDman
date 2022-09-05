@@ -242,13 +242,7 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 		// Y sign
 		tmp |= ((y & 0x80) >> 2);
 
-		SendMouse(tmp);
-
-		//Second PS2 byte (X movement)
-		SendMouse((uint8_t)x);
-
-		//Third PS2 byte (Y movement)
-		SendMouse((uint8_t)y);
+		SendMouse3(tmp, (uint8_t)x, (uint8_t)y);
 
 		break;
 
@@ -503,26 +497,26 @@ void HandleReceived(uint8_t port)
 			switch (ports[port].recvout)
 			{
 			case 0xE9:							// Status Request
-				SimonSaysSendMouse(0xFA);		// ACK
-				SimonSaysSendMouse(0b00100000); // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
-				SimonSaysSendMouse(0x02);		// Resolution 4 counts/mm
-				SimonSaysSendMouse(100);		// Sample rate 100/sec
+				SimonSaysSendMouse1(0xFA);		// ACK
+				SimonSaysSendMouse3(0b00100000, // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
+									0x02,		// Resolution 4 counts/mm
+									100);		// Sample rate 100/sec
 				break;
 
 			// ID
 			case 0xF2:
-				SimonSaysSendMouse(0xFA); // ACK
-				SimonSaysSendMouse(0x00); // Standard mouse
+				SimonSaysSendMouse1(0xFA); // ACK
+				SimonSaysSendMouse1(0x00); // Standard mouse
 				break;
 
 			// Reset
 			case 0xFF:
-				SimonSaysSendMouse(0xFA); // ACK
-				SimonSaysSendMouse(0xAA); // POST OK
-				SimonSaysSendMouse(0x00); // Squeek Squeek I'm a mouse
+				SimonSaysSendMouse1(0xFA); // ACK
+				SimonSaysSendMouse1(0xAA); // POST OK
+				SimonSaysSendMouse1(0x00); // Squeek Squeek I'm a mouse
 				break;
 
-			// unimplemented stuff, bluff it
+			// unimplemented command
 			case 0xE6: // Set Scaling 1:1
 			case 0xE7: // Set Scaling 2:1
 			case 0xE8: // Set Resolution
@@ -538,7 +532,7 @@ void HandleReceived(uint8_t port)
 			case 0xFE: // Resend
 			default:   // argument from command?
 
-				SimonSaysSendMouse(0xFA); // ACK
+				SimonSaysSendMouse1(0xFA); // Just smile and nod
 				break;
 			}
 		}

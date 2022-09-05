@@ -8,11 +8,12 @@
 #define CLOCK 0
 #define DATA 1
 
-
-
 typedef union sendbuffer {
+	// pointers to chunks in code space
 	const uint8_t *chunky[64];
-	uint8_t arbitrary[64];
+
+	// chunks of up to 8 bytes, first byte is length
+	uint8_t chonky[8][8];
 } sendbuffer;
 
 typedef struct ps2port
@@ -48,12 +49,56 @@ extern __xdata ps2port ports[];
 bool GetPort(unsigned char port, unsigned char channel);
 
 void SendKeyboard(const uint8_t *chunk);
-void SendMouse(uint8_t byte);
+//void SendMouse();
 
 void SimonSaysSendKeyboard(const uint8_t *chunk);
-void SimonSaysSendMouse(uint8_t byte);
+void SimonSaysSendMouse();
 
 void PS2ProcessPort(uint8_t port);
+
+#define SimonSaysSendMouse1(one) \
+if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart) \
+{ \
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 1;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;\
+	ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8; \
+} \
+
+#define SimonSaysSendMouse2(one, two) \
+if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart) \
+{ \
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 2;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][2] = two;\
+	ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8; \
+} \
+
+#define SimonSaysSendMouse3(one, two, three) \
+if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart) \
+{ \
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 3;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][2] = two;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][3] = three;\
+	ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8; \
+} \
+
+#define SimonSaysSendMouse4(one, two, three, four) \
+if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart) \
+{ \
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 4;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][2] = two;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][3] = three;\
+	ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][4] = four;\
+	ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8; \
+} \
+
+
+#define SendMouse1(...) TR0 = 0; SimonSaysSendMouse1(__VA_ARGS__); TR0 = 1;
+#define SendMouse2(...) TR0 = 0; SimonSaysSendMouse2(__VA_ARGS__); TR0 = 1;
+#define SendMouse3(...) TR0 = 0; SimonSaysSendMouse3(__VA_ARGS__); TR0 = 1;
+#define SendMouse4(...) TR0 = 0; SimonSaysSendMouse4(__VA_ARGS__); TR0 = 1;
 
 
 

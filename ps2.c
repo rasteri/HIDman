@@ -219,16 +219,12 @@ void PS2ProcessPort(uint8_t port)
 				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
 				if (sb == 1)
 				{
-					if (port == PORT_MOUSE)
-						P3 ^= 0b10000000;
 					ports[port].sendbit--; // we will need to resend so go back one bit
 					ports[port].state = S_MIDSEND_PAUSE;
 				}
 				// if interrupted halfway through byte, will need to send entire packet again
 				else
 				{
-					if (port == PORT_MOUSE)
-						P3 ^= 0b01000000;
 					ports[port].state = S_INHIBIT;
 				}
 			}

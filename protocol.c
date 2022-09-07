@@ -100,10 +100,7 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 	switch (type)
 	{
 	case REPORT_USAGE_KEYBOARD:
-		/*ANDYS_DEBUG_OUT("dunno %x %x : ", type, length);
-		for (int p = 0; p < length; p++)
-			ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
-		ANDYS_DEBUG_OUT("\n");*/
+
 		// do special keys first
 		if (msgbuffer[0] != lastKeyboardHID[0])
 		{
@@ -212,19 +209,18 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 
 	case REPORT_USAGE_MOUSE:
 
-		/*DEBUG_OUT("Mouse : ");
+		/*ANDYS_DEBUG_OUT("Mouse : ");
 		for (int p = 0; p < length; p++)
-			DEBUG_OUT("%x ", msgbuffer[p]);
-		DEBUG_OUT("\n");*/
+			ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
+		ANDYS_DEBUG_OUT("\n");*/
 
 		//HID :
-		//byte 0 appears to always be 1
-		//byte 1 is buttons
-		//byte 2 is x movement (8 bit signed)
-		//byte 3 is y movement (8 bit signed)
+		//byte 0 is buttons
+		//byte 1 is x movement (8 bit signed)
+		//byte 2 is y movement (8 bit signed)
 
-		x = (signed char)msgbuffer[2];
-		y = (signed char)msgbuffer[3];
+		x = (signed char)msgbuffer[1];
+		y = (signed char)msgbuffer[2];
 
 		// PS2 mice have the y-axis inverted from HID
 		y = -y;
@@ -234,7 +230,7 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 		uint8_t tmp = 0x08;
 
 		// bottom 3 bits of button format is the same
-		tmp |= msgbuffer[1] & 0x07;
+		tmp |= msgbuffer[0] & 0x07;
 
 		// X sign
 		tmp |= ((x & 0x80) >> 3);
@@ -334,6 +330,7 @@ void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned ch
 		}*/
 		break;
 	}
+
 }
 
 void TypematicDefaults()

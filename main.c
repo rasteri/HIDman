@@ -9,7 +9,6 @@
 #include "protocol.h"
 #include "ps2.h"
 
-
 SBIT(LED, 0x90, 6);
 SBIT(KEY_CLOCK, 0xB0, 4);
 SBIT(KEY_DATA, 0xB0, 5);
@@ -32,7 +31,8 @@ void mTimer0Interrupt(void) __interrupt(1)
 
 	// now handle keyboard typematic repeat timers
 	// divide down to 15KHz to make maths easier
-	if (++repeatDiv == 4){
+	if (++repeatDiv == 4)
+	{
 		RepeatTimer();
 		repeatDiv = 0;
 	}
@@ -57,7 +57,7 @@ void main()
 
 	// timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x01; // mode 1 (16bit no auto reload)
-	T2MOD |= 0b10010000; // fast mode (fsys) - should be 48MHz
+	T2MOD |= 0b10010000;		 // fast mode (fsys) - should be 48MHz
 
 	// preload to 60KHz
 	TH0 = 0xFC;
@@ -69,7 +69,7 @@ void main()
 
 	P0_DIR = 0b01110000; // LEDs as output
 	P0_PU = 0x00;
-	P0 = 0x00; // all lit
+	P0 = 0x00;		 // all lit
 	P0 = 0b01110000; // none lit
 	P0 = 0b00110000; // one lit
 
@@ -90,5 +90,6 @@ void main()
 		s = checkRootHubConnections();
 		pollHIDdevice();
 		HandleRepeats();
+
 	}
 }

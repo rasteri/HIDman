@@ -1,11 +1,13 @@
 #include "CH559.h"
 #include "USBHost.h"
+#include "USBHost2.h"
 #include "util.h"
 #include "ps2.h"
 #include "uart.h"
 #include <string.h>
 #include <stdbool.h>
 #include "protocol.h"
+#include "ParseDescriptor.h"
 SBIT(LED, 0x90, 6);
 
 typedef const unsigned char __code *PUINT8C;
@@ -481,7 +483,7 @@ struct
 
 void resetHubDevices(unsigned char hubindex)
 {
-	__xdata unsigned char hiddevice;
+	unsigned char hiddevice;
 	VendorProductID[hubindex].idVendorL = 0;
 	VendorProductID[hubindex].idVendorH = 0;
 	VendorProductID[hubindex].idProductL = 0;
@@ -501,7 +503,7 @@ void resetHubDevices(unsigned char hubindex)
 
 void pollHIDdevice()
 {
-	__xdata unsigned char s, hiddevice, len;
+	unsigned char s, hiddevice, len;
 
 	for (hiddevice = 0; hiddevice < MAX_HID_DEVICES; hiddevice++)
 	{
@@ -754,7 +756,7 @@ void parseHIDDeviceReport(unsigned char __xdata *report, unsigned short length, 
 		i += size + 1;
 	}
 }
-
+HID_SEG_STRUCT bleh;
 unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 {
 	unsigned char s;
@@ -783,7 +785,18 @@ unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 	}
 	DEBUG_OUT("\n");
 	//sendProtocolMSG(MSG_TYPE_HID_INFO, len, CurrentDevive, HIDdevice[CurrentDevive].interface, HIDdevice[CurrentDevive].rootHub, receiveDataBuffer);
-	parseHIDDeviceReport(receiveDataBuffer, len, CurrentDevive);
+	//parseHIDDeviceReport(receiveDataBuffer, len, CurrentDevive);
+	ParseReportDescriptor(receiveDataBuffer, len, &bleh);
+
+	ANDYS_DEBUG_OUT("KeyboardReportId : %x\n", bleh.KeyboardReportId);
+	ANDYS_DEBUG_OUT("MouseReportId : %x\n\n", bleh.MouseReportId);
+	for (uint8_t x=0; x < HID_SEG_NUM; x++){
+		ANDYS_DEBUG_OUT("Seg %x - ",x);
+		ANDYS_DEBUG_OUT("Start %x,",bleh.HIDSeg[x].start);
+		ANDYS_DEBUG_OUT("Size %x,",bleh.HIDSeg[x].size);
+		ANDYS_DEBUG_OUT("Count %x\n\n",bleh.HIDSeg[x].count);
+	}
+
 	return (ERR_SUCCESS);
 }
 
@@ -863,7 +876,7 @@ unsigned char initializeRootHubConnection(unsigned char rootHubIndex)
 					{
 						//sendProtocolMSG(MSG_TYPE_DEVICE_INFO, (receiveDataBuffer[2] + (receiveDataBuffer[3] << 8)), addr, rootHubIndex+1, 0xAA, receiveDataBuffer);
 						unsigned short i, total;
-						unsigned char __xdata temp[512];
+						static unsigned char __xdata temp[512];
 						PXUSB_ITF_DESCR currentInterface = 0;
 						int interfaces;
 						//DEBUG_OUT_USB_BUFFER(receiveDataBuffer);

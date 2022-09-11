@@ -116,7 +116,7 @@ void PS2ProcessPort(uint8_t port)
 {
 	const uint8_t *chunk;
 	uint8_t *chonk;
-	__data uint8_t sb;
+	static __data uint8_t sb;
 
 	bool reEnter = 0;
 	do

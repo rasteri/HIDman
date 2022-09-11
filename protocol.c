@@ -92,7 +92,7 @@ void HandleRepeats()
 	}
 }
 
-void SendHIDPS2(unsigned short length, __xdata unsigned char devnum, unsigned char type, unsigned char __xdata *msgbuffer)
+void SendHIDPS2(unsigned short length, unsigned char devnum, unsigned char type, unsigned char __xdata *msgbuffer)
 {
 	bool brk = 0, make = 0;
 	uint8_t currcode;

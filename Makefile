@@ -13,7 +13,9 @@ $(OBJDIR)/USBHost.rel \
 $(OBJDIR)/uart.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/data.rel \
-$(OBJDIR)/protocol.rel
+$(OBJDIR)/protocol.rel \
+$(OBJDIR)/ParseDescriptor.rel \
+$(OBJDIR)/ParseHidData.rel
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -31,7 +33,7 @@ ifndef CODE_SIZE
 CODE_SIZE = 0xEFFF
 endif
 
-CFLAGS := -V -mmcs51 --model-large \
+CFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
 	--code-size $(CODE_SIZE) \
 	-I/ -DFREQ_SYS=$(FREQ_SYS) \

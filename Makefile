@@ -22,7 +22,7 @@ FREQ_SYS = 48000000
 endif
 
 ifndef XRAM_SIZE
-XRAM_SIZE = 0x0800
+XRAM_SIZE = 0x0A00
 endif
 
 ifndef XRAM_LOC

@@ -1,8 +1,53 @@
 #include "Type.h"
 
 #include "Protocol.h"
-#include "UsbHost2.h"
+//#include "UsbHost2.h"
 #include "ParseHidData.h"
+#include "util.h"
+
+void ProcessHIDData(Interface *pInterface, UINT8 *pData, UINT16 len)
+{
+
+
+	
+/*	UINT8 buffer[KEYBOARD_LEN + 2];
+	UINT8 pktLen;
+	UINT8 interfaceClass = pInterface->InterfaceClass;
+	UINT8 interfaceProtocol = pInterface->InterfaceProtocol;
+
+	len = len;
+
+	if (interfaceClass == USB_DEV_CLASS_HID)
+	{
+		if (pInterface->HidSegStruct.HIDSeg[HID_SEG_KEYBOARD_MODIFIER_INDEX].size != 0)
+		{
+			//keyboard
+			UINT8 keyboardData[KEYBOARD_LEN];
+			if (!UsbKeyboardParse(pData, keyboardData, &pInterface->HidSegStruct, &pInterface->KeyboardParseStruct))
+			{
+				return;
+			}
+
+			for (i = 0; i < KEYBOARD_LEN; i++)
+			{
+				ANDYS_DEBUG_OUT("0x%x ", keyboardData[i]);
+			}
+			ANDYS_DEBUG_OUT("\n");
+		}
+		else if (pInterface->HidSegStruct.HIDSeg[HID_SEG_BUTTON_INDEX].size != 0)
+		{
+			//mouse
+			UINT8 mouseData[MOUSE_LEN];
+			UsbMouseParse(pData, mouseData, &pInterface->HidSegStruct);
+
+			for (i = 0; i < MOUSE_LEN; i++)
+			{
+				ANDYS_DEBUG_OUT("0x%x ", mouseData[i]);
+			}
+			ANDYS_DEBUG_OUT("\n");
+		}
+	}*/
+}
 
 static UINT8C lowest_bit_bitmap[] =
 {
@@ -114,12 +159,12 @@ static BOOL NewUsbKeyboardParse(UINT8 *pUsb, UINT8 len, KEYBOARD_PARSE_STRUCT *p
 	return TRUE;
 }
 
+
 BOOL UsbKeyboardParse(UINT8 *pUsb, UINT8 *pOut, HID_SEG_STRUCT *pKeyboardSegStruct, KEYBOARD_PARSE_STRUCT *pKeyboardParseStruct)
 {
     UINT8 i;
 
     BOOL ret;
-    
     if (pKeyboardSegStruct->HIDSeg[HID_SEG_KEYBOARD_MODIFIER_INDEX].start == 0xff)
     {
         return FALSE;
@@ -127,6 +172,7 @@ BOOL UsbKeyboardParse(UINT8 *pUsb, UINT8 *pOut, HID_SEG_STRUCT *pKeyboardSegStru
 
 	if (pKeyboardSegStruct->KeyboardReportId != 0 && pKeyboardSegStruct->KeyboardReportId != pUsb[0])
 	{
+
 		return FALSE;
 	}
 	
@@ -274,5 +320,3 @@ BOOL UsbMouseParse(UINT8 *pUsb, UINT8 *pOut, HID_SEG_STRUCT *pMouseSegStruct)
 
 	return TRUE;
 }
-
-

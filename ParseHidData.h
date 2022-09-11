@@ -1,6 +1,6 @@
 #ifndef _PARSELASERMOUSEDATA_H_
 #define _PARSELASERMOUSEDATA_H_
-
+#include "USBHost.h"
 //packet id
 #define ID_USB_KEYBOARD   0xA0
 #define ID_USB_MOUSE      0xA1
@@ -31,7 +31,7 @@
 #define SWITCH_OUT    0
 
 extern BOOL UsbKeyboardParse(UINT8 *pUsb, UINT8 *pOut, HID_SEG_STRUCT *pKeyboardSegStruct, KEYBOARD_PARSE_STRUCT *pKeyboardParseStruct);
-
+void ProcessHIDData(Interface *pInterface, UINT8 *pData, UINT16 len);
 extern BOOL UsbMouseParse(UINT8 *pUsb, UINT8 *pOut, HID_SEG_STRUCT *pMouseDataStruct);
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "type.h"
 
-BOOL ParseReportDescriptor(const UINT8 *pDescriptor, UINT16 len, HID_SEG_STRUCT *const pHidSegStruct);
+BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_SEG_STRUCT *pHidSegStruct);
 
 #endif
 

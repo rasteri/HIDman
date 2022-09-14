@@ -1,16 +1,13 @@
 #include "Type.h"
-
-#include "Protocol.h"
-//#include "UsbHost2.h"
 #include "ParseHidData.h"
 #include "util.h"
 
-void ProcessHIDData(Interface *pInterface, UINT8 *pData, UINT16 len)
+/*void ProcessHIDData(Interface *pInterface, UINT8 *pData, UINT16 len)
 {
 
 
 	
-/*	UINT8 buffer[KEYBOARD_LEN + 2];
+	UINT8 buffer[KEYBOARD_LEN + 2];
 	UINT8 pktLen;
 	UINT8 interfaceClass = pInterface->InterfaceClass;
 	UINT8 interfaceProtocol = pInterface->InterfaceProtocol;
@@ -46,8 +43,8 @@ void ProcessHIDData(Interface *pInterface, UINT8 *pData, UINT16 len)
 			}
 			ANDYS_DEBUG_OUT("\n");
 		}
-	}*/
-}
+	}
+}*/
 
 static UINT8C lowest_bit_bitmap[] =
 {

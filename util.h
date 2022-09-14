@@ -24,6 +24,10 @@ void UART0Send(unsigned char b);
 #define PIN_MODE_INPUT_OUTPUT_PULLUP_2CLK 6
 void pinMode(unsigned char port, unsigned char pin, unsigned char mode);
 
+#define DYNAMIC_MEMORY_SIZE 0x400
+extern unsigned char __xdata dynamic_memory_pool[DYNAMIC_MEMORY_SIZE];
+
+
 typedef void(* __data FunctionReference)();
 extern FunctionReference runBootloader;
 

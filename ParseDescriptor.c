@@ -1,67 +1,61 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "Type.h"
-#include "util.h"
 #include "UsbDef.h"
 #include "UsbHost.h"
 
-#define LITTLE_EADIAN       0
-static UINT16  GetUnaligned16(const UINT8 *start)
+#define LITTLE_EADIAN 1
+static UINT16 GetUnaligned16(const UINT8 *start)
 {
 #if LITTLE_EADIAN
 	return *(UINT16 *)start;
 #else
 	UINT16 dat = (*start) | (*(start + 1) << 8);
-	
+
 	return dat;
 #endif
 }
 
-static UINT32  GetUnaligned32(const UINT8 *start)
+static UINT32 GetUnaligned32(const UINT8 *start)
 {
 #if LITTLE_EADIAN
 	return *(UINT32 *)start;
 #else
 	UINT32 dat = (UINT32)(*start) | ((UINT32)(*(start + 1)) << 8) | ((UINT32)(*(start + 2)) << 16) | ((UINT32)(*(start + 3)) << 24);
-	
+
 	return dat;
 #endif
 }
 
-static UINT32  ItemUData(const HID_ITEM* itemInfo)
+static UINT32 ItemUData(const HID_ITEM *itemInfo)
 {
 	switch (itemInfo->size)
 	{
-	case 1:  return itemInfo->value.u8;
-	case 2:  return itemInfo->value.u16;
-	case 4:  return itemInfo->value.u32;
+	case 1:
+		return itemInfo->value.u8;
+	case 2:
+		return itemInfo->value.u16;
+	case 4:
+		return itemInfo->value.u32;
 	}
 
 	return 0;
 }
 
-static INT32  ItemSData(const HID_ITEM* itemInfo)
+static INT32 ItemSData(const HID_ITEM *itemInfo)
 {
 	switch (itemInfo->size)
 	{
-	case 1:  return itemInfo->value.s8;
-	case 2:  return itemInfo->value.s16;
-	case 4:  return itemInfo->value.s32;
+	case 1:
+		return itemInfo->value.s8;
+	case 2:
+		return itemInfo->value.s16;
+	case 4:
+		return itemInfo->value.s32;
 	}
-	
-	return 0;
-}
 
-static void InitHidGlobal(HID_GLOBAL *pHidGlobal)
-{
-	pHidGlobal->usagePage = REPORT_USAGE_UNKNOWN;
-	pHidGlobal->logicalMinimum = 0;
-	pHidGlobal->logicalMaximum = 0;
-	pHidGlobal->physicalMinimum = 0;
-	pHidGlobal->physicalMaximum = 0;
-	pHidGlobal->unitExponent = 0;
-	pHidGlobal->unit = 0;
-	pHidGlobal->reportID = 0;
-	pHidGlobal->reportSize = 0;
-	pHidGlobal->reportCount = 0;
+	return 0;
 }
 
 static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
@@ -71,11 +65,10 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 	{
 		return NULL;
 	}
-
 	b = *start++;
 
 	item->type = (b >> 2) & 3;
-	item->tag  = (b >> 4) & 15;
+	item->tag = (b >> 4) & 15;
 
 	if (item->tag == HID_ITEM_TAG_LONG)
 	{
@@ -125,7 +118,7 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 		}
 
 		item->value.u16 = GetUnaligned16(start);
-		start = (UINT8 *)((UINT16 *)start + 1);
+		start += 2;
 
 		return start;
 
@@ -137,259 +130,257 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 		}
 
 		item->value.u32 = GetUnaligned32(start);
-		start = (UINT8 *)((UINT32 *)start + 1);
+		start += 4;
 		return start;
 	}
 
 	return NULL;
 }
 
-static void InitHidSeg(HID_SEG_STRUCT *pHidSegStruct)
-{
-	UINT8 i;
-	for (i = 0; i < HID_SEG_NUM; i++)
-	{
-		pHidSegStruct->HIDSeg[i].start = 0xff;
-		pHidSegStruct->HIDSeg[i].size = 0;
-		pHidSegStruct->HIDSeg[i].count = 0;
+#define CreateNextSeg()                                                                                   \
+	if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                              \
+	{                                                                                                     \
+		pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = (HID_SEG *)malloc(sizeof(HID_SEG)); \
+		currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                         \
+	}                                                                                                     \
+	else                                                                                                  \
+	{                                                                                                     \
+		currSegPnt->next = (HID_SEG *)malloc(sizeof(HID_SEG));                                            \
+		currSegPnt = currSegPnt->next;                                                                    \
 	}
 
-	pHidSegStruct->KeyboardReportId = 0x00;
-	pHidSegStruct->MouseReportId = 0x00;
-}
-
-BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_SEG_STRUCT *pHidSegStruct)
+BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct)
 {
 	uint32_t startBit = 0;
-	uint32_t bleh = 0;
 	uint8_t tmp = 0;
-	static __xdata HID_GLOBAL	hidGlobal;
+	static __xdata HID_GLOBAL *hidGlobalPnt;
+	static __xdata HID_GLOBAL *tmpGlobal;
 	static __xdata USAGE arrUsage[MAX_USAGE_NUM];
+	static __xdata HID_LOCAL hidLocal;
+	uint8_t collectionDepth = 0;
 	UINT8 usagePtr = 0;
-	
+	uint32_t tempSB = 0;
+
 	UINT8 *start = pDescriptor;
 	UINT8 *end;
-	HID_ITEM item;
+	static __xdata HID_ITEM item;
 
-	InitHidGlobal(&hidGlobal);
-	InitHidSeg(pHidSegStruct);
+	uint32_t appUsage = 0;
+	uint32_t appUsagePage = 0;
+
+	HID_SEG *currSegPnt;
+
+	memset(pHidSegStruct, 0x00, sizeof(pHidSegStruct));
+
+	hidGlobalPnt = malloc(sizeof(HID_GLOBAL));
+	memset(hidGlobalPnt, 0x00, sizeof(HID_GLOBAL));
 
 	end = start + len;
-	
+
 	while ((start = FetchItem(start, end, &item)) != NULL)
 	{
-								tmp = (uint8_t) startBit;
-						ANDYS_DEBUG_OUT("bleh %x\n", tmp);
 
-		if (item.format != HID_ITEM_FORMAT_SHORT) 
+		if (item.format != HID_ITEM_FORMAT_SHORT)
 		{
 			goto ERR;
 		}
-	
+
 		switch (item.type)
 		{
 		case TYPE_MAIN:
 			if (item.tag == HID_MAIN_ITEM_TAG_INPUT)
 			{
-				//是输入数据
-				if (hidGlobal.usagePage == REPORT_USAGE_PAGE_KEYBOARD)
+				tempSB = startBit;
+				if (pHidSegStruct->reports[hidGlobalPnt->reportID] == NULL)
 				{
-					//是按键
+					pHidSegStruct->reports[hidGlobalPnt->reportID] = (HID_REPORT *)malloc(sizeof(HID_REPORT));
+					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = appUsagePage;
+					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsage = appUsage;
+				}
 
-					pHidSegStruct->KeyboardReportId = hidGlobal.reportID;
-					
-					if (pHidSegStruct->HIDSeg[HID_SEG_KEYBOARD_MODIFIER_INDEX].size == 0)
+				if (ItemUData(&item) & HID_INPUT_VARIABLE)
+				{
+
+					// we found some discrete usages, get to it
+					if (usagePtr)
 					{
-						pHidSegStruct->HIDSeg[HID_SEG_KEYBOARD_MODIFIER_INDEX].start = startBit;
-
-						pHidSegStruct->HIDSeg[HID_SEG_KEYBOARD_MODIFIER_INDEX].size = hidGlobal.reportSize;
-						pHidSegStruct->HIDSeg[HID_SEG_KEYBOARD_MODIFIER_INDEX].count = hidGlobal.reportCount;
+						// need to make a seg for each found usage
+						for (int i = 0; i < usagePtr; i++)
+						{
+							CreateNextSeg();
+							printf("s1 %hx\n", (uint16_t)currSegPnt);
+							currSegPnt->global = hidGlobalPnt;
+							currSegPnt->startBit = tempSB;
+							currSegPnt->usage = arrUsage[i].usage;
+							currSegPnt->inputField = ItemUData(&item);
+							tempSB += hidGlobalPnt->reportSize;
+						}
+					}
+					// if no usages found, add min/max style
+					else if (hidLocal.usageMin != 0xffffffff && hidLocal.usageMax != 0xFFFFFFFF)
+					{
+						// need to make a seg for each usage in the range
+						for (uint32_t i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
+						{
+							CreateNextSeg();
+							printf("s2 %hx\n", (uint16_t)currSegPnt);
+							currSegPnt->global = hidGlobalPnt;
+							currSegPnt->usage = i;
+							currSegPnt->inputField = ItemUData(&item);
+							currSegPnt->startBit = tempSB;
+							tempSB += hidGlobalPnt->reportSize;
+						}
 					}
 					else
 					{
-						pHidSegStruct->HIDSeg[HID_SEG_KEYBOARD_VAL_INDEX].start = startBit;
-
-						pHidSegStruct->HIDSeg[HID_SEG_KEYBOARD_VAL_INDEX].size = hidGlobal.reportSize;
-						pHidSegStruct->HIDSeg[HID_SEG_KEYBOARD_VAL_INDEX].count = hidGlobal.reportCount;
 					}
-					
-					startBit += hidGlobal.reportSize * hidGlobal.reportCount;
 				}
-				else if (hidGlobal.usagePage == REPORT_USAGE_PAGE_BUTTON)
-				{
-					//是按键
-					UINT32 dat = ItemUData(&item);
-
-					pHidSegStruct->MouseReportId = hidGlobal.reportID;
-					
-					if (!(dat & 0x01))
-					{
-						tmp = (uint8_t) startBit;
-						ANDYS_DEBUG_OUT("btn %x\n", tmp);
-						//为变量
-						pHidSegStruct->HIDSeg[HID_SEG_BUTTON_INDEX].start = startBit;
-						pHidSegStruct->HIDSeg[HID_SEG_BUTTON_INDEX].size = hidGlobal.reportSize;
-						pHidSegStruct->HIDSeg[HID_SEG_BUTTON_INDEX].count = hidGlobal.reportCount;
-					}
-					
-					startBit += hidGlobal.reportSize * hidGlobal.reportCount;
-				}
+				// Item is array style, whole range appears in every segment
 				else
 				{
-					if (usagePtr > 0)
+					// need to make a seg for each report seg
+					for (int i = 0; i < hidGlobalPnt->reportCount; i++)
 					{
-						//有usage
-						UINT8 i = 0;
-						while (i < usagePtr)
-						{
-							if (arrUsage[i].usageLen == 1)
-							{
-								if (arrUsage[i].usage == REPORT_USAGE_X)
-								{
-									//是x
-									pHidSegStruct->HIDSeg[HID_SEG_X_INDEX].start = startBit;
-									pHidSegStruct->HIDSeg[HID_SEG_X_INDEX].size = hidGlobal.reportSize;
-									pHidSegStruct->HIDSeg[HID_SEG_X_INDEX].count = 1;
-
-									startBit += hidGlobal.reportSize;
-								}
-								else if (arrUsage[i].usage == REPORT_USAGE_Y)
-								{
-									//是y
-									pHidSegStruct->HIDSeg[HID_SEG_Y_INDEX].start = startBit;
-									pHidSegStruct->HIDSeg[HID_SEG_Y_INDEX].size = hidGlobal.reportSize;
-									pHidSegStruct->HIDSeg[HID_SEG_Y_INDEX].count = 1;
-
-									startBit += hidGlobal.reportSize;
-								}
-								else if (arrUsage[i].usage == REPORT_USAGE_WHEEL)
-								{
-									//是滚轮
-									pHidSegStruct->HIDSeg[HID_SEG_WHEEL_INDEX].start = startBit;
-									pHidSegStruct->HIDSeg[HID_SEG_WHEEL_INDEX].size = hidGlobal.reportSize;
-									pHidSegStruct->HIDSeg[HID_SEG_WHEEL_INDEX].count = 1;
-
-									startBit += hidGlobal.reportSize;
-								}
-								else
-								{
-									//其它page
-									if (usagePtr == 1)
-									{
-										//只有一个page
-										startBit += hidGlobal.reportSize * hidGlobal.reportCount;
-									}
-									else
-									{
-										//有多个page
-										startBit += hidGlobal.reportSize;
-									}
-								}
-							}
-							else
-							{
-								if (usagePtr == 1)
-								{
-									//只有一个page
-									startBit += hidGlobal.reportSize * hidGlobal.reportCount;
-								}
-								else
-								{
-									//有多个page
-									startBit += hidGlobal.reportSize;
-								}
-							}
-							
-							i++;
-						}
+						CreateNextSeg();
+						printf("s3 %hx\n", (uint16_t)currSegPnt);
+						currSegPnt->global = hidGlobalPnt;
+						currSegPnt->inputField = ItemUData(&item);
+						currSegPnt->usageMin = hidLocal.usageMin;
+						currSegPnt->usageMax = hidLocal.usageMax;
+						currSegPnt->startBit = tempSB;
+						tempSB += hidGlobalPnt->reportSize;
 					}
-				}	
+				}
+
+				startBit += hidGlobalPnt->reportSize * hidGlobalPnt->reportCount;
+				pHidSegStruct->reports[hidGlobalPnt->reportID]->length = startBit;
 			}
-			
+			else if (item.tag == HID_MAIN_ITEM_TAG_COLLECTION_START)
+			{
+				collectionDepth++;
+				if (ItemUData(&item) == HID_COLLECTION_APPLICATION)
+				{
+					// Make a note of this application collection's usage/page
+					// (so we know what sort of device this is)
+					appUsage = hidLocal.usage;
+
+					appUsagePage = hidGlobalPnt->usagePage;
+				}
+			}
+			else if (item.tag == HID_MAIN_ITEM_TAG_COLLECTION_END)
+			{
+				collectionDepth--;
+
+				// Only advance app if we're at the root level
+				if (collectionDepth == 0)
+				{
+					appUsage = 0x00;
+					appUsagePage = 0x00;
+				}
+			}
+
 			usagePtr = 0;
-			
+			hidLocal.usage = 0x00;
+			hidLocal.usageMax = 0xffffffff;
+			hidLocal.usageMin = 0xffffffff;
+
 			break;
-			
+
 		case TYPE_GLOBAL:
+
+			tmpGlobal = malloc(sizeof(HID_GLOBAL));
+			memcpy(tmpGlobal, hidGlobalPnt, sizeof(HID_GLOBAL));
+			hidGlobalPnt = tmpGlobal;
 
 			switch (item.tag)
 			{
 			case HID_GLOBAL_ITEM_TAG_REPORT_ID:
-				//report id
+				pHidSegStruct->usesReports = 1;
+				// report id
+				startBit = 0;
 				startBit += item.size * 8;
 
-				hidGlobal.reportID = ItemUData(&item);
-
+				hidGlobalPnt->reportID = ItemUData(&item);
 
 				break;
-			
-			case HID_GLOBAL_ITEM_TAG_LOGICAL_MINIMUM:				
-				hidGlobal.logicalMinimum = ItemSData(&item);
+
+			case HID_GLOBAL_ITEM_TAG_LOGICAL_MINIMUM:
+				hidGlobalPnt->logicalMinimum = ItemSData(&item);
 
 				break;
 
 			case HID_GLOBAL_ITEM_TAG_LOGICAL_MAXIMUM:
-				if (hidGlobal.logicalMinimum < 0)
+				if (hidGlobalPnt->logicalMinimum < 0)
 				{
-					hidGlobal.logicalMaximum = ItemSData(&item);
+					hidGlobalPnt->logicalMaximum = ItemSData(&item);
 				}
 				else
 				{
-					hidGlobal.logicalMaximum = ItemUData(&item);
+					hidGlobalPnt->logicalMaximum = ItemUData(&item);
 				}
-				
+
 				break;
 
 			case HID_GLOBAL_ITEM_TAG_PHYSICAL_MINIMUM:
-				hidGlobal.physicalMinimum = ItemSData(&item);
+				hidGlobalPnt->physicalMinimum = ItemSData(&item);
 
 				break;
-				
+
 			case HID_GLOBAL_ITEM_TAG_PHYSICAL_MAXIMUM:
-				if (hidGlobal.physicalMinimum < 0)
+				if (hidGlobalPnt->physicalMinimum < 0)
 				{
-					hidGlobal.physicalMaximum = ItemSData(&item);
+					hidGlobalPnt->physicalMaximum = ItemSData(&item);
 				}
 				else
 				{
-					hidGlobal.physicalMaximum = ItemUData(&item);
+					hidGlobalPnt->physicalMaximum = ItemUData(&item);
 				}
 
 				break;
-				
+
 			case HID_GLOBAL_ITEM_TAG_REPORT_SIZE:
-				hidGlobal.reportSize = ItemUData(&item);
+				hidGlobalPnt->reportSize = ItemUData(&item);
 
 				break;
 
 			case HID_GLOBAL_ITEM_TAG_REPORT_COUNT:
-				hidGlobal.reportCount = ItemUData(&item);
+				hidGlobalPnt->reportCount = ItemUData(&item);
 
 				break;
 
 			case HID_GLOBAL_ITEM_TAG_USAGE_PAGE:
-				hidGlobal.usagePage = ItemUData(&item);
+				hidGlobalPnt->usagePage = ItemUData(&item);
 
 				break;
 
 			default:
 				break;
 			}
-			
+
 			break;
 
 		case TYPE_LOCAL:
 			if (item.tag == HID_LOCAL_ITEM_TAG_USAGE)
 			{
+				
+				hidLocal.usage = ItemUData(&item);
+
 				if (usagePtr < MAX_USAGE_NUM)
 				{
 					arrUsage[usagePtr].usage = ItemUData(&item);
-					arrUsage[usagePtr].usageLen = item.size;
 
 					usagePtr++;
 				}
 			}
-			
+			else if (item.tag == HID_LOCAL_ITEM_TAG_USAGE_MIN)
+			{
+				hidLocal.usageMin = ItemUData(&item);
+			}
+			else if (item.tag == HID_LOCAL_ITEM_TAG_USAGE_MAX)
+			{
+				hidLocal.usageMax = ItemUData(&item);
+			}
+
 			break;
 		}
 
@@ -398,8 +389,53 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_SEG_STRUCT *pHidS
 			return TRUE;
 		}
 	}
-	
+
 ERR:
 	return FALSE;
 }
+/*
+uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 
+bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
+{
+
+	HID_REPORT *descReport;
+	HID_SEG *currSeg;
+	uint8_t *currByte;
+	uint8_t tmp;
+
+	if (desc->usesReports)
+	{
+		// first byte of report will be the report number
+		descReport = desc->reports[report[0]];
+	}
+	else
+	{
+		descReport = desc->reports[0];
+	}
+
+	// sanity check length
+	if (descReport->length != len)
+	{
+		printf("Bad length - %d -> %d\n", descReport->length, len);
+		return 0;
+	}
+	printf("OK length %d\n", len);
+
+	currSeg = descReport->firstHidSeg;
+
+	// TODO handle segs that are bigger than 8 bits
+	while (currSeg != NULL)
+	{
+
+		// find byte
+		currByte = report + (currSeg->startBit >> 3);
+
+		// find bits
+		currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
+						 & bitMasks[currSeg->global->reportSize];	 // mask off the bits according to seg size
+
+		currSeg = currSeg->next;
+	}
+}
+*/

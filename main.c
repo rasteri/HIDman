@@ -8,6 +8,7 @@
 #include "uart.h"
 #include "protocol.h"
 #include "ps2.h"
+#include "parsedescriptor.h"
 
 SBIT(LED, 0x90, 6);
 SBIT(KEY_CLOCK, 0xB0, 4);
@@ -38,14 +39,18 @@ void mTimer0Interrupt(void) __interrupt(1)
 	}
 }
 
+
 void main()
 {
 	unsigned char s;
 	uint8_t keyindex;
 	uint8_t init = 0;
+	uint8_t fun = 0;
 	initClock();
 	initUART0(1000000, 0);
 	ANDYS_DEBUG_OUT("Startup\n");
+
+
 	resetHubDevices(0);
 	resetHubDevices(1);
 	initUSB_Host();
@@ -88,8 +93,8 @@ void main()
 			runBootloader();
 		//processUart();
 		s = checkRootHubConnections();
-		pollHIDdevice();
-		HandleRepeats();
-
+		//pollHIDdevice();
+		//HandleRepeats();
+		//DumpyTown();
 	}
 }

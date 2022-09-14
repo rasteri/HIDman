@@ -7,6 +7,7 @@ OBJDIR = ./build
 TARGET = hidman
 
 OBJECTS = \
+$(OBJDIR)/_heap.rel \
 $(OBJDIR)/main.rel \
 $(OBJDIR)/util.rel \
 $(OBJDIR)/USBHost.rel \
@@ -14,19 +15,18 @@ $(OBJDIR)/uart.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/data.rel \
 $(OBJDIR)/protocol.rel \
-$(OBJDIR)/ParseDescriptor.rel \
-$(OBJDIR)/ParseHidData.rel
+$(OBJDIR)/ParseDescriptor.rel
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
 endif
 
 ifndef XRAM_SIZE
-XRAM_SIZE = 0x0A00
+XRAM_SIZE = 0x1600
 endif
 
 ifndef XRAM_LOC
-XRAM_LOC = 0x0600
+XRAM_LOC = 0x0200
 endif
 
 ifndef CODE_SIZE
@@ -35,7 +35,7 @@ endif
 
 CFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
-	--code-size $(CODE_SIZE) \
+	--code-size $(CODE_SIZE) -DHEAP_SIZE=3500 \
 	-I/ -DFREQ_SYS=$(FREQ_SYS) \
 	$(EXTRA_FLAGS)
 

@@ -130,16 +130,16 @@ typedef struct _EndPoint
 
 typedef struct _HID_GLOBAL
 {
-	UINT32 usagePage;
-	INT32 logicalMinimum;
-	INT32 logicalMaximum;
-	INT32 physicalMinimum;
-	INT32 physicalMaximum;
-	UINT32 unitExponent;
-	UINT32 unit;
-	UINT32 reportID;
-	UINT32 reportSize;
-	UINT32 reportCount;
+	UINT16 usagePage;
+	INT16 logicalMinimum;
+	INT16 logicalMaximum;
+	INT16 physicalMinimum;
+	INT16 physicalMaximum;
+	UINT16 unitExponent;
+	UINT16 unit;
+	UINT16 reportID;
+	UINT16 reportSize;
+	UINT16 reportCount;
 } HID_GLOBAL;
 
 typedef struct _HID_LOCAL
@@ -159,10 +159,10 @@ typedef struct _USAGE
 
 typedef struct HID_SEG
 {
-	uint32_t startBit;
-	uint32_t usage;
-	uint32_t usageMin;
-	uint32_t usageMax;
+	uint16_t startBit;
+	uint16_t usage;
+	uint16_t usageMin;
+	uint16_t usageMax;
 	HID_GLOBAL *global;
 
 	uint8_t oldValue;
@@ -175,9 +175,9 @@ typedef struct HID_SEG
 
 typedef struct _HID_REPORT
 {
-	uint32_t appUsage;
-	uint32_t appUsagePage;
-	uint32_t length;
+	uint16_t appUsage;
+	uint16_t appUsagePage;
+	uint16_t length;
 	HID_SEG *firstHidSeg;
 } HID_REPORT;
 

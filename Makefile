@@ -35,7 +35,7 @@ endif
 
 CFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
-	--code-size $(CODE_SIZE) -DHEAP_SIZE=3500 \
+	--code-size $(CODE_SIZE) -DHEAP_SIZE=3072 \
 	-I/ -DFREQ_SYS=$(FREQ_SYS) \
 	$(EXTRA_FLAGS)
 

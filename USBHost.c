@@ -515,35 +515,12 @@ void pollHIDdevice()
 			s = hostTransfer(USB_PID_IN << 4 | HIDdevice[hiddevice].endPoint & 0x7F, HIDdevice[hiddevice].endPoint & 0x80 ? bUH_R_TOG | bUH_T_TOG : 0, 0);
 			if (s == ERR_SUCCESS)
 			{
-				if (HIDdevice[hiddevice].type == Usage_KEYBOARD)
-					P3 ^= 0b10000000;
 				HIDdevice[hiddevice].endPoint ^= 0x80;
 				len = USB_RX_LEN;
 				if (len)
 				{
 					LED = !LED;
-					/*if (HIDdevice[hiddevice].type == Usage_KEYBOARD)
-					{
-						if (UsbKeyboardParse(RxBuffer, keyboardData, &HIDdevice[hiddevice].HidSegStruct, &HIDdevice[hiddevice].KeyboardParseStruct))
-						{
-							for (int b = 0; b < KEYBOARD_LEN; b++)
-								ANDYS_DEBUG_OUT("%x ", keyboardData[b]);
-
-							ANDYS_DEBUG_OUT("\n");
-						}
-					}
-					else if (HIDdevice[hiddevice].type == Usage_MOUSE)
-					{
-						if (UsbMouseParse(RxBuffer, keyboardData, &HIDdevice[hiddevice].HidSegStruct))
-						{
-							for (int b = 0; b < MOUSE_LEN; b++)
-								ANDYS_DEBUG_OUT("%x ", keyboardData[b]);
-
-							ANDYS_DEBUG_OUT("\n");
-						}
-					}*/
-					//SendHIDPS2(len, hiddevice, HIDdevice[hiddevice].type, RxBuffer);
-					//sendHidPollMSG(MSG_TYPE_DEVICE_POLL,len, HIDdevice[hiddevice].type, hiddevice, HIDdevice[hiddevice].endPoint & 0x7F, RxBuffer,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorL,VendorProductID[HIDdevice[hiddevice].rootHub].idVendorH,VendorProductID[HIDdevice[hiddevice].rootHub].idProductL,VendorProductID[HIDdevice[hiddevice].rootHub].idProductH);
+					ParseReport(&HIDdevice[hiddevice].HidSegStruct, len * 8, RxBuffer);
 				}
 			}
 		}
@@ -786,6 +763,7 @@ unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 	//sendProtocolMSG(MSG_TYPE_HID_INFO, len, CurrentDevive, HIDdevice[CurrentDevive].interface, HIDdevice[CurrentDevive].rootHub, receiveDataBuffer);
 	//parseHIDDeviceReport(receiveDataBuffer, len, CurrentDevive);
 	ParseReportDescriptor(receiveDataBuffer, len, &HIDdevice[CurrentDevive].HidSegStruct);
+	DumpyTown();
 
 	/*ANDYS_DEBUG_OUT("KeyboardReportId : %x\n", HIDdevice[CurrentDevive].HidSegStruct.KeyboardReportId);
 	ANDYS_DEBUG_OUT("MouseReportId : %x\n\n", HIDdevice[CurrentDevive].HidSegStruct.MouseReportId);
@@ -1026,12 +1004,13 @@ void DumpyTown()
 {
 	HID_REPORT_DESC *bleh;
 	HID_SEG *tmpseg;
-
+	printf("\033[2J\033[H");
 	for (uint8_t y = 0; y < MAX_HID_DEVICES; y++)
 	{
-		
+
 		if (HIDdevice[y].connected)
 		{
+			printf("---- DEVICE %d ----\n", y);
 			bleh = &(HIDdevice[y].HidSegStruct);
 			for (uint8_t x = 0; x < MAX_REPORTS; x++)
 			{
@@ -1039,10 +1018,10 @@ void DumpyTown()
 				{
 					tmpseg = bleh->reports[x]->firstHidSeg;
 
-					printf("Report %x, usage %lx, length %lu: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
+					printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
 					while (tmpseg != NULL)
 					{
-						printf("  startbit %lu, usagepage %lx, usage %lx, size %lx -- value %x\n", tmpseg->startBit, tmpseg->global->usagePage, tmpseg->usage, tmpseg->global->reportSize, tmpseg->value);
+						printf("  startbit %u, usagepage %x, usage %x, size %x -- value %x\n", tmpseg->startBit, tmpseg->global->usagePage, tmpseg->usage, tmpseg->global->reportSize, tmpseg->value);
 						tmpseg = tmpseg->next;
 					}
 				}

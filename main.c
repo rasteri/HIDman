@@ -93,8 +93,7 @@ void main()
 			runBootloader();
 		//processUart();
 		s = checkRootHubConnections();
-		//pollHIDdevice();
-		//HandleRepeats();
-		//DumpyTown();
+		pollHIDdevice();
+		HandleRepeats();
 	}
 }

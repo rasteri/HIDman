@@ -1,9 +1,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "ch559.h"
 #include "Type.h"
 #include "UsbDef.h"
 #include "UsbHost.h"
+#include "protocol.h"
+
+#include "ps2.h"
 
 #define LITTLE_EADIAN 1
 static UINT16 GetUnaligned16(const UINT8 *start)
@@ -217,7 +221,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 						}
 					}
 					// if no usages found, add min/max style
-					else if (hidLocal.usageMin != 0xffffffff && hidLocal.usageMax != 0xFFFFFFFF)
+					else if (hidLocal.usageMin != 0xffff && hidLocal.usageMax != 0xFFFF)
 					{
 						// need to make a seg for each usage in the range
 						for (uint32_t i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
@@ -281,8 +285,8 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 
 			usagePtr = 0;
 			hidLocal.usage = 0x00;
-			hidLocal.usageMax = 0xffffffff;
-			hidLocal.usageMin = 0xffffffff;
+			hidLocal.usageMax = 0xffff;
+			hidLocal.usageMin = 0xffff;
 
 			break;
 
@@ -362,7 +366,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 		case TYPE_LOCAL:
 			if (item.tag == HID_LOCAL_ITEM_TAG_USAGE)
 			{
-				
+
 				hidLocal.usage = ItemUData(&item);
 
 				if (usagePtr < MAX_USAGE_NUM)
@@ -393,49 +397,5 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 ERR:
 	return FALSE;
 }
-/*
-uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 
-bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
-{
 
-	HID_REPORT *descReport;
-	HID_SEG *currSeg;
-	uint8_t *currByte;
-	uint8_t tmp;
-
-	if (desc->usesReports)
-	{
-		// first byte of report will be the report number
-		descReport = desc->reports[report[0]];
-	}
-	else
-	{
-		descReport = desc->reports[0];
-	}
-
-	// sanity check length
-	if (descReport->length != len)
-	{
-		printf("Bad length - %d -> %d\n", descReport->length, len);
-		return 0;
-	}
-	printf("OK length %d\n", len);
-
-	currSeg = descReport->firstHidSeg;
-
-	// TODO handle segs that are bigger than 8 bits
-	while (currSeg != NULL)
-	{
-
-		// find byte
-		currByte = report + (currSeg->startBit >> 3);
-
-		// find bits
-		currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
-						 & bitMasks[currSeg->global->reportSize];	 // mask off the bits according to seg size
-
-		currSeg = currSeg->next;
-	}
-}
-*/

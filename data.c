@@ -3,6 +3,29 @@
 #include <stdio.h>
 #include <string.h>
 #include "ps2.h"
+#include "defs.h"
+
+__xdata JoyMap JoyPresets[] = {
+
+    {
+        0,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Usage Page
+        1,                        // Usage
+        MAP_KEYBOARD,             // Output Channel
+        0x04,                     // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        0,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_X,            // Usage
+        MAP_KEYBOARD,              // Output Channel
+        0x05,                      // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE,  // InputType
+        192                        // Input Param
+    },
+};
 
 __code uint8_t KEY_A_MAKE[] = {1, 0x1C};
 __code uint8_t KEY_B_MAKE[] = {1, 0x32};
@@ -109,7 +132,6 @@ __code uint8_t KEY_COMMA_MAKE[] = {1, 0x41};
 __code uint8_t KEY_PERIOD_MAKE[] = {1, 0x49};
 __code uint8_t KEY_FWSLASH_MAKE[] = {1, 0x4A};
 
-
 __code uint8_t KEY_A_BREAK[] = {2, 0xF0, 0x1C};
 __code uint8_t KEY_B_BREAK[] = {2, 0xF0, 0x32};
 __code uint8_t KEY_C_BREAK[] = {2, 0xF0, 0x21};
@@ -156,10 +178,10 @@ __code uint8_t KEY_TAB_BREAK[] = {2, 0xF0, 0x0D};
 __code uint8_t KEY_CAPS_BREAK[] = {2, 0xF0, 0x58};
 __code uint8_t KEY_LSHIFT_BREAK[] = {2, 0xF0, 0x12};
 __code uint8_t KEY_LCTRL_BREAK[] = {2, 0xF0, 0x14};
-__code uint8_t KEY_LGUI_BREAK[] = {3, 0xE0, 0xF0,  0x1F};
+__code uint8_t KEY_LGUI_BREAK[] = {3, 0xE0, 0xF0, 0x1F};
 __code uint8_t KEY_LALT_BREAK[] = {2, 0xF0, 0x11};
 __code uint8_t KEY_RSHIFT_BREAK[] = {2, 0xF0, 0x59};
-__code uint8_t KEY_RCTRL_BREAK[] = {3, 0xE0, 0xF0,  0x14};
+__code uint8_t KEY_RCTRL_BREAK[] = {3, 0xE0, 0xF0, 0x14};
 __code uint8_t KEY_RGUI_BREAK[] = {3, 0xE0, 0xF0, 0x27};
 __code uint8_t KEY_RALT_BREAK[] = {3, 0xE0, 0xF0, 0x11};
 __code uint8_t KEY_APPS_BREAK[] = {3, 0xE0, 0xF0, 0x2F};
@@ -223,36 +245,33 @@ __code uint8_t KEY_SCANCODE_2[] = {1, 0x02};
 __code uint8_t KEY_ECHO[] = {1, 0xEE};
 __code uint8_t KEY_ERROR[] = {1, 0xFE};
 
-
-const uint8_t * const ModtoPS2_MAKE[] =
-{
-    KEY_LCTRL_MAKE,
-    KEY_LSHIFT_MAKE,
-    KEY_LALT_MAKE,
-    KEY_LGUI_MAKE,
-    KEY_RCTRL_MAKE,
-    KEY_RSHIFT_MAKE,
-    KEY_RALT_MAKE,
-    KEY_RGUI_MAKE
-};
-
-const uint8_t * const ModtoPS2_BREAK[] =
-{
-    KEY_LCTRL_BREAK,
-    KEY_LSHIFT_BREAK,
-    KEY_LALT_BREAK,
-    KEY_LGUI_BREAK,
-    KEY_RCTRL_BREAK,
-    KEY_RSHIFT_BREAK,
-    KEY_RALT_BREAK,
-    KEY_RGUI_BREAK
-};
-
-const uint8_t * const HIDtoPS2_Make[] =
+const uint8_t *const ModtoPS2_MAKE[] =
     {
-        NULL, 
-        NULL, 
-        NULL, 
+        KEY_LCTRL_MAKE,
+        KEY_LSHIFT_MAKE,
+        KEY_LALT_MAKE,
+        KEY_LGUI_MAKE,
+        KEY_RCTRL_MAKE,
+        KEY_RSHIFT_MAKE,
+        KEY_RALT_MAKE,
+        KEY_RGUI_MAKE};
+
+const uint8_t *const ModtoPS2_BREAK[] =
+    {
+        KEY_LCTRL_BREAK,
+        KEY_LSHIFT_BREAK,
+        KEY_LALT_BREAK,
+        KEY_LGUI_BREAK,
+        KEY_RCTRL_BREAK,
+        KEY_RSHIFT_BREAK,
+        KEY_RALT_BREAK,
+        KEY_RGUI_BREAK};
+
+const uint8_t *const HIDtoPS2_Make[] =
+    {
+        NULL,
+        NULL,
+        NULL,
         NULL,
         KEY_A_MAKE,
         KEY_B_MAKE,
@@ -314,7 +333,7 @@ const uint8_t * const HIDtoPS2_Make[] =
         KEY_F4_MAKE,
         KEY_F5_MAKE,
         KEY_F6_MAKE,
-        KEY_F7_MAKE,//40
+        KEY_F7_MAKE, //40
         KEY_F8_MAKE,
         KEY_F9_MAKE,
         KEY_F10_MAKE,
@@ -346,21 +365,20 @@ const uint8_t * const HIDtoPS2_Make[] =
         KEY_PAD5_MAKE,
         KEY_PAD6_MAKE,
         KEY_PAD7_MAKE,
-        KEY_PAD8_MAKE,// 60
+        KEY_PAD8_MAKE, // 60
         KEY_PAD9_MAKE,
         KEY_PAD0_MAKE,
         KEY_PADDOT_MAKE,
         NULL,
         KEY_APPS_MAKE,
         NULL,
-        KEY_EQUAL_MAKE
-        };
+        KEY_EQUAL_MAKE};
 
-const uint8_t * const HIDtoPS2_Break[] =
+const uint8_t *const HIDtoPS2_Break[] =
     {
-        NULL, 
-        NULL, 
-        NULL, 
+        NULL,
+        NULL,
+        NULL,
         NULL,
         KEY_A_BREAK,
         KEY_B_BREAK,
@@ -416,50 +434,183 @@ const uint8_t * const HIDtoPS2_Break[] =
         KEY_PERIOD_BREAK,
         KEY_FWSLASH_BREAK,
         KEY_CAPS_BREAK,
-        KEY_F1_BREAK,// = {1, 0x05};
-        KEY_F2_BREAK,// = {1, 0x06};
-        KEY_F3_BREAK,// = {1, 0x04};
-        KEY_F4_BREAK,// = {1, 0x0C};
-        KEY_F5_BREAK,// = {1, 0x03};
-        KEY_F6_BREAK,// = {1, 0x0B};
-        KEY_F7_BREAK,// = {1, 0x83}; 40
-        KEY_F8_BREAK,// = {1, 0x0A};
-        KEY_F9_BREAK,// = {1, 0x01};
-        KEY_F10_BREAK,// = {1, 0x09};
-        KEY_F11_BREAK,// = {1, 0x78};
-        KEY_F12_BREAK,// = {1, 0x07};
-        KEY_PRTSC_BREAK,// = {4, 0xE0, 0x12, 0xE0, 0x7C};
-        KEY_SCROLL_BREAK,// = {1, 0x7E};
-        KEY_PAUSE_BREAK,// = {8, 0xE1, 0x14, 0x77, 0xE1, 0xF0, 0x14, 0xF0, 0x77};
-        KEY_INSERT_BREAK,// = {2, 0xE0, 0x70};
-        KEY_HOME_BREAK,// = {2, 0xE0, 0x6C};
-        KEY_PGUP_BREAK,// = {2, 0xE0, 0x7D};
-        KEY_DELETE_BREAK,// = {2, 0xE0, 0x71};
-        KEY_END_BREAK,// = {2, 0xE0, 0x69};
-        KEY_PGDN_BREAK,// = {2, 0xE0, 0x7A};
+        KEY_F1_BREAK,     // = {1, 0x05};
+        KEY_F2_BREAK,     // = {1, 0x06};
+        KEY_F3_BREAK,     // = {1, 0x04};
+        KEY_F4_BREAK,     // = {1, 0x0C};
+        KEY_F5_BREAK,     // = {1, 0x03};
+        KEY_F6_BREAK,     // = {1, 0x0B};
+        KEY_F7_BREAK,     // = {1, 0x83}; 40
+        KEY_F8_BREAK,     // = {1, 0x0A};
+        KEY_F9_BREAK,     // = {1, 0x01};
+        KEY_F10_BREAK,    // = {1, 0x09};
+        KEY_F11_BREAK,    // = {1, 0x78};
+        KEY_F12_BREAK,    // = {1, 0x07};
+        KEY_PRTSC_BREAK,  // = {4, 0xE0, 0x12, 0xE0, 0x7C};
+        KEY_SCROLL_BREAK, // = {1, 0x7E};
+        KEY_PAUSE_BREAK,  // = {8, 0xE1, 0x14, 0x77, 0xE1, 0xF0, 0x14, 0xF0, 0x77};
+        KEY_INSERT_BREAK, // = {2, 0xE0, 0x70};
+        KEY_HOME_BREAK,   // = {2, 0xE0, 0x6C};
+        KEY_PGUP_BREAK,   // = {2, 0xE0, 0x7D};
+        KEY_DELETE_BREAK, // = {2, 0xE0, 0x71};
+        KEY_END_BREAK,    // = {2, 0xE0, 0x69};
+        KEY_PGDN_BREAK,   // = {2, 0xE0, 0x7A};
         KEY_RIGHT_BREAK,
         KEY_LEFT_BREAK, // 50
         KEY_DOWN_BREAK,
         KEY_UP_BREAK,
-        KEY_NUM_BREAK,// = {1, 0x77};
-        KEY_PADFWSLASH_BREAK,// = {2, 0xE0, 0x4A};
-        KEY_PADASTERISK_BREAK,// = {1, 0x7C};
-        KEY_PADMINUS_BREAK,// = {1, 0x7B};
-        KEY_PADPLUS_BREAK,// = {1, 0x79};
-        KEY_PADEN_BREAK,// = {2, 0xE0, 0x5A};
-        KEY_PAD1_BREAK,// = {1, 0x69};
-        KEY_PAD2_BREAK,// = {1, 0x71};
-        KEY_PAD3_BREAK,// = {1, 0x7A};
-        KEY_PAD4_BREAK,// = {1, 0x6B};
-        KEY_PAD5_BREAK,// = {1, 0x73};
-        KEY_PAD6_BREAK,// = {1, 0x74};
-        KEY_PAD7_BREAK,// = {1, 0x6C};
-        KEY_PAD8_BREAK,// = {1, 0x75}; 60
-        KEY_PAD9_BREAK,// = {1, 0x7D};
-        KEY_PAD0_BREAK,// = {1, 0x70};
+        KEY_NUM_BREAK,         // = {1, 0x77};
+        KEY_PADFWSLASH_BREAK,  // = {2, 0xE0, 0x4A};
+        KEY_PADASTERISK_BREAK, // = {1, 0x7C};
+        KEY_PADMINUS_BREAK,    // = {1, 0x7B};
+        KEY_PADPLUS_BREAK,     // = {1, 0x79};
+        KEY_PADEN_BREAK,       // = {2, 0xE0, 0x5A};
+        KEY_PAD1_BREAK,        // = {1, 0x69};
+        KEY_PAD2_BREAK,        // = {1, 0x71};
+        KEY_PAD3_BREAK,        // = {1, 0x7A};
+        KEY_PAD4_BREAK,        // = {1, 0x6B};
+        KEY_PAD5_BREAK,        // = {1, 0x73};
+        KEY_PAD6_BREAK,        // = {1, 0x74};
+        KEY_PAD7_BREAK,        // = {1, 0x6C};
+        KEY_PAD8_BREAK,        // = {1, 0x75}; 60
+        KEY_PAD9_BREAK,        // = {1, 0x7D};
+        KEY_PAD0_BREAK,        // = {1, 0x70};
         KEY_PADDOT_BREAK,
         NULL,
         KEY_APPS_BREAK,
         NULL,
-        KEY_EQUAL_BREAK
+        KEY_EQUAL_BREAK};
+
+__code uint8_t ASCIItoHID[] = {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0x28, // 10
+    0,
+    0,
+    0x28,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0, // 20
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0, // 30
+   0,
+    0x2C,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // 40
+    0,
+    0,
+    0x57,
+    0,
+    0x56,
+    0x37 ,
+    0,
+    0x27,
+    0x1e ,
+    0x1f , // 50
+    0x20 ,
+    0x21 ,
+    0x22 ,
+    0x23 ,
+    0x24 ,
+    0x25 ,
+    0x26 ,
+    0 ,
+    0,
+    0, // 60
+    0,
+    0,
+    0,
+    0,
+    0x04 ,
+    0x05 ,
+    0x06 ,
+    0x07 ,
+    0x08 ,
+    0x09 , // 70
+    0x0a ,
+    0x0b ,
+    0x0c ,
+    0x0d ,
+    0x0e ,
+    0x0f ,
+    0x10 ,
+    0x11 ,
+    0x12 ,
+    0x13 , // 80
+    0x14 ,
+    0x15 ,
+    0x16 ,
+    0x17 ,
+    0x18 ,
+    0x19 ,
+    0x1a ,
+    0x1b ,
+    0x1c ,
+    0x1d , // 90
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0x04,
+    0x05,
+    0x06,
+    0x07, // 100
+    0x08,
+    0x09, 
+    0x0a,
+    0x0b,
+    0x0c,
+    0x0d,
+    0x0e,
+    0x0f,
+    0x10,
+    0x11, //110
+    0x12,
+    0x13, 
+    0x14,
+    0x15,
+    0x16,
+    0x17,
+    0x18,
+    0x19,
+    0x1a,
+    0x1b, //120
+    0x1c,
+    0x1d, 
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0 // 130
 };

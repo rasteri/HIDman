@@ -36,8 +36,16 @@ extern __code uint8_t KEY_SCANCODE_2[];
 extern __code uint8_t KEY_ECHO[];
 extern __code uint8_t KEY_ERROR[];
 
+extern __code uint8_t KEY_LSHIFT_MAKE[];
+extern __code uint8_t KEY_LSHIFT_BREAK[];
+
 extern const uint8_t * const HIDtoPS2_Make[];
 extern const uint8_t * const HIDtoPS2_Break[];
 extern const uint8_t * const ModtoPS2_BREAK[];
 extern const uint8_t * const ModtoPS2_MAKE[];
+
+extern __code uint8_t ASCIItoHID[];
+
+#define JoyPresetNum 2
+extern __xdata JoyMap JoyPresets[];
 #endif

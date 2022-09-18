@@ -1,0 +1,188 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include "menu.h"
+#include "CH559.h"
+#include "util.h"
+#include "USBHost.h"
+#include "uart.h"
+#include "ps2.h"
+#include "data.h"
+#include "protocol.h"
+
+__xdata char SendBuffer[255];
+
+bool DumpReport = 0;
+
+__xdata bool MenuActive = 0;
+
+#define SEND_STATE_IDLE 0
+#define SEND_STATE_SHIFTON 1
+#define SEND_STATE_MAKE 2
+#define SEND_STATE_BREAK 3
+#define SEND_STATE_SHIFTOFF 4
+
+uint8_t sendBufferState = SEND_STATE_IDLE;
+
+/*bool Sendbuffer_Task()
+{
+    bool reEnter = 0;
+    do
+    {
+        reEnter = 0;
+        switch (sendBufferState)
+        {
+        case SEND_STATE_IDLE:
+            if (SendBuffer[0])
+            {
+                sendBufferState = SEND_STATE_SHIFTON;
+                reEnter = 1;
+            }
+            printf("idle\n");
+            break;
+        case SEND_STATE_SHIFTON:
+            currchar = SendBuffer[BufferIndex];
+            if (currchar)
+            {
+                if (currchar >= 0x41 && currchar <= 0x5A)
+                {
+                    if (SendKeyboard(KEY_LSHIFT_MAKE))
+                    {
+                        sendBufferState = SEND_STATE_MAKE;
+                        reEnter = 1;
+                    }
+                }
+                else
+                {
+                    sendBufferState = SEND_STATE_MAKE;
+                    reEnter = 1;
+                }
+            }
+            else
+            {
+                sendBufferState = SEND_STATE_IDLE;
+                BufferIndex = 0;
+                SendBuffer[0] = 0;
+            }
+            printf("Shifton\n");
+            break;
+
+        case SEND_STATE_MAKE:
+            if (SendKeyboard(HIDtoPS2_Make[ASCIItoHID[currchar]]))
+            {
+                sendBufferState = SEND_STATE_BREAK;
+                reEnter = 1;
+            }
+            printf("Make\n");
+            break;
+
+        case SEND_STATE_BREAK:
+            if (SendKeyboard(HIDtoPS2_Break[ASCIItoHID[currchar]]))
+            {
+                sendBufferState = SEND_STATE_SHIFTOFF;
+                reEnter = 1;
+            }
+            printf("Break\n");
+            break;
+
+        case SEND_STATE_SHIFTOFF:
+            if (SendKeyboard(KEY_LSHIFT_BREAK))
+            {
+                BufferIndex++;
+                sendBufferState = SEND_STATE_SHIFTON;
+                reEnter = 1;
+            }
+            printf("Shiftoff\n");
+            break;
+        }
+    } while (reEnter);
+}*/
+
+void SendKeyboardBuffer()
+{
+    uint8_t currchar;
+    uint8_t BufferIndex = 0;
+
+    while (1)
+    {
+        currchar = SendBuffer[BufferIndex];
+
+        if (!currchar)
+            return;
+
+        if (currchar >= 0x41 && currchar <= 0x5A)
+            while (!SendKeyboard(KEY_LSHIFT_MAKE))
+                delay(10);
+
+        while (!SendKeyboard(HIDtoPS2_Make[ASCIItoHID[currchar]]))
+            delay(10);
+        while (!SendKeyboard(HIDtoPS2_Break[ASCIItoHID[currchar]]))
+            delay(10);
+        if (currchar >= 0x41 && currchar <= 0x5A)
+        {
+            while (!SendKeyboard(KEY_LSHIFT_BREAK))
+                delay(10);
+        }
+        BufferIndex++;
+    }
+}
+
+uint8_t fuckcount = 1;
+
+#define MENU_STATE_INIT 0
+#define MENU_STATE_MAIN 1
+#define MENU_STATE_DUMPING 2
+
+uint8_t menuState = MENU_STATE_INIT;
+
+uint8_t menuKey = 0;
+
+void Menu_Press_Key(uint8_t key)
+{
+    menuKey = key;
+}
+
+void Menu_Task()
+{
+    switch (menuState)
+    {
+    case MENU_STATE_INIT:
+        SendKeyboardString("\n\nHIDMAN v0.1 Main Menu %x\n\n1. Configure game controller mappings\n2. Log HID Data\n\nESC to exit menu\n\n", allocated);
+        menuState = MENU_STATE_MAIN;
+        break;
+    case MENU_STATE_MAIN:
+        if (menuKey)
+        {
+            switch (menuKey)
+            {
+            case 0x1e: // 1
+                SendKeyboardString("Not Implemented\n");
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case 0x1f: // 2
+                SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
+                DumpReport = 1;
+                menuState = MENU_STATE_DUMPING;
+                break;
+            case 0x29: // ESC
+                menuState = MENU_STATE_INIT;
+                MenuActive = 0;
+                break;
+            }
+            menuKey = 0;
+        }
+        break;
+
+    case MENU_STATE_DUMPING:
+        if (menuKey == 0x29)
+        {
+            menuState = MENU_STATE_INIT;
+            DumpReport = 0;
+            MenuActive = 0;
+            break;
+        }
+        break;
+    }
+}

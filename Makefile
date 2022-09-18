@@ -15,6 +15,9 @@ $(OBJDIR)/uart.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/data.rel \
 $(OBJDIR)/protocol.rel \
+$(OBJDIR)/menu.rel \
+$(OBJDIR)/malloc.rel \
+$(OBJDIR)/free.rel \
 $(OBJDIR)/ParseDescriptor.rel
 
 ifndef FREQ_SYS

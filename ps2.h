@@ -48,7 +48,7 @@ extern __xdata ps2port ports[];
 
 bool GetPort(unsigned char port, unsigned char channel);
 
-void SendKeyboard(const uint8_t *chunk);
+bool SendKeyboard(const uint8_t *chunk);
 //void SendMouse();
 
 void SimonSaysSendKeyboard(const uint8_t *chunk);

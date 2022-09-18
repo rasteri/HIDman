@@ -1,12 +1,16 @@
+#include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include "CH559.h"
 #include "USBHost.h"
 #include "util.h"
 #include "ps2.h"
 #include "uart.h"
-#include <string.h>
-#include <stdbool.h>
+
 #include "protocol.h"
 #include "ParseDescriptor.h"
+#include "menu.h"
 
 SBIT(LED, 0x90, 6);
 
@@ -485,7 +489,8 @@ struct
 
 void resetHubDevices(unsigned char hubindex)
 {
-	unsigned char hiddevice;
+	unsigned char hiddevice, report;
+	HID_SEG *currSeg, *nextSeg, *globalSeg;
 	VendorProductID[hubindex].idVendorL = 0;
 	VendorProductID[hubindex].idVendorH = 0;
 	VendorProductID[hubindex].idProductL = 0;
@@ -499,6 +504,49 @@ void resetHubDevices(unsigned char hubindex)
 			HIDdevice[hiddevice].interface = 0;
 			HIDdevice[hiddevice].endPoint = 0;
 			HIDdevice[hiddevice].type = 0;
+
+			for (report = 0; report < MAX_REPORTS; report++)
+			{
+				if (HIDdevice[hiddevice].HidSegStruct.reports[report])
+				{
+					printf("Wiping report %x - ", report);
+					currSeg = HIDdevice[hiddevice].HidSegStruct.reports[report]->firstHidSeg;
+
+					// wipe all globals first
+					while (currSeg)
+					{
+						if (currSeg->global != NULL)
+						{
+							printf("G");
+							// clear all references to this global in other segs first
+							nextSeg = currSeg->next;
+							while (nextSeg)
+							{
+								if (nextSeg->global == currSeg->global)
+									nextSeg->global = NULL;
+								nextSeg = nextSeg->next;
+							}
+
+							free(currSeg->global);
+						}
+						currSeg = currSeg->next;
+					}
+
+					// now free segments
+					currSeg = HIDdevice[hiddevice].HidSegStruct.reports[report]->firstHidSeg;
+					while (currSeg)
+					{
+						printf("S");
+						nextSeg = currSeg->next;
+						free(nextSeg);
+						currSeg = nextSeg;
+					}
+					printf("R");
+					free(HIDdevice[hiddevice].HidSegStruct.reports[report]);
+					HIDdevice[hiddevice].HidSegStruct.reports[report] = NULL;
+					printf(" -\n");
+				}
+			}
 		}
 	}
 }
@@ -521,6 +569,16 @@ void pollHIDdevice()
 				{
 					LED = !LED;
 					ParseReport(&HIDdevice[hiddevice].HidSegStruct, len * 8, RxBuffer);
+
+					if (DumpReport)
+					{
+						SendKeyboardString("Interface %x Report Length %x - ", HIDdevice[hiddevice].interface, len);
+						for (uint8_t tmp = 0; tmp < len; tmp++)
+						{
+							SendKeyboardString("%x ", RxBuffer[tmp]);
+						}
+						SendKeyboardString("\n");
+					}
 				}
 			}
 		}
@@ -755,14 +813,24 @@ unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 	if (s != ERR_SUCCESS)
 		return s;
 
-	for (i = 0; i < len; i++)
+	if (DumpReport)
 	{
-		DEBUG_OUT("0x%02X ", receiveDataBuffer[i]);
+		SendKeyboardString("\n\nInterface %x Report Descriptor - \n", HIDdevice[CurrentDevive].interface);
+		for (i = 0; i < len; i++)
+		{
+			if (!(i & 0x000F))
+				SendKeyboardString("\n");
+
+			SendKeyboardString("%02X ", receiveDataBuffer[i]);
+		}
+		SendKeyboardString("\n");
+		SendKeyboardString("\n");
 	}
-	DEBUG_OUT("\n");
 	//sendProtocolMSG(MSG_TYPE_HID_INFO, len, CurrentDevive, HIDdevice[CurrentDevive].interface, HIDdevice[CurrentDevive].rootHub, receiveDataBuffer);
 	//parseHIDDeviceReport(receiveDataBuffer, len, CurrentDevive);
+
 	ParseReportDescriptor(receiveDataBuffer, len, &HIDdevice[CurrentDevive].HidSegStruct);
+
 	DumpyTown();
 
 	/*ANDYS_DEBUG_OUT("KeyboardReportId : %x\n", HIDdevice[CurrentDevive].HidSegStruct.KeyboardReportId);
@@ -985,7 +1053,6 @@ unsigned char checkRootHubConnections()
 				disableRootHubPort(1); //todo really need to reset register?
 				rootHubDevice[1].status = ROOT_DEVICE_CONNECTED;
 				DEBUG_OUT("Device at root hub %i connected\n", 1);
-				//sendProtocolMSG(MSG_TYPE_CONNECTED,0, 0x02, 0x02, 0x02, 0);
 				s = initializeRootHubConnection(1);
 			}
 		}
@@ -994,7 +1061,6 @@ unsigned char checkRootHubConnections()
 			resetHubDevices(1);
 			disableRootHubPort(1);
 			DEBUG_OUT("Device at root hub %i disconnected\n", 1);
-			//sendProtocolMSG(MSG_TYPE_DISCONNECTED,0, 0x02, 0x02, 0x02, 0);
 			s = ERR_USB_DISCON;
 		}
 	}
@@ -1021,7 +1087,7 @@ void DumpyTown()
 					printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
 					while (tmpseg != NULL)
 					{
-						printf("  startbit %u, usagepage %x, usage %x, size %x -- value %x\n", tmpseg->startBit, tmpseg->global->usagePage, tmpseg->usage, tmpseg->global->reportSize, tmpseg->value);
+						printf("  startbit %u, usagepage %hx, usage %hx, size %x -- value %x\n", tmpseg->startBit, tmpseg->global->usagePage, tmpseg->usage, tmpseg->global->reportSize, tmpseg->value);
 						tmpseg = tmpseg->next;
 					}
 				}

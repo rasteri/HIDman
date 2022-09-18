@@ -17,6 +17,7 @@
 #include "ps2.h"
 #include "data.h"
 #include "protocol.h"
+#include "menu.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
@@ -92,38 +93,32 @@ void HandleRepeats()
 	}
 }
 
-unsigned char nextMousePacket[3] = {0, 0, 0};
-bool mouseUpdated = 0;
-bool keyboardUpdated = 0;
-
-// bit map for currently pressed keys (0-256)
-__xdata uint8_t KeyboardKeyMap[32];
-__xdata uint8_t oldKeyboardKeyMap[32];
-
-void SetKey(uint8_t key)
+void SetKey(uint8_t key, HID_REPORT *report)
 {
-	KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07);
+	report->KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07);
 }
 
 void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 {
+	bool make = 0;
+	uint8_t tmp = 0;
 	if (report->appUsagePage == REPORT_USAGE_PAGE_GENERIC)
 	{
 		switch (report->appUsage)
 		{
 		case REPORT_USAGE_MOUSE:
-			mouseUpdated = 1;
+			report->mouseUpdated = 1;
 			if (currSeg->global->usagePage == REPORT_USAGE_PAGE_BUTTON && currSeg->usage <= 3)
 			{
 				uint8_t bitshifted = 0x01 << (currSeg->usage - 1);
 
 				if (currSeg->value)
 				{
-					nextMousePacket[0] |= bitshifted;
+					report->nextMousePacket[0] |= bitshifted;
 				}
 				else
 				{
-					nextMousePacket[0] &= ~bitshifted;
+					report->nextMousePacket[0] &= ~bitshifted;
 				}
 			}
 			else if (currSeg->global->usagePage == REPORT_USAGE_PAGE_GENERIC)
@@ -131,17 +126,17 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 
 				if (currSeg->usage == REPORT_USAGE_X)
 				{
-					nextMousePacket[1] = currSeg->value;
-					nextMousePacket[0] = (nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
+					report->nextMousePacket[1] = currSeg->value;
+					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
 				}
 				else if (currSeg->usage == REPORT_USAGE_Y)
 				{
 					currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
-					nextMousePacket[2] = currSeg->value;
-					nextMousePacket[0] = (nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
+					report->nextMousePacket[2] = currSeg->value;
+					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
 				}
 			}
-			nextMousePacket[0] |= 0b00001000;
+			report->nextMousePacket[0] |= 0b00001000;
 			break;
 
 		case REPORT_USAGE_KEYBOARD:
@@ -149,20 +144,83 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 			if (currSeg->global->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
 			{
 
-				keyboardUpdated = 1;
+				report->keyboardUpdated = 1;
 
 				if (currSeg->inputField & HID_INPUT_VARIABLE && currSeg->value)
 				{
-					SetKey(currSeg->usage);
+					SetKey(currSeg->usage, report);
 				}
 				else
 				{
 					//array
 					if (currSeg->value)
-						SetKey(currSeg->value);
+						SetKey(currSeg->value, report);
 				}
 			}
 			break;
+
+		case REPORT_USAGE_JOYSTICK:
+			if (currSeg->map != NULL)
+			{
+				if (currSeg->map->OutputChannel == MAP_KEYBOARD)
+					report->keyboardUpdated = 1;
+				else if (currSeg->map->OutputChannel == MAP_MOUSE)
+					report->mouseUpdated = 1;
+
+				if (currSeg->map->InputType == MAP_TYPE_THRESHOLD_ABOVE && currSeg->value > currSeg->map->InputParam)
+				{
+					make = 1;
+				}
+				else if (currSeg->map->InputType == MAP_TYPE_THRESHOLD_BELOW && currSeg->value < currSeg->map->InputParam)
+				{
+					make = 1;
+				}
+
+				else
+					make = 0;
+
+				if (make)
+				{
+					printf("make %x\n", currSeg->map->OutputControl);
+					if (currSeg->map->OutputChannel == MAP_KEYBOARD)
+					{
+						SetKey(currSeg->map->OutputControl, report);
+					}
+					else
+					{
+						switch (currSeg->map->OutputControl)
+						{
+						case MAP_MOUSE_BUTTON1:
+							report->nextMousePacket[0] |= 0x01;
+							break;
+						case MAP_MOUSE_BUTTON2:
+							report->nextMousePacket[0] |= 0x02;
+							break;
+						case MAP_MOUSE_BUTTON3:
+							report->nextMousePacket[0] |= 0x04;
+							break;
+						}
+					}
+				}
+				else if (currSeg->map->InputType == MAP_TYPE_SCALE)
+				{
+					switch (currSeg->map->OutputControl)
+					{
+					// TODO scaling
+					case MAP_MOUSE_X:
+						tmp = currSeg->value - 80;
+						report->nextMousePacket[1] = tmp;
+						report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((tmp >> 3) & 0b00010000);
+						break;
+					case MAP_MOUSE_Y:
+						tmp = (uint8_t)(-((int8_t)(currSeg->value - 80)));
+						report->nextMousePacket[2] = tmp;
+						report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((tmp >> 2) & 0b00100000);
+						break;
+					}
+				}
+				break;
+			}
 		}
 	}
 }
@@ -183,13 +241,12 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	HID_REPORT *descReport;
 	HID_SEG *currSeg;
 	uint8_t *currByte;
-	uint8_t tmp;
-
-	/*(for (tmp = 0; tmp < len; tmp++)
+	uint32_t tmp;
+	/*for (tmp = 0; tmp < (len >> 3); tmp++)
 	{
 		printf("%x ", report[tmp]);
 	}
-	printf("\n");*/
+	printf("\n\n");*/
 
 	if (desc->usesReports)
 	{
@@ -204,22 +261,15 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	// sanity check length
 	if (descReport->length != len)
 	{
-		printf("Bad length - %ld -> %ld\n", descReport->length, len);
+		printf("Bad length - %u -> %lu\n", descReport->length, len);
 		return 0;
 	}
 
 	currSeg = descReport->firstHidSeg;
 
 	// clear key map as all pressed keys should be present in report
-	if (descReport->appUsagePage == REPORT_USAGE_PAGE_GENERIC && descReport->appUsage == REPORT_USAGE_KEYBOARD)
-	{
-		memset(KeyboardKeyMap, 0, 32);
-	}
-
-	else if (descReport->appUsagePage == REPORT_USAGE_PAGE_GENERIC && descReport->appUsage == REPORT_USAGE_MOUSE)
-	{
-		memset(nextMousePacket, 0, 3);
-	}
+	memset(descReport->KeyboardKeyMap, 0, 32);
+	memset(descReport->nextMousePacket, 0, 3);
 
 	// TODO handle segs that are bigger than 8 bits
 	while (currSeg != NULL)
@@ -240,31 +290,35 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 
 		currSeg = currSeg->next;
 	}
-	if (mouseUpdated)
+	if (descReport->mouseUpdated)
 	{
-		SendMouse3(nextMousePacket[0], nextMousePacket[1], nextMousePacket[2]);
-		mouseUpdated = 0;
+		SendMouse3(descReport->nextMousePacket[0], descReport->nextMousePacket[1], descReport->nextMousePacket[2]);
+		descReport->mouseUpdated = 0;
 	}
-	if (keyboardUpdated)
+	if (descReport->keyboardUpdated)
 	{
 		for (uint8_t c = 0; c < 255; c++)
 		{
-			if (BitPresent(KeyboardKeyMap, c) && !BitPresent(oldKeyboardKeyMap, c))
+			if (BitPresent(descReport->KeyboardKeyMap, c) && !BitPresent(descReport->oldKeyboardKeyMap, c))
 			{
-				// Make
-				if (c <= 0x67)
+				if (MenuActive)
+					Menu_Press_Key(c);
+				else
 				{
-
-					SendKeyboard(HIDtoPS2_Make[c]);
-					RepeatKey = c;
-					SetRepeatState(1);
-				}
-				else if (c >= 0xE0 && c <= 0xE7)
-				{
-					SendKeyboard(ModtoPS2_MAKE[c - 0xE0]);
+					// Make
+					if (c <= 0x67)
+					{
+						SendKeyboard(HIDtoPS2_Make[c]);
+						RepeatKey = c;
+						SetRepeatState(1);
+					}
+					else if (c >= 0xE0 && c <= 0xE7)
+					{
+						SendKeyboard(ModtoPS2_MAKE[c - 0xE0]);
+					}
 				}
 			}
-			else if (!BitPresent(KeyboardKeyMap, c) && BitPresent(oldKeyboardKeyMap, c))
+			else if (!BitPresent(descReport->KeyboardKeyMap, c) && BitPresent(descReport->oldKeyboardKeyMap, c))
 			{
 				// break
 				if (c <= 0x67)
@@ -288,7 +342,9 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 				}
 			}
 		}
-		memcpy(oldKeyboardKeyMap, KeyboardKeyMap, 32);
+
+		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 32);
+		descReport->keyboardUpdated = 0;
 	}
 }
 
@@ -316,11 +372,15 @@ void SendHIDPS2(unsigned short length, unsigned char devnum, unsigned char type,
 
 					if (rbits & 0x01)
 					{
-						SendKeyboard(ModtoPS2_MAKE[j]);
+						if (MenuActive)
+							Menu_Press_Key(j + 0xE0);
+						else
+							SendKeyboard(ModtoPS2_MAKE[j]);
 					}
 					else
 					{
-						SendKeyboard(ModtoPS2_BREAK[j]);
+						if (!MenuActive)
+							SendKeyboard(ModtoPS2_BREAK[j]);
 					}
 				}
 
@@ -365,7 +425,7 @@ void SendHIDPS2(unsigned short length, unsigned char devnum, unsigned char type,
 						continue;
 
 					//send the break code
-					if (lastKeyboardHID[i] <= 0x67)
+					if (lastKeyboardHID[i] <= 0x67 && !MenuActive)
 						SendKeyboard(HIDtoPS2_Break[lastKeyboardHID[i]]);
 				}
 			}
@@ -391,9 +451,16 @@ void SendHIDPS2(unsigned short length, unsigned char devnum, unsigned char type,
 				{
 					if (msgbuffer[i] <= 0x67)
 					{
-						SendKeyboard(HIDtoPS2_Make[msgbuffer[i]]);
-						RepeatKey = msgbuffer[i];
-						SetRepeatState(1);
+						if (MenuActive)
+						{
+							Menu_Press_Key(msgbuffer[i]);
+						}
+						else
+						{
+							SendKeyboard(HIDtoPS2_Make[msgbuffer[i]]);
+							RepeatKey = msgbuffer[i];
+							SetRepeatState(1);
+						}
 					}
 				}
 			}

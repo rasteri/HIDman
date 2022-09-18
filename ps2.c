@@ -93,7 +93,7 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 	}
 }
 
-void SendKeyboard(const uint8_t *chunk)
+bool SendKeyboard(const uint8_t *chunk)
 {
 
 	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
@@ -104,9 +104,13 @@ void SendKeyboard(const uint8_t *chunk)
 	{
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
 		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
+		TR0 = 1; // re-enable timer interrupt
+		return 1;
 	}
 
 	TR0 = 1; // re-enable timer interrupt
+	printf("full\n");
+	return 0;
 }
 
 

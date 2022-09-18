@@ -6,8 +6,11 @@
 #include "UsbDef.h"
 #include "UsbHost.h"
 #include "protocol.h"
-
+#include "data.h"
 #include "ps2.h"
+#include "util.h"
+
+uint8_t JoyNum = 0;
 
 #define LITTLE_EADIAN 1
 static UINT16 GetUnaligned16(const UINT8 *start)
@@ -141,29 +144,48 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 	return NULL;
 }
 
-#define CreateNextSeg()                                                                                   \
-	if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                              \
-	{                                                                                                     \
-		pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = (HID_SEG *)malloc(sizeof(HID_SEG)); \
-		currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                         \
-	}                                                                                                     \
-	else                                                                                                  \
-	{                                                                                                     \
-		currSegPnt->next = (HID_SEG *)malloc(sizeof(HID_SEG));                                            \
-		currSegPnt = currSegPnt->next;                                                                    \
+#define CreateSeg()                                                                                           \
+	{                                                                                                         \
+		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                              \
+		{                                                                                                     \
+			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = (HID_SEG *)amalloc(sizeof(HID_SEG)); \
+			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                         \
+		}                                                                                                     \
+		else                                                                                                  \
+		{                                                                                                     \
+			currSegPnt->next = (HID_SEG *)amalloc(sizeof(HID_SEG));                                            \
+			currSegPnt = currSegPnt->next;                                                                    \
+		}                                                                                                     \
+		memset(currSegPnt, 0, sizeof(HID_SEG));                                                               \
+		currSegPnt->global = hidGlobalPnt;                                                                    \
+		currSegPnt->startBit = tempSB;                                                                        \
+		currSegPnt->inputField = ItemUData(&item);                                                            \
+		tempSB += hidGlobalPnt->reportSize;                                                                   \
+	}
+
+//search though preset to see if this matches a mapping
+#define CreateMapping()                                           \
+	for (uint8_t k = 0; k < JoyPresetNum; k++)                    \
+	{                                                             \
+		if (JoyPresets[k].UsagePage == hidGlobalPnt->usagePage && \
+			JoyPresets[k].Usage == currSegPnt->usage &&           \
+			JoyPresets[k].Number == JoyNum)                       \
+			currSegPnt->map = &JoyPresets[k];                     \
 	}
 
 BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct)
 {
-	uint32_t startBit = 0;
+	uint16_t startBit = 0;
 	uint8_t tmp = 0;
 	static __xdata HID_GLOBAL *hidGlobalPnt;
 	static __xdata HID_GLOBAL *tmpGlobal;
-	static __xdata USAGE arrUsage[MAX_USAGE_NUM];
+	static __xdata uint8_t arrUsage[MAX_USAGE_NUM];
 	static __xdata HID_LOCAL hidLocal;
 	uint8_t collectionDepth = 0;
 	UINT8 usagePtr = 0;
 	uint32_t tempSB = 0;
+
+	uint16_t i = 0;
 
 	UINT8 *start = pDescriptor;
 	UINT8 *end;
@@ -176,7 +198,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 
 	memset(pHidSegStruct, 0x00, sizeof(pHidSegStruct));
 
-	hidGlobalPnt = malloc(sizeof(HID_GLOBAL));
+	hidGlobalPnt = amalloc(sizeof(HID_GLOBAL));
 	memset(hidGlobalPnt, 0x00, sizeof(HID_GLOBAL));
 
 	end = start + len;
@@ -197,7 +219,9 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 				tempSB = startBit;
 				if (pHidSegStruct->reports[hidGlobalPnt->reportID] == NULL)
 				{
-					pHidSegStruct->reports[hidGlobalPnt->reportID] = (HID_REPORT *)malloc(sizeof(HID_REPORT));
+					pHidSegStruct->reports[hidGlobalPnt->reportID] = (HID_REPORT *)amalloc(sizeof(HID_REPORT));
+					memset(pHidSegStruct->reports[hidGlobalPnt->reportID], 0x00, sizeof(HID_REPORT));
+
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = appUsagePage;
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsage = appUsage;
 				}
@@ -209,30 +233,22 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 					if (usagePtr)
 					{
 						// need to make a seg for each found usage
-						for (int i = 0; i < usagePtr; i++)
+						for (i = 0; i < usagePtr; i++)
 						{
-							CreateNextSeg();
-							printf("s1 %hx\n", (uint16_t)currSegPnt);
-							currSegPnt->global = hidGlobalPnt;
-							currSegPnt->startBit = tempSB;
-							currSegPnt->usage = arrUsage[i].usage;
-							currSegPnt->inputField = ItemUData(&item);
-							tempSB += hidGlobalPnt->reportSize;
+							CreateSeg();
+							currSegPnt->usage = arrUsage[i];
+							CreateMapping();
 						}
 					}
 					// if no usages found, add min/max style
 					else if (hidLocal.usageMin != 0xffff && hidLocal.usageMax != 0xFFFF)
 					{
 						// need to make a seg for each usage in the range
-						for (uint32_t i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
+						for (i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
 						{
-							CreateNextSeg();
-							printf("s2 %hx\n", (uint16_t)currSegPnt);
-							currSegPnt->global = hidGlobalPnt;
+							CreateSeg();
 							currSegPnt->usage = i;
-							currSegPnt->inputField = ItemUData(&item);
-							currSegPnt->startBit = tempSB;
-							tempSB += hidGlobalPnt->reportSize;
+							CreateMapping();
 						}
 					}
 					else
@@ -243,16 +259,11 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 				else
 				{
 					// need to make a seg for each report seg
-					for (int i = 0; i < hidGlobalPnt->reportCount; i++)
+					for (i = 0; i < hidGlobalPnt->reportCount; i++)
 					{
-						CreateNextSeg();
-						printf("s3 %hx\n", (uint16_t)currSegPnt);
-						currSegPnt->global = hidGlobalPnt;
-						currSegPnt->inputField = ItemUData(&item);
+						CreateSeg();
 						currSegPnt->usageMin = hidLocal.usageMin;
 						currSegPnt->usageMax = hidLocal.usageMax;
-						currSegPnt->startBit = tempSB;
-						tempSB += hidGlobalPnt->reportSize;
 					}
 				}
 
@@ -292,7 +303,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 
 		case TYPE_GLOBAL:
 
-			tmpGlobal = malloc(sizeof(HID_GLOBAL));
+			tmpGlobal = amalloc(sizeof(HID_GLOBAL));
 			memcpy(tmpGlobal, hidGlobalPnt, sizeof(HID_GLOBAL));
 			hidGlobalPnt = tmpGlobal;
 
@@ -366,12 +377,11 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 		case TYPE_LOCAL:
 			if (item.tag == HID_LOCAL_ITEM_TAG_USAGE)
 			{
-
 				hidLocal.usage = ItemUData(&item);
 
 				if (usagePtr < MAX_USAGE_NUM)
 				{
-					arrUsage[usagePtr].usage = ItemUData(&item);
+					arrUsage[usagePtr] = ItemUData(&item);
 
 					usagePtr++;
 				}
@@ -397,5 +407,3 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 ERR:
 	return FALSE;
 }
-
-

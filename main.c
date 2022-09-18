@@ -9,6 +9,7 @@
 #include "protocol.h"
 #include "ps2.h"
 #include "parsedescriptor.h"
+#include "menu.h"
 
 SBIT(LED, 0x90, 6);
 SBIT(KEY_CLOCK, 0xB0, 4);
@@ -18,6 +19,7 @@ SBIT(MOUSE_CLOCK, 0xA0, 0);
 SBIT(MOUSE_DATA, 0xA0, 1);
 
 __xdata uint8_t repeatDiv = 0;
+uint16_t ResetCounter;
 
 // timer should run at 48MHz divided by (0xFFFF - (TH0TL0))
 // i.e. 60khz
@@ -36,9 +38,19 @@ void mTimer0Interrupt(void) __interrupt(1)
 	{
 		RepeatTimer();
 		repeatDiv = 0;
+
+		if (!(P4_IN & (1 << 6)))
+		{
+			ResetCounter++;
+			if (ResetCounter > 30000)
+			{
+				runBootloader();
+			}
+		}
+		else
+			ResetCounter = 0;
 	}
 }
-
 
 void main()
 {
@@ -49,7 +61,6 @@ void main()
 	initClock();
 	initUART0(1000000, 0);
 	ANDYS_DEBUG_OUT("Startup\n");
-
 
 	resetHubDevices(0);
 	resetHubDevices(1);
@@ -87,10 +98,18 @@ void main()
 	OutPort(PORT_MOUSE, DATA, 1);
 	OutPort(PORT_MOUSE, CLOCK, 1);
 
+	memset(SendBuffer, 0, 255);
+
+	SendKeyboardString("We are go\n");
+
 	while (1)
 	{
 		if (!(P4_IN & (1 << 6)))
-			runBootloader();
+			MenuActive = 1;
+
+		if (MenuActive)
+			Menu_Task();
+
 		//processUart();
 		s = checkRootHubConnections();
 		pollHIDdevice();

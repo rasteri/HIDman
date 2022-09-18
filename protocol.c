@@ -102,10 +102,78 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 {
 	bool make = 0;
 	uint8_t tmp = 0;
+
+	if (currSeg->OutputChannel == MAP_KEYBOARD)
+		report->keyboardUpdated = 1;
+	else if (currSeg->OutputChannel == MAP_MOUSE)
+		report->mouseUpdated = 1;
+
+	if (currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE && currSeg->value > currSeg->InputParam)
+	{
+		make = 1;
+	}
+	else if (currSeg->InputType == MAP_TYPE_THRESHOLD_BELOW && currSeg->value < currSeg->InputParam)
+	{
+		make = 1;
+	}
+
+	else
+		make = 0;
+
+	if (make)
+	{
+
+		if (currSeg->OutputChannel == MAP_KEYBOARD)
+		{
+			SetKey(currSeg->OutputControl, report);
+		}
+		else
+		{
+			switch (currSeg->OutputControl)
+			{
+			case MAP_MOUSE_BUTTON1:
+				report->nextMousePacket[0] |= 0x01;
+				break;
+			case MAP_MOUSE_BUTTON2:
+				report->nextMousePacket[0] |= 0x02;
+				break;
+			case MAP_MOUSE_BUTTON3:
+				report->nextMousePacket[0] |= 0x04;
+				break;
+			}
+		}
+	}
+	else if (currSeg->InputType == MAP_TYPE_SCALE)
+	{
+		if (currSeg->OutputChannel == MAP_MOUSE)
+		{
+			
+			switch (currSeg->OutputControl)
+			{
+			// TODO scaling
+			case MAP_MOUSE_X:
+				report->nextMousePacket[1] = currSeg->value;
+				report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
+				break;
+			case MAP_MOUSE_Y:
+				currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
+				report->nextMousePacket[2] = currSeg->value;
+				report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
+				break;
+			}
+		}
+	}
+	else if (currSeg->InputType == MAP_TYPE_ARRAY)
+	{
+		if (currSeg->OutputChannel == MAP_KEYBOARD)
+		{
+			SetKey(currSeg->value, report);
+		}
+	}
+
+	/*
 	if (report->appUsagePage == REPORT_USAGE_PAGE_GENERIC)
 	{
-		switch (report->appUsage)
-		{
 		case REPORT_USAGE_MOUSE:
 			report->mouseUpdated = 1;
 			if (currSeg->global->usagePage == REPORT_USAGE_PAGE_BUTTON && currSeg->usage <= 3)
@@ -159,70 +227,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 			}
 			break;
 
-		case REPORT_USAGE_JOYSTICK:
-			if (currSeg->map != NULL)
-			{
-				if (currSeg->map->OutputChannel == MAP_KEYBOARD)
-					report->keyboardUpdated = 1;
-				else if (currSeg->map->OutputChannel == MAP_MOUSE)
-					report->mouseUpdated = 1;
-
-				if (currSeg->map->InputType == MAP_TYPE_THRESHOLD_ABOVE && currSeg->value > currSeg->map->InputParam)
-				{
-					make = 1;
-				}
-				else if (currSeg->map->InputType == MAP_TYPE_THRESHOLD_BELOW && currSeg->value < currSeg->map->InputParam)
-				{
-					make = 1;
-				}
-
-				else
-					make = 0;
-
-				if (make)
-				{
-					printf("make %x\n", currSeg->map->OutputControl);
-					if (currSeg->map->OutputChannel == MAP_KEYBOARD)
-					{
-						SetKey(currSeg->map->OutputControl, report);
-					}
-					else
-					{
-						switch (currSeg->map->OutputControl)
-						{
-						case MAP_MOUSE_BUTTON1:
-							report->nextMousePacket[0] |= 0x01;
-							break;
-						case MAP_MOUSE_BUTTON2:
-							report->nextMousePacket[0] |= 0x02;
-							break;
-						case MAP_MOUSE_BUTTON3:
-							report->nextMousePacket[0] |= 0x04;
-							break;
-						}
-					}
-				}
-				else if (currSeg->map->InputType == MAP_TYPE_SCALE)
-				{
-					switch (currSeg->map->OutputControl)
-					{
-					// TODO scaling
-					case MAP_MOUSE_X:
-						tmp = currSeg->value - 80;
-						report->nextMousePacket[1] = tmp;
-						report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((tmp >> 3) & 0b00010000);
-						break;
-					case MAP_MOUSE_Y:
-						tmp = (uint8_t)(-((int8_t)(currSeg->value - 80)));
-						report->nextMousePacket[2] = tmp;
-						report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((tmp >> 2) & 0b00100000);
-						break;
-					}
-				}
-				break;
-			}
-		}
-	}
+		case REPORT_USAGE_JOYSTICK:*/
 }
 
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
@@ -270,7 +275,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	// clear key map as all pressed keys should be present in report
 	memset(descReport->KeyboardKeyMap, 0, 32);
 	memset(descReport->nextMousePacket, 0, 3);
-
+	descReport->nextMousePacket[0] |= 0b00001000;
 	// TODO handle segs that are bigger than 8 bits
 	while (currSeg != NULL)
 	{
@@ -282,7 +287,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 
 		// find bits
 		currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
-						 & bitMasks[currSeg->global->reportSize];	 // mask off the bits according to seg size
+						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size
 
 		// process em
 		//if (currSeg->value != currSeg->oldValue)
@@ -292,6 +297,8 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	}
 	if (descReport->mouseUpdated)
 	{
+		
+		printf ("ms %hx %hx %hx\n", descReport->nextMousePacket[0], descReport->nextMousePacket[1], descReport->nextMousePacket[2]);
 		SendMouse3(descReport->nextMousePacket[0], descReport->nextMousePacket[1], descReport->nextMousePacket[2]);
 		descReport->mouseUpdated = 0;
 	}

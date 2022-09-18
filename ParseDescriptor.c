@@ -144,27 +144,27 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 	return NULL;
 }
 
-#define CreateSeg()                                                                                           \
-	{                                                                                                         \
-		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                              \
-		{                                                                                                     \
+#define CreateSeg()                                                                                            \
+	{                                                                                                          \
+		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                               \
+		{                                                                                                      \
 			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = (HID_SEG *)amalloc(sizeof(HID_SEG)); \
-			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                         \
-		}                                                                                                     \
-		else                                                                                                  \
-		{                                                                                                     \
+			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                          \
+		}                                                                                                      \
+		else                                                                                                   \
+		{                                                                                                      \
 			currSegPnt->next = (HID_SEG *)amalloc(sizeof(HID_SEG));                                            \
-			currSegPnt = currSegPnt->next;                                                                    \
-		}                                                                                                     \
-		memset(currSegPnt, 0, sizeof(HID_SEG));                                                               \
-		currSegPnt->global = hidGlobalPnt;                                                                    \
-		currSegPnt->startBit = tempSB;                                                                        \
-		currSegPnt->inputField = ItemUData(&item);                                                            \
-		tempSB += hidGlobalPnt->reportSize;                                                                   \
+			currSegPnt = currSegPnt->next;                                                                     \
+		}                                                                                                      \
+                                                                                                               \
+		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                \
+		currSegPnt->startBit = tempSB;                                                                         \
+		tempSB += hidGlobalPnt->reportSize;                                                                    \
+		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                                     \
 	}
 
 //search though preset to see if this matches a mapping
-#define CreateMapping()                                           \
+/*#define CreateMapping()                                           \
 	for (uint8_t k = 0; k < JoyPresetNum; k++)                    \
 	{                                                             \
 		if (JoyPresets[k].UsagePage == hidGlobalPnt->usagePage && \
@@ -172,7 +172,7 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 			JoyPresets[k].Number == JoyNum)                       \
 			currSegPnt->map = &JoyPresets[k];                     \
 	}
-
+*/
 BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct)
 {
 	uint16_t startBit = 0;
@@ -236,19 +236,70 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 						for (i = 0; i < usagePtr; i++)
 						{
 							CreateSeg();
-							currSegPnt->usage = arrUsage[i];
-							CreateMapping();
+
+							if (appUsagePage == REPORT_USAGE_PAGE_GENERIC && appUsage == REPORT_USAGE_MOUSE)
+							{
+								if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_GENERIC)
+								{
+									currSegPnt->OutputChannel = MAP_MOUSE;
+									switch (arrUsage[i])
+									{
+									case REPORT_USAGE_X:
+										// Mouse - value field
+										currSegPnt->OutputControl = MAP_MOUSE_X;
+										currSegPnt->InputType = MAP_TYPE_SCALE;
+										break;
+
+									case REPORT_USAGE_Y:
+										// Mouse - value field
+										currSegPnt->OutputControl = MAP_MOUSE_Y;
+										currSegPnt->InputType = MAP_TYPE_SCALE;
+										break;
+									}
+								}
+							}
 						}
 					}
 					// if no usages found, add min/max style
 					else if (hidLocal.usageMin != 0xffff && hidLocal.usageMax != 0xFFFF)
 					{
-						// need to make a seg for each usage in the range
-						for (i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
+						if (appUsagePage == REPORT_USAGE_PAGE_GENERIC)
 						{
-							CreateSeg();
-							currSegPnt->usage = i;
-							CreateMapping();
+							// need to make a seg for each usage in the range
+							for (i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
+							{
+								CreateSeg();
+
+								if (appUsage == REPORT_USAGE_KEYBOARD)
+								{
+									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
+									{
+										// Keyboard - 1 bit per key (usually for modifier field)
+										currSegPnt->OutputChannel = MAP_KEYBOARD;
+										currSegPnt->OutputControl = i;
+
+										// any values above zero will send key
+										currSegPnt->InputType = MAP_TYPE_THRESHOLD_ABOVE;
+										currSegPnt->InputParam = 0;
+									}
+								}
+								else if (appUsage == REPORT_USAGE_MOUSE)
+								{
+									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_BUTTON)
+									{
+										// Mouse - 1 bit per button
+										currSegPnt->OutputChannel = MAP_MOUSE;
+
+										// buttons are 1,2,3 in the outputcontrol field
+										if (i <= 3)
+											currSegPnt->OutputControl = i;
+
+										// any values above zero will send button
+										currSegPnt->InputType = MAP_TYPE_THRESHOLD_ABOVE;
+										currSegPnt->InputParam = 0;
+									}
+								}
+							}
 						}
 					}
 					else
@@ -258,12 +309,17 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 				// Item is array style, whole range appears in every segment
 				else
 				{
-					// need to make a seg for each report seg
-					for (i = 0; i < hidGlobalPnt->reportCount; i++)
+					if (appUsagePage == REPORT_USAGE_PAGE_GENERIC &&
+						appUsage == REPORT_USAGE_KEYBOARD &&
+						hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
 					{
-						CreateSeg();
-						currSegPnt->usageMin = hidLocal.usageMin;
-						currSegPnt->usageMax = hidLocal.usageMax;
+						// need to make a seg for each report seg
+						for (i = 0; i < hidGlobalPnt->reportCount; i++)
+						{
+							CreateSeg();
+							currSegPnt->OutputChannel = MAP_KEYBOARD;
+							currSegPnt->InputType = MAP_TYPE_ARRAY;
+						}
 					}
 				}
 
@@ -302,10 +358,6 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 			break;
 
 		case TYPE_GLOBAL:
-
-			tmpGlobal = amalloc(sizeof(HID_GLOBAL));
-			memcpy(tmpGlobal, hidGlobalPnt, sizeof(HID_GLOBAL));
-			hidGlobalPnt = tmpGlobal;
 
 			switch (item.tag)
 			{

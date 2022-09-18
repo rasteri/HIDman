@@ -148,7 +148,7 @@ void Menu_Task()
     switch (menuState)
     {
     case MENU_STATE_INIT:
-        SendKeyboardString("\n\nHIDMAN v0.1 Main Menu %x\n\n1. Configure game controller mappings\n2. Log HID Data\n\nESC to exit menu\n\n", allocated);
+        SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n1. Configure game controller mappings\n2. Log HID Data\n\nESC to exit menu\n\n");
         menuState = MENU_STATE_MAIN;
         break;
     case MENU_STATE_MAIN:

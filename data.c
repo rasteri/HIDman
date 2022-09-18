@@ -5,7 +5,7 @@
 #include "ps2.h"
 #include "defs.h"
 
-__xdata JoyMap JoyPresets[] = {
+/*__xdata JoyMap JoyPresets[] = {
 
     {
         0,                        // Number
@@ -25,7 +25,7 @@ __xdata JoyMap JoyPresets[] = {
         MAP_TYPE_THRESHOLD_ABOVE,  // InputType
         192                        // Input Param
     },
-};
+};*/
 
 __code uint8_t KEY_A_MAKE[] = {1, 0x1C};
 __code uint8_t KEY_B_MAKE[] = {1, 0x32};

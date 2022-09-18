@@ -153,27 +153,24 @@ typedef struct _HID_LOCAL
 #define MAP_KEYBOARD 0
 #define MAP_MOUSE 1
 
-#define MAP_MOUSE_X 0
-#define MAP_MOUSE_Y 1
-#define MAP_MOUSE_WHEEL 2
-#define MAP_MOUSE_BUTTON1 3
-#define MAP_MOUSE_BUTTON2 4
-#define MAP_MOUSE_BUTTON3 5
+
+#define MAP_MOUSE_BUTTON1 1
+#define MAP_MOUSE_BUTTON2 2
+#define MAP_MOUSE_BUTTON3 3
+#define MAP_MOUSE_X 4
+#define MAP_MOUSE_Y 5
+#define MAP_MOUSE_WHEEL 6
 
 #define MAP_TYPE_THRESHOLD_BELOW 1
 #define MAP_TYPE_THRESHOLD_ABOVE 2
 #define MAP_TYPE_SCALE 3
+#define MAP_TYPE_ARRAY 4
 
-typedef struct JoyMap
+// defines a mapping between a HID segment and a PS/2 event
+typedef struct HID_SEG
 {
-	// the index of the joystick - zero is first joystick detected, one is second, etc
-	uint8_t Number;
 
-	// Generic desktop for axes, buttons for buttons
-	uint8_t UsagePage;
-
-	// Which axis for axes, button number for buttons
-	uint8_t Usage;
+	uint16_t startBit;
 
 	// Mouse or keyboard
 	uint8_t OutputChannel;
@@ -187,15 +184,20 @@ typedef struct JoyMap
 
 	// Param has different meanings depending on InputType
 	uint16_t InputParam;
-} JoyMap;
 
+	uint8_t reportSize;
 
+	uint8_t oldValue;
+	uint8_t value;
+
+	struct HID_SEG *next;
+} HID_SEG;
 
 #define MAX_USAGE_NUM 10
 
-typedef struct HID_SEG
+/*typedef struct HID_SEG
 {
-	uint16_t startBit;
+
 	uint8_t usage;
 	uint8_t usageMin;
 	uint8_t usageMax;
@@ -210,7 +212,7 @@ typedef struct HID_SEG
 	JoyMap *map;
 
 	struct HID_SEG *next;
-} HID_SEG;
+} HID_SEG;*/
 
 typedef struct _HID_REPORT
 {

@@ -504,49 +504,6 @@ void resetHubDevices(unsigned char hubindex)
 			HIDdevice[hiddevice].interface = 0;
 			HIDdevice[hiddevice].endPoint = 0;
 			HIDdevice[hiddevice].type = 0;
-
-			for (report = 0; report < MAX_REPORTS; report++)
-			{
-				if (HIDdevice[hiddevice].HidSegStruct.reports[report])
-				{
-					printf("Wiping report %x - ", report);
-					currSeg = HIDdevice[hiddevice].HidSegStruct.reports[report]->firstHidSeg;
-
-					// wipe all globals first
-					while (currSeg)
-					{
-						if (currSeg->global != NULL)
-						{
-							printf("G");
-							// clear all references to this global in other segs first
-							nextSeg = currSeg->next;
-							while (nextSeg)
-							{
-								if (nextSeg->global == currSeg->global)
-									nextSeg->global = NULL;
-								nextSeg = nextSeg->next;
-							}
-
-							free(currSeg->global);
-						}
-						currSeg = currSeg->next;
-					}
-
-					// now free segments
-					currSeg = HIDdevice[hiddevice].HidSegStruct.reports[report]->firstHidSeg;
-					while (currSeg)
-					{
-						printf("S");
-						nextSeg = currSeg->next;
-						free(nextSeg);
-						currSeg = nextSeg;
-					}
-					printf("R");
-					free(HIDdevice[hiddevice].HidSegStruct.reports[report]);
-					HIDdevice[hiddevice].HidSegStruct.reports[report] = NULL;
-					printf(" -\n");
-				}
-			}
 		}
 	}
 }
@@ -1087,7 +1044,7 @@ void DumpyTown()
 					printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
 					while (tmpseg != NULL)
 					{
-						printf("  startbit %u, usagepage %hx, usage %hx, size %x -- value %x\n", tmpseg->startBit, tmpseg->global->usagePage, tmpseg->usage, tmpseg->global->reportSize, tmpseg->value);
+						printf("  startbit %u, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
 						tmpseg = tmpseg->next;
 					}
 				}

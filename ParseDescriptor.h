@@ -3,7 +3,7 @@
 
 #include "type.h"
 #define REPORTPOOLSIZE 5
-#define SEGMENTPOOLSIZE 100
+#define SEGMENTPOOLSIZE 40
 
 extern __xdata HID_SEG SegmentPool[2][SEGMENTPOOLSIZE];
 extern __xdata HID_REPORT ReportPool[2][REPORTPOOLSIZE];

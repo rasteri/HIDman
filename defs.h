@@ -153,7 +153,6 @@ typedef struct _HID_LOCAL
 #define MAP_KEYBOARD 0
 #define MAP_MOUSE 1
 
-
 #define MAP_MOUSE_BUTTON1 1
 #define MAP_MOUSE_BUTTON2 2
 #define MAP_MOUSE_BUTTON3 3
@@ -161,10 +160,33 @@ typedef struct _HID_LOCAL
 #define MAP_MOUSE_Y 5
 #define MAP_MOUSE_WHEEL 6
 
+#define MAP_TYPE_NONE 0
 #define MAP_TYPE_THRESHOLD_BELOW 1
 #define MAP_TYPE_THRESHOLD_ABOVE 2
 #define MAP_TYPE_SCALE 3
 #define MAP_TYPE_ARRAY 4
+
+typedef struct JoyPreset
+{
+	uint8_t Number;
+
+	uint8_t InputUsagePage;
+
+	uint8_t InputUsage;
+
+	// Mouse or keyboard
+	uint8_t OutputChannel;
+
+	// for keyboard, this is the HID scancode of the key associated with this control
+	// for mouse, this is one of the values of MAP_MOUSE_x
+	uint8_t OutputControl;
+
+	// How this control gets interpreted - MAP_TYPE_x
+	uint8_t InputType;
+
+	// Param has different meanings depending on InputType
+	uint16_t InputParam;
+} JoyPreset;
 
 // defines a mapping between a HID segment and a PS/2 event
 typedef struct HID_SEG

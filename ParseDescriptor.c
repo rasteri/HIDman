@@ -162,7 +162,8 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 			currSegPnt->next = &SegmentPool[port][SegmentPoolSizes[port]++];                                            \
 			currSegPnt = currSegPnt->next;                                                                              \
 		}                                                                                                               \
-                                                                                                                        \
+		printf("s %x\n", SegmentPoolSizes[port]);                                                                       \
+		delay(500);                                                                                                     \
 		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                         \
 		currSegPnt->startBit = tempSB;                                                                                  \
 		tempSB += hidGlobalPnt->reportSize;                                                                             \
@@ -170,15 +171,22 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 	}
 
 //search though preset to see if this matches a mapping
-/*#define CreateMapping()                                           \
-	for (uint8_t k = 0; k < JoyPresetNum; k++)                    \
-	{                                                             \
-		if (JoyPresets[k].UsagePage == hidGlobalPnt->usagePage && \
-			JoyPresets[k].Usage == currSegPnt->usage &&           \
-			JoyPresets[k].Number == JoyNum)                       \
-			currSegPnt->map = &JoyPresets[k];                     \
-	}
-*/
+/*#define CreateMapping()             \
+	for (k = 0; k < 4; k++) \
+	{                               \
+		printf("%x", JoyNum);       \
+	}*/
+/*currSegPnt->OutputChannel = DefaultJoyMaps[k].OutputChannel;                 \
+			currSegPnt->OutputControl = DefaultJoyMaps[k].OutputControl;                 \
+			currSegPnt->InputType = DefaultJoyMaps[k].InputType;                         \
+			currSegPnt->InputParam = DefaultJoyMaps[k].InputParam;                       \*/
+/*if (DefaultJoyMaps[k].InputUsagePage == hidGlobalPnt->usagePage && \
+			DefaultJoyMaps[k].InputUsage == hidLocal.usage &&              \
+			DefaultJoyMaps[k].Number == JoyNum)                            \
+		{                                                                  \
+			printf("Mappytime\n");                                         \
+		}                                                                  \*/
+
 BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct, uint8_t port)
 {
 	uint16_t startBit = 0;
@@ -190,6 +198,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 	uint8_t collectionDepth = 0;
 	UINT8 usagePtr = 0;
 	uint32_t tempSB = 0;
+	uint8_t k = 0;
 
 	uint16_t i = 0;
 
@@ -229,6 +238,11 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = appUsagePage;
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsage = appUsage;
+
+					if (appUsage == REPORT_USAGE_PAGE_GENERIC && appUsagePage == REPORT_USAGE_JOYSTICK)
+					{
+						JoyNum++;
+					}
 				}
 
 				if (ItemUData(&item) & HID_INPUT_VARIABLE)
@@ -242,25 +256,35 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 						{
 							CreateSeg();
 
-							if (appUsagePage == REPORT_USAGE_PAGE_GENERIC && appUsage == REPORT_USAGE_MOUSE)
+							if (appUsagePage == REPORT_USAGE_PAGE_GENERIC)
 							{
-								if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_GENERIC)
+								if (appUsage == REPORT_USAGE_MOUSE)
 								{
-									currSegPnt->OutputChannel = MAP_MOUSE;
-									switch (arrUsage[i])
+									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_GENERIC)
 									{
-									case REPORT_USAGE_X:
-										// Mouse - value field
-										currSegPnt->OutputControl = MAP_MOUSE_X;
-										currSegPnt->InputType = MAP_TYPE_SCALE;
-										break;
+										currSegPnt->OutputChannel = MAP_MOUSE;
+										switch (arrUsage[i])
+										{
+										case REPORT_USAGE_X:
+											// Mouse - value field
+											currSegPnt->OutputControl = MAP_MOUSE_X;
+											currSegPnt->InputType = MAP_TYPE_SCALE;
+											break;
 
-									case REPORT_USAGE_Y:
-										// Mouse - value field
-										currSegPnt->OutputControl = MAP_MOUSE_Y;
-										currSegPnt->InputType = MAP_TYPE_SCALE;
-										break;
+										case REPORT_USAGE_Y:
+											// Mouse - value field
+											currSegPnt->OutputControl = MAP_MOUSE_Y;
+											currSegPnt->InputType = MAP_TYPE_SCALE;
+											break;
+										}
 									}
+								}
+								else if (appUsage == REPORT_USAGE_JOYSTICK)
+								{
+									/*for (k = 0; k < 4; k++)
+									{
+										printf("%x", JoyNum);
+									}*/
 								}
 							}
 						}
@@ -303,6 +327,10 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 										currSegPnt->InputType = MAP_TYPE_THRESHOLD_ABOVE;
 										currSegPnt->InputParam = 0;
 									}
+								}
+								else if (appUsage == REPORT_USAGE_JOYSTICK)
+								{
+									//CreateMapping();
 								}
 							}
 						}

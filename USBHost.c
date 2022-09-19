@@ -506,6 +506,7 @@ void resetHubDevices(unsigned char hubindex)
 			HIDdevice[hiddevice].type = 0;
 		}
 	}
+	printf("Wiping %x\n", hubindex);
 	SegmentPoolSizes[hubindex] = 0;
 	ReportPoolSizes[hubindex] = 0;
 }

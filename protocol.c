@@ -147,7 +147,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 	{
 		if (currSeg->OutputChannel == MAP_MOUSE)
 		{
-			
+
 			switch (currSeg->OutputControl)
 			{
 			// TODO scaling
@@ -283,24 +283,25 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 		// find byte
 		currByte = report + (currSeg->startBit >> 3);
 
-		currSeg->oldValue = currSeg->value;
+		//currSeg->oldValue = currSeg->value;
 
 		// find bits
 		currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
 						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size
 
 		// process em
-		//if (currSeg->value != currSeg->oldValue)
+		// if (currSeg->value != currSeg->oldValue)
 		processSeg(currSeg, descReport);
 
 		currSeg = currSeg->next;
 	}
 	if (descReport->mouseUpdated)
 	{
-		
-		printf ("ms %hx %hx %hx\n", descReport->nextMousePacket[0], descReport->nextMousePacket[1], descReport->nextMousePacket[2]);
-		SendMouse3(descReport->nextMousePacket[0], descReport->nextMousePacket[1], descReport->nextMousePacket[2]);
-		descReport->mouseUpdated = 0;
+		if (!MenuActive)
+		{
+			SendMouse3(descReport->nextMousePacket[0], descReport->nextMousePacket[1], descReport->nextMousePacket[2]);
+			descReport->mouseUpdated = 0;
+		}
 	}
 	if (descReport->keyboardUpdated)
 	{
@@ -327,25 +328,28 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 			}
 			else if (!BitPresent(descReport->KeyboardKeyMap, c) && BitPresent(descReport->oldKeyboardKeyMap, c))
 			{
-				// break
-				if (c <= 0x67)
+				if (!MenuActive)
 				{
-					// if the key we just released is the one that's repeating then stop
-					if (c == RepeatKey)
+					// break
+					if (c <= 0x67)
 					{
-						RepeatKey = 0;
-						SetRepeatState(0);
+						// if the key we just released is the one that's repeating then stop
+						if (c == RepeatKey)
+						{
+							RepeatKey = 0;
+							SetRepeatState(0);
+						}
+
+						// Pause has no break for some reason
+						if (c == 0x48)
+							continue;
+
+						SendKeyboard(HIDtoPS2_Break[c]);
 					}
-
-					// Pause has no break for some reason
-					if (c == 0x48)
-						continue;
-
-					SendKeyboard(HIDtoPS2_Break[c]);
-				}
-				else if (c >= 0xE0 && c <= 0xE7)
-				{
-					SendKeyboard(ModtoPS2_BREAK[c - 0xE0]);
+					else if (c >= 0xE0 && c <= 0xE7)
+					{
+						SendKeyboard(ModtoPS2_BREAK[c - 0xE0]);
+					}
 				}
 			}
 		}

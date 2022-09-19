@@ -7,8 +7,6 @@ FunctionReference runBootloader = (FunctionReference)0xF400;
 #define	FREQ_SYS	48000000
 #endif 
 
-uint16_t allocated = 0;
-
 void initClock()
 {
     SAFE_MOD = 0x55;

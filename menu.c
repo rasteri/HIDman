@@ -150,6 +150,7 @@ void Menu_Task()
     case MENU_STATE_INIT:
         SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n1. Configure game controller mappings\n2. Log HID Data\n\nESC to exit menu\n\n");
         menuState = MENU_STATE_MAIN;
+        menuKey = 0;
         break;
     case MENU_STATE_MAIN:
         if (menuKey)
@@ -167,6 +168,7 @@ void Menu_Task()
                 menuState = MENU_STATE_DUMPING;
                 break;
             case 0x29: // ESC
+                SendKeyboardString("Goodbye\n");
                 menuState = MENU_STATE_INIT;
                 MenuActive = 0;
                 break;
@@ -180,7 +182,6 @@ void Menu_Task()
         {
             menuState = MENU_STATE_INIT;
             DumpReport = 0;
-            MenuActive = 0;
             break;
         }
         break;

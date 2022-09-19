@@ -506,6 +506,8 @@ void resetHubDevices(unsigned char hubindex)
 			HIDdevice[hiddevice].type = 0;
 		}
 	}
+	SegmentPoolSizes[hubindex] = 0;
+	ReportPoolSizes[hubindex] = 0;
 }
 
 void pollHIDdevice()
@@ -529,10 +531,10 @@ void pollHIDdevice()
 
 					if (DumpReport)
 					{
-						SendKeyboardString("Interface %x Report Length %x - ", HIDdevice[hiddevice].interface, len);
+						SendKeyboardString("I%X L%X- ", HIDdevice[hiddevice].interface, len);
 						for (uint8_t tmp = 0; tmp < len; tmp++)
 						{
-							SendKeyboardString("%x ", RxBuffer[tmp]);
+							SendKeyboardString("%X ", RxBuffer[tmp]);
 						}
 						SendKeyboardString("\n");
 					}
@@ -772,7 +774,7 @@ unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 
 	if (DumpReport)
 	{
-		SendKeyboardString("\n\nInterface %x Report Descriptor - \n", HIDdevice[CurrentDevive].interface);
+		SendKeyboardString("\n\nPort %hx Interface %hx Report Descriptor - \n", HIDdevice[CurrentDevive].rootHub, HIDdevice[CurrentDevive].interface);
 		for (i = 0; i < len; i++)
 		{
 			if (!(i & 0x000F))
@@ -786,7 +788,7 @@ unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 	//sendProtocolMSG(MSG_TYPE_HID_INFO, len, CurrentDevive, HIDdevice[CurrentDevive].interface, HIDdevice[CurrentDevive].rootHub, receiveDataBuffer);
 	//parseHIDDeviceReport(receiveDataBuffer, len, CurrentDevive);
 
-	ParseReportDescriptor(receiveDataBuffer, len, &HIDdevice[CurrentDevive].HidSegStruct);
+	ParseReportDescriptor(receiveDataBuffer, len, &HIDdevice[CurrentDevive].HidSegStruct, HIDdevice[CurrentDevive].rootHub);
 
 	DumpyTown();
 

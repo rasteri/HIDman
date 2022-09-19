@@ -169,7 +169,6 @@ typedef struct _HID_LOCAL
 // defines a mapping between a HID segment and a PS/2 event
 typedef struct HID_SEG
 {
-
 	uint16_t startBit;
 
 	// Mouse or keyboard
@@ -187,7 +186,7 @@ typedef struct HID_SEG
 
 	uint8_t reportSize;
 
-	uint8_t oldValue;
+	//uint8_t oldValue;
 	uint8_t value;
 
 	struct HID_SEG *next;

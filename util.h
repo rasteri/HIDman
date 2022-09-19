@@ -8,8 +8,6 @@
 #define DEBUG_OUT(...) (void)0;
 #endif
 
-#define amalloc(a) malloc(a);
-
 void initClock();
 void delayUs(unsigned short n);
 void delay(unsigned short n);

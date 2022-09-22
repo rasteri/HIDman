@@ -128,16 +128,16 @@ typedef struct _EndPoint
 
 typedef struct _HID_GLOBAL
 {
-	UINT8 usagePage;
+	uint8_t usagePage;
 	INT8 logicalMinimum;
 	INT8 logicalMaximum;
 	INT8 physicalMinimum;
 	INT8 physicalMaximum;
-	UINT8 unitExponent;
-	UINT8 unit;
-	UINT8 reportID;
-	UINT8 reportSize;
-	UINT8 reportCount;
+	uint8_t unitExponent;
+	uint8_t unit;
+	uint8_t reportID;
+	uint8_t reportSize;
+	uint8_t reportCount;
 } HID_GLOBAL;
 
 typedef struct _HID_LOCAL
@@ -165,6 +165,8 @@ typedef struct _HID_LOCAL
 #define MAP_TYPE_THRESHOLD_ABOVE 2
 #define MAP_TYPE_SCALE 3
 #define MAP_TYPE_ARRAY 4
+
+#define JOYPRESETCOUNT 18
 
 typedef struct JoyPreset
 {
@@ -263,20 +265,20 @@ typedef struct _HID_REPORT_DESC
 typedef struct _HID_ITEM_INFO
 {
 	unsigned int format;
-	UINT8 size;
-	UINT8 type;
-	UINT8 tag;
+	uint8_t size;
+	uint8_t type;
+	uint8_t tag;
 
 	union
 	{
-		UINT8 u8;
+		uint8_t u8;
 		INT8 s8;
 		UINT16 u16;
 		INT16 s16;
 		UINT32 u32;
 		INT32 s32;
 
-		const UINT8 *longdata;
+		const uint8_t *longdata;
 	} value;
 
 } HID_ITEM;

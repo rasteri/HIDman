@@ -9,61 +9,115 @@
 __code JoyPreset DefaultJoyMaps[] = {
 
     {
-        0,                        // Number
+        1,                        // Number
         REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
         1,                        // Input Usage
-        MAP_KEYBOARD,             // Output Channel
-        KEY_MOD_LCTRL,            // Output Control
-        MAP_TYPE_THRESHOLD_ABOVE, // InputType
-        0                         // Input Param
-    },
-    {
-        0,                        // Number
-        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        2,                        // Input Usage
-        MAP_KEYBOARD,             // Output Channel
-        KEY_SPACE,                // Output Control
-        MAP_TYPE_THRESHOLD_ABOVE, // InputType
-        0                         // Input Param
-    },
-    {
-        0,                        // Number
-        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        3,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_A,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
     {
-        0,                        // Number
+        1,                        // Number
         REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        4,                        // Input Usage
+        2,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_B,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
     {
-        0,                        // Number
+        1,                        // Number
         REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        5,                        // Input Usage
+        3,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_C,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
     {
-        0,                        // Number
+        1,                        // Number
         REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        6,                        // Input Usage
+        4,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_D,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
     {
-        0,                         // Number
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        5,                        // Input Usage
+        MAP_MOUSE,                // Output Channel
+        MAP_MOUSE_BUTTON2,        // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        6,                        // Input Usage
+        MAP_MOUSE,                // Output Channel
+        MAP_MOUSE_BUTTON1,        // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        7,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_G,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        8,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_H,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        9,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_I,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        10,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_J,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        11,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_K,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        12,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_L,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                         // Number
         REPORT_USAGE_PAGE_GENERIC, // Usage Page
         REPORT_USAGE_X,            // Usage
         MAP_KEYBOARD,              // Output Channel
@@ -72,7 +126,7 @@ __code JoyPreset DefaultJoyMaps[] = {
         192                        // Input Param
     },
     {
-        0,                         // Number
+        1,                         // Number
         REPORT_USAGE_PAGE_GENERIC, // Usage Page
         REPORT_USAGE_X,            // Usage
         MAP_KEYBOARD,              // Output Channel
@@ -81,24 +135,41 @@ __code JoyPreset DefaultJoyMaps[] = {
         64                         // Input Param
     },
     {
-        0,                         // Number
+        1,                         // Number
         REPORT_USAGE_PAGE_GENERIC, // Usage Page
         REPORT_USAGE_Y,            // Usage
         MAP_KEYBOARD,              // Output Channel
         KEY_DOWN,                  // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE,  // InputType
+        192                        // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Y,            // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_UP,                    // Output Control
         MAP_TYPE_THRESHOLD_BELOW,  // InputType
         64                         // Input Param
     },
     {
-        0,                         // Number
+        1,                         // Number
         REPORT_USAGE_PAGE_GENERIC, // Usage Page
-        REPORT_USAGE_Y,            // Usage
-        MAP_KEYBOARD,              // Output Channel
-        KEY_UP,                  // Output Control
-        MAP_TYPE_THRESHOLD_BELOW,  // InputType
-        64                         // Input Param
-    }
-};
+        REPORT_USAGE_Z,            // Usage
+        MAP_MOUSE,                 // Output Channel
+        MAP_MOUSE_Y,               // Output Control
+        MAP_TYPE_SCALE,            // InputType
+        2                          // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Rz,           // Usage
+        MAP_MOUSE,                 // Output Channel
+        MAP_MOUSE_X,               // Output Control
+        MAP_TYPE_SCALE,            // InputType
+        2                          // Input Param
+    }};
 
 __code uint8_t KEY_A_MAKE[] = {1, 0x1C};
 __code uint8_t KEY_B_MAKE[] = {1, 0x32};

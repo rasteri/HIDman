@@ -18,8 +18,12 @@ __xdata uint8_t ReportPoolSizes[2] = {0, 0};
 
 uint8_t JoyNum = 0;
 
+#pragma save
+#pragma nogcse
+#pragma noinduction
+#pragma noloopreverse
 #define LITTLE_EADIAN 1
-static UINT16 GetUnaligned16(const UINT8 *start)
+static UINT16 GetUnaligned16(const uint8_t *start)
 {
 #if LITTLE_EADIAN
 	return *(UINT16 *)start;
@@ -30,7 +34,7 @@ static UINT16 GetUnaligned16(const UINT8 *start)
 #endif
 }
 
-static UINT32 GetUnaligned32(const UINT8 *start)
+static UINT32 GetUnaligned32(const uint8_t *start)
 {
 #if LITTLE_EADIAN
 	return *(UINT32 *)start;
@@ -71,9 +75,9 @@ static INT32 ItemSData(const HID_ITEM *itemInfo)
 	return 0;
 }
 
-static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
+static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 {
-	UINT8 b;
+	static __xdata uint8_t b;
 	if (end - start <= 0)
 	{
 		return NULL;
@@ -162,60 +166,63 @@ static UINT8 *FetchItem(UINT8 *start, UINT8 *end, HID_ITEM *item)
 			currSegPnt->next = &SegmentPool[port][SegmentPoolSizes[port]++];                                            \
 			currSegPnt = currSegPnt->next;                                                                              \
 		}                                                                                                               \
-		printf("s %x\n", SegmentPoolSizes[port]);                                                                       \
-		delay(500);                                                                                                     \
 		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                         \
 		currSegPnt->startBit = tempSB;                                                                                  \
+                                                                                                                        \
 		tempSB += hidGlobalPnt->reportSize;                                                                             \
 		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                                              \
 	}
 
 //search though preset to see if this matches a mapping
-/*#define CreateMapping()             \
-	for (k = 0; k < 4; k++) \
-	{                               \
-		printf("%x", JoyNum);       \
-	}*/
-/*currSegPnt->OutputChannel = DefaultJoyMaps[k].OutputChannel;                 \
-			currSegPnt->OutputControl = DefaultJoyMaps[k].OutputControl;                 \
-			currSegPnt->InputType = DefaultJoyMaps[k].InputType;                         \
-			currSegPnt->InputParam = DefaultJoyMaps[k].InputParam;                       \*/
-/*if (DefaultJoyMaps[k].InputUsagePage == hidGlobalPnt->usagePage && \
-			DefaultJoyMaps[k].InputUsage == hidLocal.usage &&              \
-			DefaultJoyMaps[k].Number == JoyNum)                            \
-		{                                                                  \
-			printf("Mappytime\n");                                         \
-		}                                                                  \*/
+#define CreateMapping()                                                        \
+	{                                                                          \
+		for (k = 0; k < JOYPRESETCOUNT; k++)                                   \
+		{                                                                      \
+			if (DefaultJoyMaps[k].InputUsagePage == hidGlobalPnt->usagePage && \
+				DefaultJoyMaps[k].InputUsage == hidLocal.usage &&              \
+				DefaultJoyMaps[k].Number == JoyNum)                            \
+			{                                                                  \
+				CreateSeg();                                                   \
+				tempSB -= hidGlobalPnt->reportSize;                            \
+				currSegPnt->OutputChannel = DefaultJoyMaps[k].OutputChannel;   \
+				currSegPnt->OutputControl = DefaultJoyMaps[k].OutputControl;   \
+				currSegPnt->InputType = DefaultJoyMaps[k].InputType;           \
+				currSegPnt->InputParam = DefaultJoyMaps[k].InputParam;         \
+			}                                                                  \
+		}                                                                      \
+		tempSB += hidGlobalPnt->reportSize;                                    \
+	}
 
-BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct, uint8_t port)
+BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct, uint8_t port)
 {
-	uint16_t startBit = 0;
-	uint8_t tmp = 0;
+	static __xdata uint8_t i, k, collectionDepth, usagePtr, arrUsage[MAX_USAGE_NUM];
+	static __xdata uint16_t startBit, tempSB, appUsage, appUsagePage;
+
+	uint8_t *start, *end;
+
 	static __xdata HID_GLOBAL hidGlobal;
 	static __xdata HID_GLOBAL *hidGlobalPnt = &hidGlobal;
-	static __xdata uint8_t arrUsage[MAX_USAGE_NUM];
 	static __xdata HID_LOCAL hidLocal;
-	uint8_t collectionDepth = 0;
-	UINT8 usagePtr = 0;
-	uint32_t tempSB = 0;
-	uint8_t k = 0;
-
-	uint16_t i = 0;
-
-	UINT8 *start = pDescriptor;
-	UINT8 *end;
 	static __xdata HID_ITEM item;
-
-	uint32_t appUsage = 0;
-	uint32_t appUsagePage = 0;
-
 	HID_SEG *currSegPnt;
 
-	memset(pHidSegStruct, 0x00, sizeof(pHidSegStruct));
+	startBit = 0;
+	tempSB = 0;
+	appUsage = 0;
+	appUsagePage = 0;
+	i = 0;
+	k = 0;
+	collectionDepth = 0;
+	usagePtr = 0;
 
+	memset(pHidSegStruct, 0x00, sizeof(HID_REPORT_DESC));
 	memset(hidGlobalPnt, 0x00, sizeof(HID_GLOBAL));
+	memset(&hidLocal, 0x00, sizeof(HID_LOCAL));
 
+	start = pDescriptor;
 	end = start + len;
+
+	JoyNum = 0;
 
 	while ((start = FetchItem(start, end, &item)) != NULL)
 	{
@@ -254,12 +261,13 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 						// need to make a seg for each found usage
 						for (i = 0; i < usagePtr; i++)
 						{
-							CreateSeg();
+							hidLocal.usage = arrUsage[i];
 
 							if (appUsagePage == REPORT_USAGE_PAGE_GENERIC)
 							{
 								if (appUsage == REPORT_USAGE_MOUSE)
 								{
+									CreateSeg();
 									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_GENERIC)
 									{
 										currSegPnt->OutputChannel = MAP_MOUSE;
@@ -281,10 +289,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 								}
 								else if (appUsage == REPORT_USAGE_JOYSTICK)
 								{
-									/*for (k = 0; k < 4; k++)
-									{
-										printf("%x", JoyNum);
-									}*/
+									CreateMapping();
 								}
 							}
 						}
@@ -297,12 +302,13 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 							// need to make a seg for each usage in the range
 							for (i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
 							{
-								CreateSeg();
+								hidLocal.usage = i;
 
 								if (appUsage == REPORT_USAGE_KEYBOARD)
 								{
 									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
 									{
+										CreateSeg();
 										// Keyboard - 1 bit per key (usually for modifier field)
 										currSegPnt->OutputChannel = MAP_KEYBOARD;
 										currSegPnt->OutputControl = i;
@@ -316,6 +322,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 								{
 									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_BUTTON)
 									{
+										CreateSeg();
 										// Mouse - 1 bit per button
 										currSegPnt->OutputChannel = MAP_MOUSE;
 
@@ -330,7 +337,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 								}
 								else if (appUsage == REPORT_USAGE_JOYSTICK)
 								{
-									//CreateMapping();
+									CreateMapping();
 								}
 							}
 						}
@@ -399,6 +406,7 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 				// report id
 				startBit = 0;
 				startBit += item.size * 8;
+				JoyNum++;
 
 				hidGlobalPnt->reportID = ItemUData(&item);
 
@@ -492,3 +500,4 @@ BOOL ParseReportDescriptor(UINT8 *pDescriptor, UINT16 len, HID_REPORT_DESC *pHid
 ERR:
 	return FALSE;
 }
+#pragma restore

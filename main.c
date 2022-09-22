@@ -42,7 +42,7 @@ void mTimer0Interrupt(void) __interrupt(1)
 		if (!(P4_IN & (1 << 6)))
 		{
 			ResetCounter++;
-			if (ResetCounter > 30000)
+			if (ResetCounter > 10000)
 			{
 				runBootloader();
 			}

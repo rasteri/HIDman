@@ -4,28 +4,172 @@
 #include <string.h>
 #include "ps2.h"
 #include "defs.h"
+#include "usbhidkeys.h"
 
-/*__xdata JoyMap JoyPresets[] = {
+__code JoyPreset DefaultJoyMaps[] = {
 
     {
-        0,                        // Number
-        REPORT_USAGE_PAGE_BUTTON, // Usage Page
-        1,                        // Usage
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        1,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
-        0x04,                     // Output Control
+        KEY_A,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
     {
-        0,                         // Number
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        2,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_B,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        3,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_C,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        4,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_D,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        5,                        // Input Usage
+        MAP_MOUSE,                // Output Channel
+        MAP_MOUSE_BUTTON2,        // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        6,                        // Input Usage
+        MAP_MOUSE,                // Output Channel
+        MAP_MOUSE_BUTTON1,        // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        7,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_G,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        8,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_H,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        9,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_I,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        10,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_J,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        11,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_K,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        12,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_L,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                         // Number
         REPORT_USAGE_PAGE_GENERIC, // Usage Page
         REPORT_USAGE_X,            // Usage
         MAP_KEYBOARD,              // Output Channel
-        0x05,                      // Output Control
+        KEY_RIGHT,                 // Output Control
         MAP_TYPE_THRESHOLD_ABOVE,  // InputType
         192                        // Input Param
     },
-};*/
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_X,            // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_LEFT,                  // Output Control
+        MAP_TYPE_THRESHOLD_BELOW,  // InputType
+        64                         // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Y,            // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_DOWN,                  // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE,  // InputType
+        192                        // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Y,            // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_UP,                    // Output Control
+        MAP_TYPE_THRESHOLD_BELOW,  // InputType
+        64                         // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Z,            // Usage
+        MAP_MOUSE,                 // Output Channel
+        MAP_MOUSE_Y,               // Output Control
+        MAP_TYPE_SCALE,            // InputType
+        2                          // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Rz,           // Usage
+        MAP_MOUSE,                 // Output Channel
+        MAP_MOUSE_X,               // Output Control
+        MAP_TYPE_SCALE,            // InputType
+        2                          // Input Param
+    }};
 
 __code uint8_t KEY_A_MAKE[] = {1, 0x1C};
 __code uint8_t KEY_B_MAKE[] = {1, 0x32};
@@ -496,24 +640,24 @@ __code uint8_t ASCIItoHID[] = {
     0,
     0,
     0x28,
-   0,
-   0,
-   0,
-   0,
-   0,
-   0,
-   0, // 20
-   0,
-   0,
-   0,
-   0,
-   0,
-   0,
-   0,
-   0,
-   0,
-   0, // 30
-   0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // 20
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // 30
+    0,
     0x2C,
     0,
     0,
@@ -528,51 +672,51 @@ __code uint8_t ASCIItoHID[] = {
     0x57,
     0,
     0x56,
-    0x37 ,
+    0x37,
     0,
     0x27,
-    0x1e ,
-    0x1f , // 50
-    0x20 ,
-    0x21 ,
-    0x22 ,
-    0x23 ,
-    0x24 ,
-    0x25 ,
-    0x26 ,
-    0 ,
+    0x1e,
+    0x1f, // 50
+    0x20,
+    0x21,
+    0x22,
+    0x23,
+    0x24,
+    0x25,
+    0x26,
+    0,
     0,
     0, // 60
     0,
     0,
     0,
     0,
-    0x04 ,
-    0x05 ,
-    0x06 ,
-    0x07 ,
-    0x08 ,
-    0x09 , // 70
-    0x0a ,
-    0x0b ,
-    0x0c ,
-    0x0d ,
-    0x0e ,
-    0x0f ,
-    0x10 ,
-    0x11 ,
-    0x12 ,
-    0x13 , // 80
-    0x14 ,
-    0x15 ,
-    0x16 ,
-    0x17 ,
-    0x18 ,
-    0x19 ,
-    0x1a ,
-    0x1b ,
-    0x1c ,
-    0x1d , // 90
+    0x04,
+    0x05,
+    0x06,
+    0x07,
+    0x08,
+    0x09, // 70
+    0x0a,
+    0x0b,
+    0x0c,
+    0x0d,
+    0x0e,
+    0x0f,
+    0x10,
+    0x11,
+    0x12,
+    0x13, // 80
+    0x14,
+    0x15,
+    0x16,
+    0x17,
+    0x18,
+    0x19,
+    0x1a,
+    0x1b,
+    0x1c,
+    0x1d, // 90
     0,
     0,
     0,
@@ -584,7 +728,7 @@ __code uint8_t ASCIItoHID[] = {
     0x06,
     0x07, // 100
     0x08,
-    0x09, 
+    0x09,
     0x0a,
     0x0b,
     0x0c,
@@ -594,7 +738,7 @@ __code uint8_t ASCIItoHID[] = {
     0x10,
     0x11, //110
     0x12,
-    0x13, 
+    0x13,
     0x14,
     0x15,
     0x16,
@@ -604,7 +748,7 @@ __code uint8_t ASCIItoHID[] = {
     0x1a,
     0x1b, //120
     0x1c,
-    0x1d, 
+    0x1d,
     0,
     0,
     0,

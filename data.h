@@ -46,6 +46,5 @@ extern const uint8_t * const ModtoPS2_MAKE[];
 
 extern __code uint8_t ASCIItoHID[];
 
-#define JoyPresetNum 2
-//extern __xdata JoyMap JoyPresets[];
+extern __code JoyPreset DefaultJoyMaps[];
 #endif

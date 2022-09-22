@@ -128,16 +128,16 @@ typedef struct _EndPoint
 
 typedef struct _HID_GLOBAL
 {
-	UINT8 usagePage;
+	uint8_t usagePage;
 	INT8 logicalMinimum;
 	INT8 logicalMaximum;
 	INT8 physicalMinimum;
 	INT8 physicalMaximum;
-	UINT8 unitExponent;
-	UINT8 unit;
-	UINT8 reportID;
-	UINT8 reportSize;
-	UINT8 reportCount;
+	uint8_t unitExponent;
+	uint8_t unit;
+	uint8_t reportID;
+	uint8_t reportSize;
+	uint8_t reportCount;
 } HID_GLOBAL;
 
 typedef struct _HID_LOCAL
@@ -153,7 +153,6 @@ typedef struct _HID_LOCAL
 #define MAP_KEYBOARD 0
 #define MAP_MOUSE 1
 
-
 #define MAP_MOUSE_BUTTON1 1
 #define MAP_MOUSE_BUTTON2 2
 #define MAP_MOUSE_BUTTON3 3
@@ -161,10 +160,35 @@ typedef struct _HID_LOCAL
 #define MAP_MOUSE_Y 5
 #define MAP_MOUSE_WHEEL 6
 
+#define MAP_TYPE_NONE 0
 #define MAP_TYPE_THRESHOLD_BELOW 1
 #define MAP_TYPE_THRESHOLD_ABOVE 2
 #define MAP_TYPE_SCALE 3
 #define MAP_TYPE_ARRAY 4
+
+#define JOYPRESETCOUNT 18
+
+typedef struct JoyPreset
+{
+	uint8_t Number;
+
+	uint8_t InputUsagePage;
+
+	uint8_t InputUsage;
+
+	// Mouse or keyboard
+	uint8_t OutputChannel;
+
+	// for keyboard, this is the HID scancode of the key associated with this control
+	// for mouse, this is one of the values of MAP_MOUSE_x
+	uint8_t OutputControl;
+
+	// How this control gets interpreted - MAP_TYPE_x
+	uint8_t InputType;
+
+	// Param has different meanings depending on InputType
+	uint16_t InputParam;
+} JoyPreset;
 
 // defines a mapping between a HID segment and a PS/2 event
 typedef struct HID_SEG
@@ -241,20 +265,20 @@ typedef struct _HID_REPORT_DESC
 typedef struct _HID_ITEM_INFO
 {
 	unsigned int format;
-	UINT8 size;
-	UINT8 type;
-	UINT8 tag;
+	uint8_t size;
+	uint8_t type;
+	uint8_t tag;
 
 	union
 	{
-		UINT8 u8;
+		uint8_t u8;
 		INT8 s8;
 		UINT16 u16;
 		INT16 s16;
 		UINT32 u32;
 		INT32 s32;
 
-		const UINT8 *longdata;
+		const uint8_t *longdata;
 	} value;
 
 } HID_ITEM;

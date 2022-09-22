@@ -118,11 +118,12 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 	}
 
 	else
+	{
 		make = 0;
+	}
 
 	if (make)
 	{
-
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 		{
 			SetKey(currSeg->OutputControl, report);
@@ -152,13 +153,24 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 			{
 			// TODO scaling
 			case MAP_MOUSE_X:
+				//printf("%hd ", currSeg->value);
+				if (currSeg->InputParam == 2)
+					currSeg->value = (uint8_t)((int8_t)((currSeg->value + 8) >> 4) - 0x08);
+				else
+					currSeg->value = currSeg->value;
 				report->nextMousePacket[1] = currSeg->value;
 				report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
+				//printf("%hd\n", report->nextMousePacket[1]);
 				break;
 			case MAP_MOUSE_Y:
-				currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
+				printf("%hd ", currSeg->value);
+				if (currSeg->InputParam == 2)
+					currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
+				else
+					currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
 				report->nextMousePacket[2] = currSeg->value;
 				report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
+				printf("%hd\n", report->nextMousePacket[2]);
 				break;
 			}
 		}
@@ -170,64 +182,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report)
 			SetKey(currSeg->value, report);
 		}
 	}
-
-	/*
-	if (report->appUsagePage == REPORT_USAGE_PAGE_GENERIC)
-	{
-		case REPORT_USAGE_MOUSE:
-			report->mouseUpdated = 1;
-			if (currSeg->global->usagePage == REPORT_USAGE_PAGE_BUTTON && currSeg->usage <= 3)
-			{
-				uint8_t bitshifted = 0x01 << (currSeg->usage - 1);
-
-				if (currSeg->value)
-				{
-					report->nextMousePacket[0] |= bitshifted;
-				}
-				else
-				{
-					report->nextMousePacket[0] &= ~bitshifted;
-				}
-			}
-			else if (currSeg->global->usagePage == REPORT_USAGE_PAGE_GENERIC)
-			{
-
-				if (currSeg->usage == REPORT_USAGE_X)
-				{
-					report->nextMousePacket[1] = currSeg->value;
-					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
-				}
-				else if (currSeg->usage == REPORT_USAGE_Y)
-				{
-					currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
-					report->nextMousePacket[2] = currSeg->value;
-					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
-				}
-			}
-			report->nextMousePacket[0] |= 0b00001000;
-			break;
-
-		case REPORT_USAGE_KEYBOARD:
-
-			if (currSeg->global->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
-			{
-
-				report->keyboardUpdated = 1;
-
-				if (currSeg->inputField & HID_INPUT_VARIABLE && currSeg->value)
-				{
-					SetKey(currSeg->usage, report);
-				}
-				else
-				{
-					//array
-					if (currSeg->value)
-						SetKey(currSeg->value, report);
-				}
-			}
-			break;
-
-		case REPORT_USAGE_JOYSTICK:*/
 }
 
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
@@ -295,6 +249,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 
 		currSeg = currSeg->next;
 	}
+
 	if (descReport->mouseUpdated)
 	{
 		if (!MenuActive)
@@ -356,256 +311,6 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 
 		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 32);
 		descReport->keyboardUpdated = 0;
-	}
-}
-
-void SendHIDPS2(unsigned short length, unsigned char devnum, unsigned char type, unsigned char __xdata *msgbuffer)
-{
-	bool brk = 0, make = 0;
-	uint8_t currcode;
-	signed char x, y;
-	switch (type)
-	{
-	case REPORT_USAGE_KEYBOARD:
-
-		// do special keys first
-		if (msgbuffer[0] != lastKeyboardHID[0])
-		{
-			uint8_t rbits = msgbuffer[0];
-			uint8_t pbits = lastKeyboardHID[0];
-
-			// iterate through bits and compare to previous to see whats changed
-			for (uint8_t j = 0; j < 8; j++)
-			{
-				// this bit has changed
-				if ((rbits & 0x01) != (pbits & 0x01))
-				{
-
-					if (rbits & 0x01)
-					{
-						if (MenuActive)
-							Menu_Press_Key(j + 0xE0);
-						else
-							SendKeyboard(ModtoPS2_MAKE[j]);
-					}
-					else
-					{
-						if (!MenuActive)
-							SendKeyboard(ModtoPS2_BREAK[j]);
-					}
-				}
-
-				rbits = rbits >> 1;
-				pbits = pbits >> 1;
-			}
-		}
-
-		// iterate through all the HID bytes to see what's changed since last time
-		for (uint8_t i = 2; i < 8; i++)
-		{
-			// key was pressed last time
-			if (lastKeyboardHID[i])
-			{
-
-				// assume this will be a break code
-				brk = 1;
-
-				// see if this code is still present in current poll
-				for (uint8_t j = 2; j < 8; j++)
-				{
-					if (lastKeyboardHID[i] == msgbuffer[j])
-					{
-						// if so, do not break
-						brk = 0;
-						break;
-					}
-				}
-
-				if (brk)
-				{
-					// if the key we just released is the one that's repeating then stop
-					if (lastKeyboardHID[i] == RepeatKey)
-					{
-						RepeatKey = 0;
-						SetRepeatState(0);
-					}
-
-					//DEBUG_OUT("Break %x\n", lastHID[devnum][i]);
-					// no break code for pause key, for some reason
-					if (lastKeyboardHID[i] == 0x48)
-						continue;
-
-					//send the break code
-					if (lastKeyboardHID[i] <= 0x67 && !MenuActive)
-						SendKeyboard(HIDtoPS2_Break[lastKeyboardHID[i]]);
-				}
-			}
-
-			// key is pressed this time
-			if (msgbuffer[i])
-			{
-				// assume we need to make
-				make = true;
-
-				// see if key was present in previous poll
-				for (uint8_t j = 2; j < 8; j++)
-				{
-					if (msgbuffer[i] == lastKeyboardHID[j])
-					{
-						// if so, no need to make
-						make = false;
-						break;
-					}
-				}
-
-				if (make)
-				{
-					if (msgbuffer[i] <= 0x67)
-					{
-						if (MenuActive)
-						{
-							Menu_Press_Key(msgbuffer[i]);
-						}
-						else
-						{
-							SendKeyboard(HIDtoPS2_Make[msgbuffer[i]]);
-							RepeatKey = msgbuffer[i];
-							SetRepeatState(1);
-						}
-					}
-				}
-			}
-		}
-
-		for (int i = 0; i < length; i++)
-		{
-			lastKeyboardHID[i] = msgbuffer[i];
-		}
-
-		break;
-
-	case REPORT_USAGE_MOUSE:
-
-		/*ANDYS_DEBUG_OUT("Mouse : ");
-		for (int p = 0; p < length; p++)
-			ANDYS_DEBUG_OUT("%x ", msgbuffer[p]);
-		ANDYS_DEBUG_OUT("\n");*/
-
-		//HID :
-		//byte 0 is buttons
-		//byte 1 is x movement (8 bit signed)
-		//byte 2 is y movement (8 bit signed)
-
-		x = (signed char)msgbuffer[1];
-		y = (signed char)msgbuffer[2];
-
-		// PS2 mice have the y-axis inverted from HID
-		y = -y;
-
-		// First PS2 byte
-		// bit3 always set
-		uint8_t tmp = 0x08;
-
-		// bottom 3 bits of button format is the same
-		tmp |= msgbuffer[0] & 0x07;
-
-		// X sign
-		tmp |= ((x & 0x80) >> 3);
-
-		// Y sign
-		tmp |= ((y & 0x80) >> 2);
-
-		SendMouse3(tmp, (uint8_t)x, (uint8_t)y);
-
-		break;
-
-		/*	case 0x04: //joystick
-
-		if (msgbuffer[0] == 1)
-		{
-			// iterate through all the HID bytes to see what's changed since last time
-			for (uint8_t i = 1; i < 8; i++)
-			{
-				if (lastHID[devnum][i] != msgbuffer[i])
-				{
-					switch (i)
-					{
-					case 1: // right analog stick Y
-						break;
-					case 2: // right analog stick X
-						break;
-					case 3: // left analog stick X
-						// breaks
-						if (msgbuffer[3] >= 64 && lastHID[devnum][3] < 64) // not left but left last time
-							SendKeyboard(KEY_LEFT_BREAK);
-						if (msgbuffer[3] <= 192 && lastHID[devnum][3] > 192) // not right but right last time
-							SendKeyboard(KEY_RIGHT_BREAK);
-						// makes
-						if (msgbuffer[3] < 64 && lastHID[devnum][3] >= 64) // left and not left last time
-							SendKeyboard(KEY_LEFT_MAKE);
-						if (msgbuffer[3] > 192 && lastHID[devnum][3] <= 192) // right and not right last time
-							SendKeyboard(KEY_RIGHT_MAKE);
-
-						break;
-					case 4: // left analog stick Y
-						// breaks
-						if (msgbuffer[4] >= 64 && lastHID[devnum][4] < 64) // not up but up last time
-							SendKeyboard(KEY_UP_BREAK);
-						if (msgbuffer[4] <= 192 && lastHID[devnum][4] > 192) // not down but down last time
-							SendKeyboard(KEY_DOWN_BREAK);
-						// makes
-						if (msgbuffer[4] < 64 && lastHID[devnum][4] >= 64) // up and not up last time
-							SendKeyboard(KEY_UP_MAKE);
-						if (msgbuffer[4] > 192 && lastHID[devnum][4] <= 192) // down and not down last time
-							SendKeyboard(KEY_DOWN_MAKE);
-						break;
-					case 5:
-						// breaks
-						if (msgbuffer[5] & 0x10 && !(lastHID[devnum][5] & 0x10))
-							SendKeyboard(KEY_LCTRL_MAKE);
-						if (msgbuffer[5] & 0x20 && !(lastHID[devnum][5] & 0x20))
-							SendKeyboard(KEY_SPACE_MAKE);
-						if (msgbuffer[5] & 0x40 && !(lastHID[devnum][5] & 0x40))
-							SendKeyboard(KEY_LALT_MAKE);
-						if (msgbuffer[5] & 0x80 && !(lastHID[devnum][5] & 0x80))
-							SendKeyboard(KEY_ENTER_MAKE);
-						// makes
-						if (!(msgbuffer[5] & 0x10) && lastHID[devnum][5] & 0x10)
-							SendKeyboard(KEY_LCTRL_BREAK);
-						if (!(msgbuffer[5] & 0x20) && lastHID[devnum][5] & 0x20)
-							SendKeyboard(KEY_SPACE_BREAK);
-						if (!(msgbuffer[5] & 0x40) && lastHID[devnum][5] & 0x40)
-							SendKeyboard(KEY_LALT_BREAK);
-						if (!(msgbuffer[5] & 0x80) && lastHID[devnum][5] & 0x80)
-							SendKeyboard(KEY_ENTER_BREAK);
-						break;
-					case 6:
-						break;
-					}
-				}
-
-				lastHID[devnum][i] = msgbuffer[i];
-			}
-		}
-		break;*/
-
-	default:
-		// byte 0 is the subdevice number
-		// byte 1/2 are right analog stick Y/X
-		// byte 3/4 are left analog stick/DPAD X/Y
-		// byte 5 -
-		//   bits 0-3 are always 1
-		//   bits 4-7 are thumb buttons
-		// byte 6 -
-		//   bits 0-3 are shoulder buttons
-		//   bits 4-7 are always 0
-
-		/*if (msgbuffer[0] == 1)
-		{
-
-			
-		}*/
-		break;
 	}
 }
 

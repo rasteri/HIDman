@@ -193,84 +193,84 @@ extern "C" {
 #endif
 
 typedef struct _USB_SETUP_REQ {
-    UINT8 bRequestType;
-    UINT8 bRequest;
-    UINT8 wValueL;
-    UINT8 wValueH;
-    UINT8 wIndexL;
-    UINT8 wIndexH;
-    UINT8 wLengthL;
-    UINT8 wLengthH;
+    uint8_t bRequestType;
+    uint8_t bRequest;
+    uint8_t wValueL;
+    uint8_t wValueH;
+    uint8_t wIndexL;
+    uint8_t wIndexH;
+    uint8_t wLengthL;
+    uint8_t wLengthH;
 } USB_SETUP_REQ, *PUSB_SETUP_REQ;
 
 typedef USB_SETUP_REQ __xdata *PXUSB_SETUP_REQ;
 
 typedef struct _DESCR_HEADER
 {
-	UINT8 bDescLength;
-	UINT8 bDescriptorType;	
+	uint8_t bDescLength;
+	uint8_t bDescriptorType;	
 } DESCR_HEADER;
 
 
 typedef struct _USB_DEVICE_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT8 bcdUSBL;
-    UINT8 bcdUSBH;
-    UINT8 bDeviceClass;
-    UINT8 bDeviceSubClass;
-    UINT8 bDeviceProtocol;
-    UINT8 bMaxPacketSize0;
-    UINT8 idVendorL;
-    UINT8 idVendorH;
-    UINT8 idProductL;
-    UINT8 idProductH;
-    UINT8 bcdDeviceL;
-    UINT8 bcdDeviceH;
-    UINT8 iManufacturer;
-    UINT8 iProduct;
-    UINT8 iSerialNumber;
-    UINT8 bNumConfigurations;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bcdUSBL;
+    uint8_t bcdUSBH;
+    uint8_t bDeviceClass;
+    uint8_t bDeviceSubClass;
+    uint8_t bDeviceProtocol;
+    uint8_t bMaxPacketSize0;
+    uint8_t idVendorL;
+    uint8_t idVendorH;
+    uint8_t idProductL;
+    uint8_t idProductH;
+    uint8_t bcdDeviceL;
+    uint8_t bcdDeviceH;
+    uint8_t iManufacturer;
+    uint8_t iProduct;
+    uint8_t iSerialNumber;
+    uint8_t bNumConfigurations;
 } USB_DEV_DESCR, *PUSB_DEV_DESCR;
 
 typedef USB_DEV_DESCR __xdata *PXUSB_DEV_DESCR;
 
 typedef struct _USB_CONFIG_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT8 wTotalLengthL;
-    UINT8 wTotalLengthH;
-    UINT8 bNumInterfaces;
-    UINT8 bConfigurationValue;
-    UINT8 iConfiguration;
-    UINT8 bmAttributes;
-    UINT8 MaxPower;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t wTotalLengthL;
+    uint8_t wTotalLengthH;
+    uint8_t bNumInterfaces;
+    uint8_t bConfigurationValue;
+    uint8_t iConfiguration;
+    uint8_t bmAttributes;
+    uint8_t MaxPower;
 } USB_CFG_DESCR, *PUSB_CFG_DESCR;
 
 typedef USB_CFG_DESCR __xdata *PXUSB_CFG_DESCR;
 
 typedef struct _USB_INTERF_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT8 bInterfaceNumber;
-    UINT8 bAlternateSetting;
-    UINT8 bNumEndpoints;
-    UINT8 bInterfaceClass;
-    UINT8 bInterfaceSubClass;
-    UINT8 bInterfaceProtocol;
-    UINT8 iInterface;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bInterfaceNumber;
+    uint8_t bAlternateSetting;
+    uint8_t bNumEndpoints;
+    uint8_t bInterfaceClass;
+    uint8_t bInterfaceSubClass;
+    uint8_t bInterfaceProtocol;
+    uint8_t iInterface;
 } USB_ITF_DESCR, *PUSB_ITF_DESCR;
 
 typedef USB_ITF_DESCR __xdata *PXUSB_ITF_DESCR;
 
 typedef struct _USB_ENDPOINT_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT8 bEndpointAddress;
-    UINT8 bmAttributes;
-    UINT8 wMaxPacketSizeL;
-    UINT8 wMaxPacketSizeH;
-    UINT8 bInterval;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bEndpointAddress;
+    uint8_t bmAttributes;
+    uint8_t wMaxPacketSizeL;
+    uint8_t wMaxPacketSizeH;
+    uint8_t bInterval;
 } USB_ENDP_DESCR, *PUSB_ENDP_DESCR;
 
 typedef USB_ENDP_DESCR __xdata *PXUSB_ENDP_DESCR;
@@ -284,68 +284,68 @@ typedef struct _USB_CONFIG_DESCR_LONG {
 typedef USB_CFG_DESCR_LONG __xdata *PXUSB_CFG_DESCR_LONG;
 
 typedef struct _USB_HUB_DESCR {
-    UINT8 bDescLength;
-    UINT8 bDescriptorType;
-    UINT8 bNbrPorts;
-    UINT8 wHubCharacteristicsL;
-    UINT8 wHubCharacteristicsH;
-    UINT8 bPwrOn2PwrGood;
-    UINT8 bHubContrCurrent;
-    UINT8 DeviceRemovable;
-    UINT8 PortPwrCtrlMask;
+    uint8_t bDescLength;
+    uint8_t bDescriptorType;
+    uint8_t bNbrPorts;
+    uint8_t wHubCharacteristicsL;
+    uint8_t wHubCharacteristicsH;
+    uint8_t bPwrOn2PwrGood;
+    uint8_t bHubContrCurrent;
+    uint8_t DeviceRemovable;
+    uint8_t PortPwrCtrlMask;
 } USB_HUB_DESCR, *PUSB_HUB_DESCR;
 
 typedef USB_HUB_DESCR __xdata *PXUSB_HUB_DESCR;
 
 typedef struct _USB_HID_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT8 bcdHIDL;
-    UINT8 bcdHIDH;
-    UINT8 bCountryCode;
-    UINT8 bNumDescriptors;
-    UINT8 bDescriptorTypeX;
-    UINT8 wDescriptorLengthL;
-    UINT8 wDescriptorLengthH;
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bcdHIDL;
+    uint8_t bcdHIDH;
+    uint8_t bCountryCode;
+    uint8_t bNumDescriptors;
+    uint8_t bDescriptorTypeX;
+    uint8_t wDescriptorLengthL;
+    uint8_t wDescriptorLengthH;
 } USB_HID_DESCR, *PUSB_HID_DESCR;
 
 typedef USB_HID_DESCR __xdata *PXUSB_HID_DESCR;
 
 typedef struct _UDISK_BOC_CBW {         /* command of BulkOnly USB-FlashDisk */
-    UINT8 mCBW_Sig0;
-    UINT8 mCBW_Sig1;
-    UINT8 mCBW_Sig2;
-    UINT8 mCBW_Sig3;
-    UINT8 mCBW_Tag0;
-    UINT8 mCBW_Tag1;
-    UINT8 mCBW_Tag2;
-    UINT8 mCBW_Tag3;
-    UINT8 mCBW_DataLen0;
-    UINT8 mCBW_DataLen1;
-    UINT8 mCBW_DataLen2;
-    UINT8 mCBW_DataLen3;                /* uppest byte of data length, always is 0 */
-    UINT8 mCBW_Flag;                    /* transfer direction and etc. */
-    UINT8 mCBW_LUN;
-    UINT8 mCBW_CB_Len;                  /* length of command block */
-    UINT8 mCBW_CB_Buf[16];              /* command block buffer */
+    uint8_t mCBW_Sig0;
+    uint8_t mCBW_Sig1;
+    uint8_t mCBW_Sig2;
+    uint8_t mCBW_Sig3;
+    uint8_t mCBW_Tag0;
+    uint8_t mCBW_Tag1;
+    uint8_t mCBW_Tag2;
+    uint8_t mCBW_Tag3;
+    uint8_t mCBW_DataLen0;
+    uint8_t mCBW_DataLen1;
+    uint8_t mCBW_DataLen2;
+    uint8_t mCBW_DataLen3;                /* uppest byte of data length, always is 0 */
+    uint8_t mCBW_Flag;                    /* transfer direction and etc. */
+    uint8_t mCBW_LUN;
+    uint8_t mCBW_CB_Len;                  /* length of command block */
+    uint8_t mCBW_CB_Buf[16];              /* command block buffer */
 } UDISK_BOC_CBW, *PUDISK_BOC_CBW;
 
 typedef UDISK_BOC_CBW __xdata *PXUDISK_BOC_CBW;
 
 typedef struct _UDISK_BOC_CSW {         /* status of BulkOnly USB-FlashDisk */
-    UINT8 mCSW_Sig0;
-    UINT8 mCSW_Sig1;
-    UINT8 mCSW_Sig2;
-    UINT8 mCSW_Sig3;
-    UINT8 mCSW_Tag0;
-    UINT8 mCSW_Tag1;
-    UINT8 mCSW_Tag2;
-    UINT8 mCSW_Tag3;
-    UINT8 mCSW_Residue0;                /* return: remainder bytes */
-    UINT8 mCSW_Residue1;
-    UINT8 mCSW_Residue2;
-    UINT8 mCSW_Residue3;                /* uppest byte of remainder length, always is 0 */
-    UINT8 mCSW_Status;                  /* return: result status */
+    uint8_t mCSW_Sig0;
+    uint8_t mCSW_Sig1;
+    uint8_t mCSW_Sig2;
+    uint8_t mCSW_Sig3;
+    uint8_t mCSW_Tag0;
+    uint8_t mCSW_Tag1;
+    uint8_t mCSW_Tag2;
+    uint8_t mCSW_Tag3;
+    uint8_t mCSW_Residue0;                /* return: remainder bytes */
+    uint8_t mCSW_Residue1;
+    uint8_t mCSW_Residue2;
+    uint8_t mCSW_Residue3;                /* uppest byte of remainder length, always is 0 */
+    uint8_t mCSW_Status;                  /* return: result status */
 } UDISK_BOC_CSW, *PUDISK_BOC_CSW;
 
 typedef UDISK_BOC_CSW __xdata *PXUDISK_BOC_CSW;

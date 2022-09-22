@@ -785,22 +785,10 @@ unsigned char getHIDDeviceReport(unsigned char CurrentDevive)
 		SendKeyboardString("\n");
 		SendKeyboardString("\n");
 	}
-	//sendProtocolMSG(MSG_TYPE_HID_INFO, len, CurrentDevive, HIDdevice[CurrentDevive].interface, HIDdevice[CurrentDevive].rootHub, receiveDataBuffer);
-	//parseHIDDeviceReport(receiveDataBuffer, len, CurrentDevive);
 
 	ParseReportDescriptor(receiveDataBuffer, len, &HIDdevice[CurrentDevive].HidSegStruct, HIDdevice[CurrentDevive].rootHub);
 
 	DumpyTown();
-
-	/*ANDYS_DEBUG_OUT("KeyboardReportId : %x\n", HIDdevice[CurrentDevive].HidSegStruct.KeyboardReportId);
-	ANDYS_DEBUG_OUT("MouseReportId : %x\n\n", HIDdevice[CurrentDevive].HidSegStruct.MouseReportId);
-	for (uint8_t x = 0; x < HID_SEG_NUM; x++)
-	{
-		ANDYS_DEBUG_OUT("Seg %x - ", x);
-		ANDYS_DEBUG_OUT("Start %x,", HIDdevice[CurrentDevive].HidSegStruct.HIDSeg[x].start);
-		ANDYS_DEBUG_OUT("Size %x,", HIDdevice[CurrentDevive].HidSegStruct.HIDSeg[x].size);
-		ANDYS_DEBUG_OUT("Count %x\n\n", HIDdevice[CurrentDevive].HidSegStruct.HIDSeg[x].count);
-	}*/
 
 	return (ERR_SUCCESS);
 }
@@ -1046,7 +1034,7 @@ void DumpyTown()
 					printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
 					while (tmpseg != NULL)
 					{
-						printf("  startbit %u, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
+						printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
 						tmpseg = tmpseg->next;
 					}
 				}

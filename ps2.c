@@ -109,7 +109,6 @@ bool SendKeyboard(const uint8_t *chunk)
 	}
 
 	TR0 = 1; // re-enable timer interrupt
-	printf("full\n");
 	return 0;
 }
 

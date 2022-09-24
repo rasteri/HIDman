@@ -275,6 +275,8 @@ __code uint8_t KEY_APOSTROPHE_MAKE[] = {1, 0x52};
 __code uint8_t KEY_COMMA_MAKE[] = {1, 0x41};
 __code uint8_t KEY_PERIOD_MAKE[] = {1, 0x49};
 __code uint8_t KEY_FWSLASH_MAKE[] = {1, 0x4A};
+__code uint8_t KEY_EURO1_MAKE[] = {1, 0x5D};
+__code uint8_t KEY_EURO2_MAKE[] = {1, 0x61};
 
 __code uint8_t KEY_A_BREAK[] = {2, 0xF0, 0x1C};
 __code uint8_t KEY_B_BREAK[] = {2, 0xF0, 0x32};
@@ -380,6 +382,8 @@ __code uint8_t KEY_APOSTROPHE_BREAK[] = {2, 0xF0, 0x52};
 __code uint8_t KEY_COMMA_BREAK[] = {2, 0xF0, 0x41};
 __code uint8_t KEY_PERIOD_BREAK[] = {2, 0xF0, 0x49};
 __code uint8_t KEY_FWSLASH_BREAK[] = {2, 0xF0, 0x4A};
+__code uint8_t KEY_EURO1_BREAK[] = {2, 0xF0, 0x5D};
+__code uint8_t KEY_EURO2_BREAK[] = {2, 0xF0, 0x61};
 
 __code uint8_t KEY_ACK[] = {1, 0xFA};
 __code uint8_t KEY_BATCOMPLETE[] = {1, 0xAA};
@@ -463,10 +467,10 @@ const uint8_t *const HIDtoPS2_Make[] =
         KEY_LEFTSQB_MAKE,
         KEY_RIGHTSQB_MAKE, //30
         KEY_BKSLASH_MAKE,
-        KEY_TILDE_MAKE,
+        KEY_EURO1_MAKE,
         KEY_SEMICOLON_MAKE,
         KEY_APOSTROPHE_MAKE,
-        NULL,
+        KEY_TILDE_MAKE,
         KEY_COMMA_MAKE,
         KEY_PERIOD_MAKE,
         KEY_FWSLASH_MAKE,
@@ -513,7 +517,7 @@ const uint8_t *const HIDtoPS2_Make[] =
         KEY_PAD9_MAKE,
         KEY_PAD0_MAKE,
         KEY_PADDOT_MAKE,
-        NULL,
+        KEY_EURO2_MAKE,
         KEY_APPS_MAKE,
         NULL,
         KEY_EQUAL_MAKE};
@@ -570,10 +574,10 @@ const uint8_t *const HIDtoPS2_Break[] =
         KEY_LEFTSQB_BREAK,
         KEY_RIGHTSQB_BREAK, //30
         KEY_BKSLASH_BREAK,
-        KEY_TILDE_BREAK,
+        KEY_EURO1_BREAK,
         KEY_SEMICOLON_BREAK,
         KEY_APOSTROPHE_BREAK,
-        NULL,
+        KEY_TILDE_BREAK,
         KEY_COMMA_BREAK,
         KEY_PERIOD_BREAK,
         KEY_FWSLASH_BREAK,
@@ -620,7 +624,7 @@ const uint8_t *const HIDtoPS2_Break[] =
         KEY_PAD9_BREAK,        // = {1, 0x7D};
         KEY_PAD0_BREAK,        // = {1, 0x70};
         KEY_PADDOT_BREAK,
-        NULL,
+        KEY_EURO2_BREAK,
         KEY_APPS_BREAK,
         NULL,
         KEY_EQUAL_BREAK};

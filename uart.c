@@ -1,33 +1,129 @@
+#include "Type.h"
+#include "CH559.h" 
+#include "System.h"
+#include "Uart.h"
 
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include "CH559.h"
-#include "util.h"
-#include "uart.h"
+/*******************************************************************************
+* Function Name  : CH559UART0Alter()
+* Description    : CH559����0����ӳ��,����ӳ�䵽P0.2��P0.3
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void CH559UART0Alter()
+{
+    PORT_CFG |= bP0_OC;
+    P0_DIR |= bTXD_;
+    P0_PU |= bTXD_ | bRXD_;
+    PIN_FUNC |= bUART0_PIN_X;                                                  //����ӳ�䵽P0.2��P0.3
+}
 
-uint8_t __xdata uartRxBuff[64];
-uint8_t __xdata rxPos = 0;
+/*******************************************************************************
+* Function Name  : InitUART0()
+* Description    : CH559����0��ʼ��,Ĭ��ʹ��T1��UART0�Ĳ����ʷ�����,Ҳ����ʹ��T2
+                   ��Ϊ�����ʷ�����
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void InitUART0()
+{
+    UINT32 x;
+    UINT8 x2; 
+
+#ifdef DEBUG
+    //CH559UART0Alter();
+#endif
+    
+    SM0 = 0;
+    SM1 = 1;
+    SM2 = 0;                                                                   //����0ʹ��ģʽ1
+                                                                               //ʹ��Timer1��Ϊ�����ʷ�����
+    RCLK = 0;                                                                  //UART0����ʱ��
+    TCLK = 0;                                                                  //UART0����ʱ��
+    PCON |= SMOD;
+    x = 10 * FREQ_SYS / BUAD_RATE / 16;                                             //���������Ƶ��ע��x��ֵ��Ҫ���                            
+    x2 = x % 10;
+    x /= 10;
+    if ( x2 >= 5 ) x++;                                                       //��������
+
+    TMOD = TMOD & ~ bT1_GATE & ~ bT1_CT & ~ MASK_T1_MOD | bT1_M1;              //0X20��Timer1��Ϊ8λ�Զ����ض�ʱ��
+    T2MOD = T2MOD | bTMR_CLK | bT1_CLK;                                        //Timer1ʱ��ѡ��
+    TH1 = 0-x;                                                                 //12MHz����,buad/12Ϊʵ�������ò�����
+    TR1 = 1;                                                                   //������ʱ��1
+
+	REN = 1;                                                                   //����0����ʹ��
+	
+#ifdef DEBUG
+	TI = 1;
+#else
+	TI = 0;
+
+	ES = 1;
+#endif
+}
+
+/*******************************************************************************
+* Function Name  : CH559UART0RcvByte()
+* Description    : CH559UART0����һ���ֽ�
+* Input          : None
+* Output         : None
+* Return         : SBUF
+*******************************************************************************/
+UINT8  CH559UART0RcvByte( )
+{
+    while(RI == 0);                                                            //��ѯ���գ��жϷ�ʽ�ɲ���
+    RI = 0;
+    return SBUF;
+}
+
+static BOOL volatile s_sent = FALSE;
+
+void SetUart0Sent(void)
+{
+	s_sent = TRUE;
+}
 
 
-void processUart(){
-    while(RI){
-            RI=0;
-            uartRxBuff[rxPos] = SBUF;
-            if (uartRxBuff[rxPos]=='\n' || rxPos >= 64){
-                for (uint8_t i = 0; i < rxPos; i ++ )
-                    {
-                        printf( "0x%02X ",uartRxBuff[i]);
-                    }
-                    printf("\n");
-                if(uartRxBuff[0]=='k'){
-                //if(uartRxBuff[1]==0x61)LED=0;
-                //if(uartRxBuff[1]==0x73)LED=1;
-                if(uartRxBuff[1]=='b')runBootloader();
-                }
-            rxPos=0;
-            }else{
-            rxPos++;
-            }
-        }
+/*******************************************************************************
+* Function Name  : CH559UART0SendByte(UINT8 SendDat)
+* Description    : CH559UART0����һ���ֽ�
+* Input          : UINT8 SendDat��Ҫ���͵�����
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void CH559UART0SendByte(UINT8 SendDat)
+{
+	s_sent = FALSE;
+	SBUF = SendDat;
+	while (!s_sent);
+}
+
+void CH559UART0SendData(UINT8 *pData, UINT8 len)
+{
+	while (len-- > 0)
+	{
+		s_sent = FALSE;
+		SBUF = *pData++;
+		while (!s_sent);
+	}
+}
+
+/**
+ * stdio printf directed to UART0 using putchar and getchar
+ */
+
+int putchar(int c)
+{
+    while (!TI);
+    TI = 0;
+    SBUF = c & 0xFF;
+    return c;
+}
+
+int getchar() 
+{
+    while(!RI);
+    RI = 0;
+    return SBUF;
 }

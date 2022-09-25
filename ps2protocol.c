@@ -16,7 +16,7 @@
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
-#include "protocol.h"
+#include "ps2protocol.h"
 #include "menu.h"
 
 // repeatState -

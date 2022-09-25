@@ -142,7 +142,7 @@ unsigned char digitalRead(unsigned char port, unsigned char pin)
  * stdio printf directed to UART0 using putchar and getchar
  */
 
-int putchar(int c)
+/*int putchar(int c)
 {
     while (!TI);
     TI = 0;
@@ -155,7 +155,7 @@ int getchar()
     while(!RI);
     RI = 0;
     return SBUF;
-}
+}*/
 
 /*******************************************************************************
 * Function Name  : delayUs(UNIT16 n)

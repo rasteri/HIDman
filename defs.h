@@ -262,24 +262,4 @@ typedef struct _HID_REPORT_DESC
 	HID_REPORT *reports[MAX_REPORTS];
 } HID_REPORT_DESC;
 
-typedef struct _HID_ITEM_INFO
-{
-	unsigned int format;
-	uint8_t size;
-	uint8_t type;
-	uint8_t tag;
-
-	union
-	{
-		uint8_t u8;
-		INT8 s8;
-		UINT16 u16;
-		INT16 s16;
-		UINT32 u32;
-		INT32 s32;
-
-		const uint8_t *longdata;
-	} value;
-
-} HID_ITEM;
 #endif

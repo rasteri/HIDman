@@ -15,7 +15,7 @@
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
-#include "protocol.h"
+#include "ps2protocol.h"
 
 SBIT(KEY_CLOCK, 0xB0, 4);
 SBIT(KEY_DATA, 0xB0, 5);

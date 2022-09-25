@@ -54,7 +54,17 @@ void mTimer0Interrupt(void) __interrupt(1)
 
 void main()
 {
-	InitSystem();
+	unsigned char s;
+	uint8_t keyindex;
+	uint8_t init = 0;
+	uint8_t fun = 0;
+	initClock();
+	initUART0(1000000, 0);
+	ANDYS_DEBUG_OUT("Startup\n");
+
+	resetHubDevices(0);
+	resetHubDevices(1);
+	initUSB_Host();
 
 	//port2 setup
 	PORT_CFG |= bP2_OC; // open collector
@@ -99,25 +109,10 @@ void main()
 
 		if (MenuActive)
 			Menu_Task();
-		ProcessUsbHostPort();
-		ProcessKeyboardLed();
+
+		//processUart();
+		s = checkRootHubConnections();
+		pollHIDdevice();
+		HandleRepeats();
 	}
 }
-
-/*int main()
-{
-	InitSystem();
-
-	while (TRUE)
-	{
-
-		//printf("heh\n");
-		ProcessUsbHostPort();
-
-		ProcessKeyboardLed();
-	}
-	
-	return 0;
-}
-
-*/

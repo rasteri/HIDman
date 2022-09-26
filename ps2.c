@@ -122,6 +122,7 @@ void PS2ProcessPort(uint8_t port)
 	static __data uint8_t sb;
 
 	bool reEnter = 0;
+
 	do
 	{
 		sb = ports[port].sendbit;

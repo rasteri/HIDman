@@ -25,14 +25,44 @@ static UINT8 volatile s_5MsCounter = 0;
 static BOOL volatile s_CheckUsbPort0 = FALSE;
 static BOOL volatile s_CheckUsbPort1 = FALSE;
 
+void mTimer2Interrupt(void) __interrupt(5)
+{
+
+	if (TF2)
+    { 	
+
+        TF2 = 0; 
+		
+		//uart receive timeout
+		RecvBufferTimerout();
+
+		if (s_5MsCounter == 0)
+		{
+			s_CheckUsbPort0 = TRUE;
+		}
+		else if (s_5MsCounter == 1)
+		{
+			s_CheckUsbPort1 = TRUE;
+		}
+		
+		s_5MsCounter++;
+		if (s_5MsCounter == 2)
+		{
+			s_5MsCounter = 0;
+		}
+
+	}
+}
+
 static void InitTimer2(void)
 {
 	mTimer2Clk12DivFsys( ); 												//ʱ��ѡ��Fsys��ʱ����ʽ
 	mTimer2Setup(0);														//��ʱ��������ʾ
 	mTimer2Init(FREQ_SYS / 12 * 5 / 1000);									//��ʱ������ֵ
-
+	
 	ET2 = 1;																//ʹ��ȫ���ж�
-	mTimer2RunCTL(1); 														//������ʱ��
+	mTimer2RunCTL(1); 	
+																	//������ʱ��
 }
 
 void InitSystem(void)
@@ -51,14 +81,14 @@ void InitSystem(void)
 	InitRecvBuffer();
 	
 	InitTimer2();
-	
+
 	InitUART0();
 
 	InitUsbData();
 	InitUsbHost();
 
 	HAL_ENABLE_INTERRUPTS();
-
+	
 	TRACE("system init\r\n");
 }
 

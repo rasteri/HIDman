@@ -279,7 +279,7 @@ static UINT8 USBHostTransact(UINT8 endp_pid, UINT8 tog, UINT16 timeout)
 				return (ERR_SUCCESS);
 			}
 
-#if 1
+#if 0
 			TRACE1("endp_pid=%02X\n", (UINT16)endp_pid);
 			TRACE1("USB_INT_FG=%02X\n", (UINT16)USB_INT_FG);
 			TRACE1("USB_INT_ST=%02X\n", (UINT16)USB_INT_ST);
@@ -761,8 +761,9 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 					if (s == ERR_SUCCESS)
 					{
 						TRACE1("interface %d data:", (UINT16)i);
-						// TODO THIS IS WHERE THE FUN STUFF GOES
-						//						ProcessHIDData(pInterface, ReceiveDataBuffer, len);
+						// HIS IS WHERE THE FUN STUFF GOES
+						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
+						ParseReport(&pInterface->HidSegStruct, len * 8, ReceiveDataBuffer);
 					}
 				}
 			}
@@ -1371,10 +1372,12 @@ void DealUsbPort(void) //main function should use it at least 500ms
 		UINT8 i;
 
 		mDelaymS(150);
+		TR0 = 0;
 		for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 		{
 			EnumerateRootHubPort(i);
 		}
+		TR0 = 1;
 	}
 }
 

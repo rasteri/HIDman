@@ -21,13 +21,14 @@ SBIT(MOUSE_DATA, 0xA0, 1);
 __xdata uint8_t repeatDiv = 0;
 uint16_t ResetCounter;
 
+
+void mTimer2Interrupt(void) __interrupt(5);
+
 // timer should run at 48MHz divided by (0xFFFF - (TH0TL0))
 // i.e. 60khz
 void mTimer0Interrupt(void) __interrupt(1)
 {
 	// Reload to 60KHz
-	TH0 = 0xFC;
-	TL0 = 0xDF;
 
 	PS2ProcessPort(PORT_KEY);
 	PS2ProcessPort(PORT_MOUSE);
@@ -36,7 +37,7 @@ void mTimer0Interrupt(void) __interrupt(1)
 	// divide down to 15KHz to make maths easier
 	if (++repeatDiv == 4)
 	{
-		RepeatTimer();
+		//RepeatTimer();
 		repeatDiv = 0;
 
 		if (!(P4_IN & (1 << 6)))
@@ -62,12 +63,8 @@ void main()
 	P2_PU = 0x00;		// pull up - change this to 0x00 when we add the 5v pullup
 
 	// timer0 setup
-	TMOD = (TMOD & 0xf0) | 0x01; // mode 1 (16bit no auto reload)
-	T2MOD |= 0b10010000;		 // fast mode (fsys) - should be 48MHz
-
-	// preload to 60KHz
-	TH0 = 0xFC;
-	TL0 = 0xDF;
+	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
+	TH0 = 0xBD; // 60khz
 
 	TR0 = 1; // start timer0
 	ET0 = 1; //enable timer0 interrupt;
@@ -94,11 +91,12 @@ void main()
 
 	while (1)
 	{
-		if (!(P4_IN & (1 << 6)))
+		/*if (!(P4_IN & (1 << 6)))
 			MenuActive = 1;
 
 		if (MenuActive)
-			Menu_Task();
+			Menu_Task();*/
+
 		ProcessUsbHostPort();
 		ProcessKeyboardLed();
 	}

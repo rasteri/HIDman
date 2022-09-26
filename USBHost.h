@@ -34,7 +34,7 @@
 #define ROOT_HUB_PORT_NUM      2
 
 //maximum number of external hub ports
-#define MAX_EXHUB_PORT_NUM     4
+#define MAX_EXHUB_PORT_NUM     2
 
 //none external hub port
 #define EXHUB_PORT_NONE        0xff

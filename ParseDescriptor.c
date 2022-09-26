@@ -14,10 +14,10 @@
 #include "util.h"
 #include "parsedescriptor.h"
 
-__xdata HID_SEG SegmentPool[2][SEGMENTPOOLSIZE];
-__xdata HID_REPORT ReportPool[2][REPORTPOOLSIZE];
-__xdata uint8_t SegmentPoolSizes[2] = {0, 0};
-__xdata uint8_t ReportPoolSizes[2] = {0, 0};
+__xdata HID_SEG SegmentPool[SEGMENTPOOLSIZE];
+__xdata HID_REPORT ReportPool[REPORTPOOLSIZE];
+__xdata uint8_t SegmentPoolSize = 0;
+__xdata uint8_t ReportPoolSize = 0;
 
 uint8_t JoyNum = 0;
 
@@ -192,20 +192,6 @@ static INT32 ItemSData(HID_ITEM *itemInfo)
 	return 0;
 }
 
-static void InitHidGlobal(HID_GLOBAL *pHidGlobal)
-{
-	pHidGlobal->usagePage = USAGE_PAGE_NONE;
-	pHidGlobal->logicalMinimum = 0;
-	pHidGlobal->logicalMaximum = 0;
-	pHidGlobal->physicalMinimum = 0;
-	pHidGlobal->physicalMaximum = 0;
-	pHidGlobal->unitExponent = 0;
-	pHidGlobal->unit = 0;
-	pHidGlobal->reportID = 0;
-	pHidGlobal->reportSize = 0;
-	pHidGlobal->reportCount = 0;
-}
-
 static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 {
 	static __xdata uint8_t b;
@@ -285,23 +271,23 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 	return NULL;
 }
 
-#define CreateSeg()                                                                                                     \
-	{                                                                                                                   \
-		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                                        \
-		{                                                                                                               \
-			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = &SegmentPool[port][SegmentPoolSizes[port]++]; \
-			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                                   \
-		}                                                                                                               \
-		else                                                                                                            \
-		{                                                                                                               \
-			currSegPnt->next = &SegmentPool[port][SegmentPoolSizes[port]++];                                            \
-			currSegPnt = currSegPnt->next;                                                                              \
-		}                                                                                                               \
-		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                         \
-		currSegPnt->startBit = tempSB;                                                                                  \
-                                                                                                                        \
-		tempSB += hidGlobalPnt->reportSize;                                                                             \
-		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                                              \
+#define CreateSeg()                                                                                        \
+	{                                                                                                      \
+		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                           \
+		{                                                                                                  \
+			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = &SegmentPool[SegmentPoolSize++]; \
+			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                      \
+		}                                                                                                  \
+		else                                                                                               \
+		{                                                                                                  \
+			currSegPnt->next = &SegmentPool[SegmentPoolSize++];                                            \
+			currSegPnt = currSegPnt->next;                                                                 \
+		}                                                                                                  \
+		memset(currSegPnt, 0, sizeof(HID_SEG));                                                            \
+		currSegPnt->startBit = tempSB;                                                                     \
+                                                                                                           \
+		tempSB += hidGlobalPnt->reportSize;                                                                \
+		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                                 \
 	}
 
 //search though preset to see if this matches a mapping
@@ -371,7 +357,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 				tempSB = startBit;
 				if (pHidSegStruct->reports[hidGlobalPnt->reportID] == NULL)
 				{
-					pHidSegStruct->reports[hidGlobalPnt->reportID] = &ReportPool[port][ReportPoolSizes[port]++];
+					pHidSegStruct->reports[hidGlobalPnt->reportID] = &ReportPool[ReportPoolSize++];
 					memset(pHidSegStruct->reports[hidGlobalPnt->reportID], 0x00, sizeof(HID_REPORT));
 
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = appUsagePage;

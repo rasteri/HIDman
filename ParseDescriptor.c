@@ -237,6 +237,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 		case TYPE_MAIN:
 			if (item.tag == HID_MAIN_ITEM_TAG_INPUT)
 			{
+				
 				tempSB = startBit;
 				if (pHidSegStruct->reports[hidGlobalPnt->reportID] == NULL)
 				{
@@ -246,7 +247,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = appUsagePage;
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsage = appUsage;
 
-					if (appUsage == REPORT_USAGE_PAGE_GENERIC && appUsagePage == REPORT_USAGE_JOYSTICK)
+					if (appUsagePage == REPORT_USAGE_PAGE_GENERIC && (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD))
 					{
 						JoyNum++;
 					}
@@ -287,7 +288,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 										}
 									}
 								}
-								else if (appUsage == REPORT_USAGE_JOYSTICK)
+								else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD )
 								{
 									CreateMapping();
 								}
@@ -335,7 +336,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 										currSegPnt->InputParam = 0;
 									}
 								}
-								else if (appUsage == REPORT_USAGE_JOYSTICK)
+								else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD)
 								{
 									CreateMapping();
 								}
@@ -406,7 +407,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 				// report id
 				startBit = 0;
 				startBit += item.size * 8;
-				JoyNum++;
+				//JoyNum++;
 
 				hidGlobalPnt->reportID = ItemUData(&item);
 

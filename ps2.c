@@ -15,7 +15,7 @@
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
-#include "protocol.h"
+#include "ps2protocol.h"
 
 SBIT(KEY_CLOCK, 0xB0, 4);
 SBIT(KEY_DATA, 0xB0, 5);
@@ -122,6 +122,7 @@ void PS2ProcessPort(uint8_t port)
 	static __data uint8_t sb;
 
 	bool reEnter = 0;
+
 	do
 	{
 		sb = ports[port].sendbit;

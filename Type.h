@@ -32,8 +32,8 @@ extern "C" {
 #ifndef BOOL
 typedef bool                             BOOL;
 #endif
-#ifndef uint8_t
-typedef unsigned char                   uint8_t;
+#ifndef UINT8
+typedef unsigned char                   UINT8;
 #endif
 #ifndef INT8
 typedef signed char                     INT8;
@@ -144,7 +144,7 @@ typedef unsigned int    uint;
 typedef unsigned long   ulong;
 
 #ifndef STRUCT_OFFSET
-#define STRUCT_OFFSET( s, m )       ( (uint8_t)( & (((s) *)0) -> (m) ) )  /* get the offset address for a member of a structure */
+#define STRUCT_OFFSET( s, m )       ( (UINT8)( & (((s) *)0) -> (m) ) )  /* get the offset address for a member of a structure */
 #endif
 
 #ifdef __cplusplus

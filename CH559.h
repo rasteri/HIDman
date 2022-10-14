@@ -6,6 +6,9 @@ typedef unsigned char volatile __pdata    UINT8PV;
 
 #include <compiler.h>
 #include <stdint.h>
+#include <stdbool.h>
+
+//#define DEBUG
 
 /*----- SFR --------------------------------------------------------------*/
 /*  sbit are bit addressable, others are byte addressable */
@@ -1212,8 +1215,13 @@ ASM example:
 #ifndef __USB_DEF__
 #define __USB_DEF__
 
-/*----- USB constant and structure define --------------------------------*/
+/* HID Report Types */
+#define HID_REPORT_INPUT                0x01
+#define HID_REPORT_OUTPUT               0x02
+#define HID_REPORT_FEATURE              0x03
 
+/*----- USB constant and structure define --------------------------------*/
+#define USB_PROTOCOL_NONE               0x00
 /* USB PID */
 #ifndef USB_PID_SETUP
 #define USB_PID_NULL            0x00    /* reserved PID */
@@ -1356,6 +1364,11 @@ ASM example:
 #define USB_ENDP_TYPE_BULK      0x02
 #define USB_ENDP_TYPE_INTER     0x03
 #endif
+
+/* HID Protocol Codes */
+#define HID_PROTOCOL_NONE               0x00
+#define HID_PROTOCOL_KEYBOARD           0x01
+#define HID_PROTOCOL_MOUSE              0x02
 
 #ifndef USB_DEVICE_ADDR
 #define	USB_DEVICE_ADDR			0x02	/* 默认的USB设备地址 */
@@ -1629,3 +1642,16 @@ typedef struct  _HID_Device_Mouse{
   XY X_Y;
   WHEEL Wheel_;
 } MOUSE;
+
+/*typedef unsigned char *PUINT8;
+typedef unsigned char __xdata *PUINT8X;
+typedef const unsigned char __code *PUINT8C;
+typedef unsigned char __xdata UINT8X;
+typedef unsigned char  __data             UINT8D;
+typedef unsigned uint16_t __xdata UINT16X;
+typedef unsigned uint16_t  __data             UINT16D;
+
+typedef unsigned uint32_t __xdata UINT32X;
+typedef unsigned uint32_t  __data             UINT32D;
+
+typedef unsigned bool BOOL;*/

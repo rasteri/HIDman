@@ -16,7 +16,7 @@
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
-#include "protocol.h"
+#include "ps2protocol.h"
 #include "menu.h"
 
 // repeatState -
@@ -97,94 +97,121 @@ void SetKey(uint8_t key, HID_REPORT *report)
 {
 	report->KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07);
 }
-
-void processSeg(HID_SEG *currSeg, HID_REPORT *report)
+__code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
+void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 {
 	bool make = 0;
 	uint8_t tmp = 0;
+	uint16_t cnt, endbit;
+	uint8_t *currByte;
 
-	if (currSeg->OutputChannel == MAP_KEYBOARD)
-		report->keyboardUpdated = 1;
-	else if (currSeg->OutputChannel == MAP_MOUSE)
-		report->mouseUpdated = 1;
-
-	if (currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE && currSeg->value > currSeg->InputParam)
+	if (currSeg->InputType == MAP_TYPE_BITFIELD)
 	{
-		make = 1;
-	}
-	else if (currSeg->InputType == MAP_TYPE_THRESHOLD_BELOW && currSeg->value < currSeg->InputParam)
-	{
-		make = 1;
-	}
+		endbit = currSeg->startBit + currSeg->reportSize;
+		tmp = currSeg->OutputControl;
+		for (cnt = currSeg->startBit; cnt < endbit; cnt++)
+		{
+			// find byte
+			currByte = data + ((cnt) >> 3);
 
+			// find bit
+			if (*currByte & (0x01 << (cnt & 0x07)))
+			{
+				SetKey(tmp, report);
+			}
+			tmp++;
+		}
+	}
 	else
 	{
-		make = 0;
-	}
+		// find byte
+		currByte = data + (currSeg->startBit >> 3);
 
-	if (make)
-	{
+		// find bits
+		currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
+						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size
+
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
+			report->keyboardUpdated = 1;
+		else if (currSeg->OutputChannel == MAP_MOUSE)
+			report->mouseUpdated = 1;
+
+		if (currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE && currSeg->value > currSeg->InputParam)
 		{
-			SetKey(currSeg->OutputControl, report);
+			make = 1;
 		}
+		else if (currSeg->InputType == MAP_TYPE_THRESHOLD_BELOW && currSeg->value < currSeg->InputParam)
+		{
+			make = 1;
+		}
+
 		else
 		{
-			switch (currSeg->OutputControl)
-			{
-			case MAP_MOUSE_BUTTON1:
-				report->nextMousePacket[0] |= 0x01;
-				break;
-			case MAP_MOUSE_BUTTON2:
-				report->nextMousePacket[0] |= 0x02;
-				break;
-			case MAP_MOUSE_BUTTON3:
-				report->nextMousePacket[0] |= 0x04;
-				break;
-			}
+			make = 0;
 		}
-	}
-	else if (currSeg->InputType == MAP_TYPE_SCALE)
-	{
-		if (currSeg->OutputChannel == MAP_MOUSE)
-		{
 
-			switch (currSeg->OutputControl)
+		if (make)
+		{
+			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
-			// TODO scaling
-			case MAP_MOUSE_X:
-				//printf("%hd ", currSeg->value);
-				if (currSeg->InputParam == 2)
-					currSeg->value = (uint8_t)((int8_t)((currSeg->value + 8) >> 4) - 0x08);
-				else
-					currSeg->value = currSeg->value;
-				report->nextMousePacket[1] = currSeg->value;
-				report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
-				//printf("%hd\n", report->nextMousePacket[1]);
-				break;
-			case MAP_MOUSE_Y:
-				printf("%hd ", currSeg->value);
-				if (currSeg->InputParam == 2)
-					currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
-				else
-					currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
-				report->nextMousePacket[2] = currSeg->value;
-				report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
-				printf("%hd\n", report->nextMousePacket[2]);
-				break;
+				SetKey(currSeg->OutputControl, report);
+			}
+			else
+			{
+				switch (currSeg->OutputControl)
+				{
+				case MAP_MOUSE_BUTTON1:
+					report->nextMousePacket[0] |= 0x01;
+					break;
+				case MAP_MOUSE_BUTTON2:
+					report->nextMousePacket[0] |= 0x02;
+					break;
+				case MAP_MOUSE_BUTTON3:
+					report->nextMousePacket[0] |= 0x04;
+					break;
+				}
 			}
 		}
-	}
-	else if (currSeg->InputType == MAP_TYPE_ARRAY)
-	{
-		if (currSeg->OutputChannel == MAP_KEYBOARD)
+		else if (currSeg->InputType == MAP_TYPE_SCALE)
 		{
-			SetKey(currSeg->value, report);
+			if (currSeg->OutputChannel == MAP_MOUSE)
+			{
+
+				switch (currSeg->OutputControl)
+				{
+				// TODO scaling
+				case MAP_MOUSE_X:
+					//printf("%hd ", currSeg->value);
+					if (currSeg->InputParam == 2)
+						currSeg->value = (uint8_t)((int8_t)((currSeg->value + 8) >> 4) - 0x08);
+					else
+						currSeg->value = currSeg->value;
+					report->nextMousePacket[1] = currSeg->value;
+					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
+					//printf("%hd\n", report->nextMousePacket[1]);
+					break;
+				case MAP_MOUSE_Y:
+					printf("%hd ", currSeg->value);
+					if (currSeg->InputParam == 2)
+						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
+					else
+						currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
+					report->nextMousePacket[2] = currSeg->value;
+					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
+					printf("%hd\n", report->nextMousePacket[2]);
+					break;
+				}
+			}
+		}
+		else if (currSeg->InputType == MAP_TYPE_ARRAY)
+		{
+			if (currSeg->OutputChannel == MAP_KEYBOARD)
+			{
+				SetKey(currSeg->value, report);
+			}
 		}
 	}
 }
-
-__code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 
 bool BitPresent(uint8_t *bitmap, uint8_t bit)
 {
@@ -199,7 +226,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 
 	HID_REPORT *descReport;
 	HID_SEG *currSeg;
-	uint8_t *currByte;
+
 	uint32_t tmp;
 	/*for (tmp = 0; tmp < (len >> 3); tmp++)
 	{
@@ -233,20 +260,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	// TODO handle segs that are bigger than 8 bits
 	while (currSeg != NULL)
 	{
-
-		// find byte
-		currByte = report + (currSeg->startBit >> 3);
-
-		//currSeg->oldValue = currSeg->value;
-
-		// find bits
-		currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
-						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size
-
-		// process em
-		// if (currSeg->value != currSeg->oldValue)
-		processSeg(currSeg, descReport);
-
+		processSeg(currSeg, descReport, report);
 		currSeg = currSeg->next;
 	}
 

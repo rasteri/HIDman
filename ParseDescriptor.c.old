@@ -1,142 +1,29 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "ch559.h"
 #include "Type.h"
 #include "UsbDef.h"
-#include "ch559.h"
-
-#include "defs.h"
-
 #include "UsbHost.h"
 #include "protocol.h"
 #include "data.h"
 #include "ps2.h"
 #include "util.h"
 #include "parsedescriptor.h"
-#include "andyalloc.h"
+
+__xdata HID_SEG SegmentPool[2][SEGMENTPOOLSIZE];
+__xdata HID_REPORT ReportPool[2][REPORTPOOLSIZE];
+__xdata uint8_t SegmentPoolSizes[2] = {0, 0};
+__xdata uint8_t ReportPoolSizes[2] = {0, 0};
 
 uint8_t JoyNum = 0;
 
-BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_DEVICE *pUsbDevice)
-{
-	if (len > sizeof(USB_DEV_DESCR))
-	{
-		return FALSE;
-	}
-
-	pUsbDevice->MaxPacketSize0 = pDevDescr->bMaxPacketSize0;
-	pUsbDevice->DeviceClass = pDevDescr->bDeviceClass;
-
-	if (len == sizeof(USB_DEV_DESCR))
-	{
-		pUsbDevice->VendorID = pDevDescr->idVendorL | (pDevDescr->idVendorH << 8);
-		pUsbDevice->ProductID = pDevDescr->idProductL | (pDevDescr->idProductH << 8);
-		pUsbDevice->bcdDevice = pDevDescr->bcdDeviceL | (pDevDescr->bcdDeviceH << 8);
-	}
-
-	return TRUE;
-}
-
-BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_DEVICE *pUsbDevice)
-{
-	int index;
-
-	UINT8 *pDescr;
-	DESCR_HEADER *pDescrHeader;
-	USB_ITF_DESCR *pItfDescr;
-	USB_HID_DESCR *pHidDescr;
-	USB_ENDP_DESCR *pEdpDescr;
-
-	UINT8 descrType;
-	int endpointIndex;
-
-	UINT16 totalLen = pCfgDescr->wTotalLengthL | (pCfgDescr->wTotalLengthH << 8);
-	if (totalLen > len)
-	{
-		totalLen = len;
-	}
-
-	pUsbDevice->InterfaceNum = pCfgDescr->bNumInterfaces;
-	if (pUsbDevice->InterfaceNum > MAX_INTERFACE_NUM)
-	{
-		pUsbDevice->InterfaceNum = MAX_INTERFACE_NUM;
-	}
-
-	pDescr = (UINT8 *)pCfgDescr;
-
-	pDescr += pCfgDescr->bLength;
-
-	index = pCfgDescr->bLength;
-
-	while (index < totalLen)
-	{
-		pDescrHeader = (DESCR_HEADER *)pDescr;
-		descrType = pDescrHeader->bDescriptorType;
-
-		if (descrType == USB_DESCR_TYP_INTERF)
-		{
-			//interface descriptor
-			pItfDescr = (USB_ITF_DESCR *)pDescr;
-			if (pItfDescr->bInterfaceNumber >= pUsbDevice->InterfaceNum)
-			{
-				break;
-			}
-
-			if (pItfDescr->bAlternateSetting == 0)
-			{
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum = 0;
-
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceClass = pItfDescr->bInterfaceClass;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceProtocol = pItfDescr->bInterfaceProtocol;
-			}
-		}
-		else if (descrType == USB_DESCR_TYP_HID)
-		{
-			//HID descriptor
-			pHidDescr = (USB_HID_DESCR *)pDescr;
-			if (pHidDescr->bDescriptorTypeX == USB_DESCR_TYP_REPORT)
-			{
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].ReportSize = pHidDescr->wDescriptorLengthL | (pHidDescr->wDescriptorLengthH << 8);
-			}
-		}
-		else if (descrType == USB_DESCR_TYP_ENDP)
-		{
-			//endpoint descriptor
-			pEdpDescr = (USB_ENDP_DESCR *)pDescr;
-
-			if (pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum >= MAX_ENDPOINT_NUM)
-			{
-				goto ONE_FINISH;
-			}
-
-			if (pItfDescr->bAlternateSetting == 0)
-			{
-				endpointIndex = pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum++;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointAddr = pEdpDescr->bEndpointAddress & 0x7f;
-				if (pEdpDescr->bEndpointAddress & 0x80)
-				{
-					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_IN;
-				}
-				else
-				{
-					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_OUT;
-				}
-
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].MaxPacketSize = pEdpDescr->wMaxPacketSizeL | (pEdpDescr->wMaxPacketSizeH << 8);
-			}
-		}
-	ONE_FINISH:
-		pDescr += pDescrHeader->bDescLength;
-
-		index += pDescrHeader->bDescLength;
-	}
-
-	return TRUE;
-}
-
-#define LITTLE_EADIAN 0
-static UINT16 GetUnaligned16(UINT8 *start)
+#pragma save
+#pragma nogcse
+#pragma noinduction
+#pragma noloopreverse
+#define LITTLE_EADIAN 1
+static UINT16 GetUnaligned16(const uint8_t *start)
 {
 #if LITTLE_EADIAN
 	return *(UINT16 *)start;
@@ -147,18 +34,18 @@ static UINT16 GetUnaligned16(UINT8 *start)
 #endif
 }
 
-static UINT32 GetUnaligned32(UINT8 *start)
+static UINT32 GetUnaligned32(const uint8_t *start)
 {
 #if LITTLE_EADIAN
 	return *(UINT32 *)start;
 #else
-	UINT32 dat = (*start) | (*(start + 1) << 8) | (*(start + 2) << 16) | (*(start + 3) << 24);
+	UINT32 dat = (UINT32)(*start) | ((UINT32)(*(start + 1)) << 8) | ((UINT32)(*(start + 2)) << 16) | ((UINT32)(*(start + 3)) << 24);
 
 	return dat;
 #endif
 }
 
-static UINT32 ItemUData(HID_ITEM *itemInfo)
+static UINT32 ItemUData(const HID_ITEM *itemInfo)
 {
 	switch (itemInfo->size)
 	{
@@ -173,7 +60,7 @@ static UINT32 ItemUData(HID_ITEM *itemInfo)
 	return 0;
 }
 
-static INT32 ItemSData(HID_ITEM *itemInfo)
+static INT32 ItemSData(const HID_ITEM *itemInfo)
 {
 	switch (itemInfo->size)
 	{
@@ -267,23 +154,23 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 	return NULL;
 }
 
-#define CreateSeg()                                                                                   \
-	{                                                                                                 \
-		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                      \
-		{                                                                                             \
-			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = andyalloc(sizeof(HID_SEG)); \
-			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                 \
-		}                                                                                             \
-		else                                                                                          \
-		{                                                                                             \
-			currSegPnt->next = andyalloc(sizeof(HID_SEG));                                            \
-			currSegPnt = currSegPnt->next;                                                            \
-		}                                                                                             \
-		memset(currSegPnt, 0, sizeof(HID_SEG));                                                       \
-		currSegPnt->startBit = tempSB;                                                                \
-                                                                                                      \
-		tempSB += hidGlobalPnt->reportSize;                                                           \
-		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                            \
+#define CreateSeg()                                                                                                     \
+	{                                                                                                                   \
+		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                                        \
+		{                                                                                                               \
+			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = &SegmentPool[port][SegmentPoolSizes[port]++]; \
+			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                                   \
+		}                                                                                                               \
+		else                                                                                                            \
+		{                                                                                                               \
+			currSegPnt->next = &SegmentPool[port][SegmentPoolSizes[port]++];                                            \
+			currSegPnt = currSegPnt->next;                                                                              \
+		}                                                                                                               \
+		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                         \
+		currSegPnt->startBit = tempSB;                                                                                  \
+                                                                                                                        \
+		tempSB += hidGlobalPnt->reportSize;                                                                             \
+		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                                              \
 	}
 
 //search though preset to see if this matches a mapping
@@ -331,8 +218,6 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 	memset(pHidSegStruct, 0x00, sizeof(HID_REPORT_DESC));
 	memset(hidGlobalPnt, 0x00, sizeof(HID_GLOBAL));
 	memset(&hidLocal, 0x00, sizeof(HID_LOCAL));
-	hidLocal.usageMax = 0xffff;
-	hidLocal.usageMin = 0xffff;
 
 	start = pDescriptor;
 	end = start + len;
@@ -352,17 +237,16 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 		case TYPE_MAIN:
 			if (item.tag == HID_MAIN_ITEM_TAG_INPUT)
 			{
-
 				tempSB = startBit;
 				if (pHidSegStruct->reports[hidGlobalPnt->reportID] == NULL)
 				{
-					pHidSegStruct->reports[hidGlobalPnt->reportID] = (HID_REPORT *)andyalloc(sizeof(HID_REPORT));
+					pHidSegStruct->reports[hidGlobalPnt->reportID] = &ReportPool[port][ReportPoolSizes[port]++];
 					memset(pHidSegStruct->reports[hidGlobalPnt->reportID], 0x00, sizeof(HID_REPORT));
 
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = appUsagePage;
 					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsage = appUsage;
 
-					if (appUsagePage == REPORT_USAGE_PAGE_GENERIC && (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD))
+					if (appUsage == REPORT_USAGE_PAGE_GENERIC && appUsagePage == REPORT_USAGE_JOYSTICK)
 					{
 						JoyNum++;
 					}
@@ -403,42 +287,58 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 										}
 									}
 								}
-								else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD)
+								else if (appUsage == REPORT_USAGE_JOYSTICK)
 								{
 									CreateMapping();
 								}
 							}
 						}
 					}
-					// if no usages found, maybe a bitfield
-					else if (hidLocal.usageMin != 0xFFFF && hidLocal.usageMax != 0xFFFF &&
-							 hidGlobalPnt->reportSize == 1)
+					// if no usages found, add min/max style
+					else if (hidLocal.usageMin != 0xffff && hidLocal.usageMax != 0xFFFF)
 					{
 						if (appUsagePage == REPORT_USAGE_PAGE_GENERIC)
 						{
-							if (appUsage == REPORT_USAGE_KEYBOARD)
+							// need to make a seg for each usage in the range
+							for (i = hidLocal.usageMin; i <= hidLocal.usageMax; i++)
 							{
-								if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
+								hidLocal.usage = i;
+
+								if (appUsage == REPORT_USAGE_KEYBOARD)
 								{
-									CreateSeg();
-									// Keyboard - 1 bit per key (usually for modifier field)
-									currSegPnt->OutputChannel = MAP_KEYBOARD;
-									currSegPnt->OutputControl = hidLocal.usageMin;
+									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
+									{
+										CreateSeg();
+										// Keyboard - 1 bit per key (usually for modifier field)
+										currSegPnt->OutputChannel = MAP_KEYBOARD;
+										currSegPnt->OutputControl = i;
+
+										// any values above zero will send key
+										currSegPnt->InputType = MAP_TYPE_THRESHOLD_ABOVE;
+										currSegPnt->InputParam = 0;
+									}
 								}
-							}
-							else if (appUsage == REPORT_USAGE_MOUSE)
-							{
-								if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_BUTTON)
+								else if (appUsage == REPORT_USAGE_MOUSE)
 								{
-									CreateSeg();
-									// Mouse - 1 bit per button
-									currSegPnt->OutputChannel = MAP_MOUSE;
-									currSegPnt->OutputControl = hidLocal.usageMin;
+									if (hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_BUTTON)
+									{
+										CreateSeg();
+										// Mouse - 1 bit per button
+										currSegPnt->OutputChannel = MAP_MOUSE;
+
+										// buttons are 1,2,3 in the outputcontrol field
+										if (i <= 3)
+											currSegPnt->OutputControl = i;
+
+										// any values above zero will send button
+										currSegPnt->InputType = MAP_TYPE_THRESHOLD_ABOVE;
+										currSegPnt->InputParam = 0;
+									}
 								}
-							}
-							else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD)
-							{
-								CreateMapping();
+								else if (appUsage == REPORT_USAGE_JOYSTICK)
+								{
+									CreateMapping();
+								}
 							}
 						}
 					}
@@ -506,7 +406,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 				// report id
 				startBit = 0;
 				startBit += item.size * 8;
-				//JoyNum++;
+				JoyNum++;
 
 				hidGlobalPnt->reportID = ItemUData(&item);
 
@@ -600,3 +500,4 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 ERR:
 	return FALSE;
 }
+#pragma restore

@@ -85,7 +85,7 @@ __code JoyPreset DefaultJoyMaps[] = {
         REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
         9,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
-        KEY_ESC,                    // Output Control
+        KEY_ESC,                  // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
@@ -169,7 +169,9 @@ __code JoyPreset DefaultJoyMaps[] = {
         MAP_MOUSE_X,               // Output Control
         MAP_TYPE_SCALE,            // InputType
         2                          // Input Param
-    }};
+    }
+
+};
 
 __code uint8_t KEY_A_MAKE[] = {1, 0x1C};
 __code uint8_t KEY_B_MAKE[] = {1, 0x32};

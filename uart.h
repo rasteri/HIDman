@@ -1,17 +1,17 @@
-#ifndef __uart_H__
-#define __uart_H__
+#ifndef _UART_H_
+#define _UART_H_
 
-#define MSG_TYPE_CONNECTED      0x01
-#define MSG_TYPE_DISCONNECTED   0x02
-#define MSG_TYPE_ERROR          0x03
-#define MSG_TYPE_DEVICE_POLL    0x04
-#define MSG_TYPE_DEVICE_STRING  0x05
-#define MSG_TYPE_DEVICE_INFO    0x06
-#define MSG_TYPE_HID_INFO       0x07
-#define MSG_TYPE_STARTUP        0x08
+extern void CH559UART0Alter(void);
 
-void processUart();
-void sendHidPollMSG(unsigned char msgtype, unsigned short length, unsigned char type, unsigned char device, unsigned char endpoint, unsigned char __xdata *msgbuffer,unsigned char idVendorL,unsigned char idVendorH,unsigned char idProductL,unsigned char idProductH);
-void sendProtocolMSG(unsigned char msgtype, unsigned short length, unsigned char type, unsigned char device, unsigned char endpoint, unsigned char __xdata *msgbuffer);
+extern void InitUART0(void);
+
+extern UINT8 CH559UART0RcvByte(void);
+
+extern void SetUart0Sent(void);
+
+extern void CH559UART0SendByte(UINT8 SendDat);
+
+extern void CH559UART0SendData(UINT8 *pData, UINT8 len);
 
 #endif
+

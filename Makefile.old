@@ -1,5 +1,5 @@
 CC = sdcc
-OBJCOPY = sdobjcopy
+OBJCOPY = objcopy
 PACK_HEX = packihx
 WCHISP = wchisptool
 OBJDIR = ./build
@@ -7,35 +7,26 @@ OBJDIR = ./build
 TARGET = hidman
 
 OBJECTS = \
-$(OBJDIR)/CH559.rel \
-$(OBJDIR)/GPIO.rel \
-$(OBJDIR)/KeyboardLed.rel \
-$(OBJDIR)/Main.rel \
-$(OBJDIR)/ParseDescriptor.rel \
-$(OBJDIR)/System.rel \
-$(OBJDIR)/Task.rel \
-$(OBJDIR)/Timer2.rel \
-$(OBJDIR)/UsbHost.rel \
-$(OBJDIR)/recvbuffer.rel \
-$(OBJDIR)/data.rel \
-$(OBJDIR)/menu.rel \
-$(OBJDIR)/ps2protocol.rel \
-$(OBJDIR)/ps2.rel \
+$(OBJDIR)/main.rel \
 $(OBJDIR)/util.rel \
-$(OBJDIR)/andyalloc.rel \
-$(OBJDIR)/Uart.rel
-
+$(OBJDIR)/USBHost.rel \
+$(OBJDIR)/uart.rel \
+$(OBJDIR)/ps2.rel \
+$(OBJDIR)/data.rel \
+$(OBJDIR)/protocol.rel \
+$(OBJDIR)/menu.rel \
+$(OBJDIR)/ParseDescriptor.rel
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
 endif
 
 ifndef XRAM_SIZE
-XRAM_SIZE = 0x1600
+XRAM_SIZE = 0x1400
 endif
 
 ifndef XRAM_LOC
-XRAM_LOC = 0x0200
+XRAM_LOC = 0x0400
 endif
 
 ifndef CODE_SIZE

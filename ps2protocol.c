@@ -107,7 +107,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 
 	if (currSeg->InputType == MAP_TYPE_BITFIELD)
 	{
-		endbit = currSeg->startBit + currSeg->reportSize;
+		endbit = currSeg->startBit + currSeg->reportCount;
 		tmp = currSeg->OutputControl;
 		for (cnt = currSeg->startBit; cnt < endbit; cnt++)
 		{
@@ -152,6 +152,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 
 		if (make)
 		{
+			
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
 				SetKey(currSeg->OutputControl, report);
@@ -282,6 +283,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 					Menu_Press_Key(c);
 				else
 				{
+					printf("\nSendn %x\n", c);
 					// Make
 					if (c <= 0x67)
 					{

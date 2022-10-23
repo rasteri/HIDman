@@ -211,8 +211,10 @@ typedef struct HID_SEG
 
 	uint8_t reportSize;
 
+	uint8_t reportCount;
+
 	//uint8_t oldValue;
-	uint8_t value;#
+	uint8_t value;
 
 	struct HID_SEG *next;
 } HID_SEG;

@@ -76,7 +76,7 @@ void main()
 	P0 = 0b01110000; // none lit
 	P0 = 0b00110000; // one lit
 
-	DEBUG_OUT("Ready\n");
+	printf("Ready\n");
 	//sendProtocolMSG(MSG_TYPE_STARTUP,0, 0x00, 0x00, 0x00, 0);
 
 	OutPort(PORT_KEY, DATA, 1);

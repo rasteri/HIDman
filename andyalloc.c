@@ -14,7 +14,11 @@ __xdata uint8_t *MemPoolPtr = MemPool;
 
 void __xdata *andyalloc(size_t size)
 {
-    return MemPoolPtr += size;
+    uint8_t *tmp;
+    printf("allocn %x %x\n", size, MemPoolPtr);
+    tmp = MemPoolPtr;
+    MemPoolPtr += size;
+    return tmp;
 }
 
 void andyclearmem(){

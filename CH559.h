@@ -8,7 +8,7 @@ typedef unsigned char volatile __pdata    UINT8PV;
 #include <stdint.h>
 #include <stdbool.h>
 
-//#define DEBUG
+#define DEBUG
 
 /*----- SFR --------------------------------------------------------------*/
 /*  sbit are bit addressable, others are byte addressable */

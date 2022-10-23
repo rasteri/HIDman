@@ -424,6 +424,8 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 									// Keyboard - 1 bit per key (usually for modifier field)
 									currSegPnt->OutputChannel = MAP_KEYBOARD;
 									currSegPnt->OutputControl = hidLocal.usageMin;
+									currSegPnt->reportCount = hidGlobalPnt->reportCount;
+									currSegPnt->InputType = MAP_TYPE_BITFIELD;
 								}
 							}
 							else if (appUsage == REPORT_USAGE_MOUSE)
@@ -434,12 +436,14 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 									// Mouse - 1 bit per button
 									currSegPnt->OutputChannel = MAP_MOUSE;
 									currSegPnt->OutputControl = hidLocal.usageMin;
+									currSegPnt->reportCount = hidGlobalPnt->reportCount;
+									currSegPnt->InputType = MAP_TYPE_BITFIELD;
 								}
 							}
-							else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD)
+							/*else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD)
 							{
 								CreateMapping();
-							}
+							}*/
 						}
 					}
 					else

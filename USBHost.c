@@ -762,7 +762,7 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len);
 					if (s == ERR_SUCCESS)
 					{
-						TRACE1("interface %d data:", (UINT16)i);
+						//TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
 						ParseReport(&pInterface->HidSegStruct, len * 8, ReceiveDataBuffer);

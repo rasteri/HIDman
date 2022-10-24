@@ -117,6 +117,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			// find bit
 			if (*currByte & (0x01 << (cnt & 0x07)))
 			{
+				printf("oooh %x %hx\n", currSeg->startBit, *currByte);
 				SetKey(tmp, report);
 			}
 			tmp++;
@@ -141,6 +142,10 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			make = 1;
 		}
 		else if (currSeg->InputType == MAP_TYPE_THRESHOLD_BELOW && currSeg->value < currSeg->InputParam)
+		{
+			make = 1;
+		}
+		else if (currSeg->InputType == MAP_TYPE_EQUAL && currSeg->value == currSeg->InputParam)
 		{
 			make = 1;
 		}

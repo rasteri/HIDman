@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include "Type.h"
 
 #include "PinDefine.h"
@@ -94,6 +95,7 @@ void InitSystem(void)
 
 void ProcessUsbHostPort()
 {	
+
 	DealUsbPort();
 	if (s_CheckUsbPort0)
 	{

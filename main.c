@@ -99,6 +99,7 @@ void main()
 
 		ProcessUsbHostPort();
 		ProcessKeyboardLed();
+		HandleRepeats();
 	}
 }
 

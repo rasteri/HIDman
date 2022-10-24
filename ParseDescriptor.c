@@ -267,29 +267,31 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 	return NULL;
 }
 
-#define CreateSeg()                                                                                   \
-	{                                                                                                 \
-		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                      \
-		{                                                                                             \
-			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = andyalloc(sizeof(HID_SEG)); \
-			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                 \
-		}                                                                                             \
-		else                                                                                          \
-		{                                                                                             \
-			currSegPnt->next = andyalloc(sizeof(HID_SEG));                                            \
-			currSegPnt = currSegPnt->next;                                                            \
-		}                                                                                             \
-		memset(currSegPnt, 0, sizeof(HID_SEG));                                                       \
-		currSegPnt->startBit = tempSB;                                                                \
-                                                                                                      \
-		tempSB += hidGlobalPnt->reportSize;                                                           \
-		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                            \
+#define CreateSeg()                                                                                              \
+	{                                                                                                            \
+		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                                 \
+		{                                                                                                        \
+			pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg = (HID_SEG *)andyalloc(sizeof(HID_SEG)); \
+			currSegPnt = pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg;                            \
+		}                                                                                                        \
+		else                                                                                                     \
+		{                                                                                                        \
+			currSegPnt->next = (HID_SEG *)andyalloc(sizeof(HID_SEG));                                            \
+			currSegPnt = currSegPnt->next;                                                                       \
+		}                                                                                                        \
+		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                  \
+		currSegPnt->startBit = tempSB;                                                                           \
+		currSegPnt->reportCount = hidGlobalPnt->reportCount;                                                     \
+		tempSB += hidGlobalPnt->reportSize;                                                                      \
+		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                                       \
 	}
 
 //search though preset to see if this matches a mapping
 #define CreateMapping()                                                        \
 	{                                                                          \
-		for (k = 0; k < JOYPRESETCOUNT; k++)                                   \
+		k = 0;                                                                 \
+		printf("rrrrs %hx\n", hidGlobalPnt->reportSize);                       \
+		while (DefaultJoyMaps[k].InputType != MAP_TYPE_NONE)                   \
 		{                                                                      \
 			if (DefaultJoyMaps[k].InputUsagePage == hidGlobalPnt->usagePage && \
 				DefaultJoyMaps[k].InputUsage == hidLocal.usage &&              \
@@ -302,6 +304,7 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 				currSegPnt->InputType = DefaultJoyMaps[k].InputType;           \
 				currSegPnt->InputParam = DefaultJoyMaps[k].InputParam;         \
 			}                                                                  \
+			k++;                                                               \
 		}                                                                      \
 		tempSB += hidGlobalPnt->reportSize;                                    \
 	}
@@ -424,7 +427,6 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 									// Keyboard - 1 bit per key (usually for modifier field)
 									currSegPnt->OutputChannel = MAP_KEYBOARD;
 									currSegPnt->OutputControl = hidLocal.usageMin;
-									currSegPnt->reportCount = hidGlobalPnt->reportCount;
 									currSegPnt->InputType = MAP_TYPE_BITFIELD;
 								}
 							}
@@ -436,14 +438,17 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 									// Mouse - 1 bit per button
 									currSegPnt->OutputChannel = MAP_MOUSE;
 									currSegPnt->OutputControl = hidLocal.usageMin;
-									currSegPnt->reportCount = hidGlobalPnt->reportCount;
 									currSegPnt->InputType = MAP_TYPE_BITFIELD;
 								}
 							}
-							/*else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD)
+							else if (appUsage == REPORT_USAGE_JOYSTICK || appUsage == REPORT_USAGE_GAMEPAD)
 							{
-								CreateMapping();
-							}*/
+								for (i = hidLocal.usageMin; i < hidLocal.usageMax; i++)
+								{
+									hidLocal.usage = i;
+									CreateMapping();
+								}
+							}
 						}
 					}
 					else

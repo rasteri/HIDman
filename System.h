@@ -24,7 +24,7 @@
 #ifdef DEBUG
 #define  BUAD_RATE  115200ul
 #else
-#define  BUAD_RATE  100000ul
+#define  BUAD_RATE  115200ul
 #endif
 #endif
 

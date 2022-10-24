@@ -169,7 +169,133 @@ __code JoyPreset DefaultJoyMaps[] = {
         MAP_MOUSE_X,               // Output Control
         MAP_TYPE_SCALE,            // InputType
         2                          // Input Param
-    }
+    },
+    // 0 on hat switch, just press up
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_UP,                    // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        0                          // Input Param
+    },
+    // 1 on hatswitch, press up and right
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_UP,                    // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        1                          // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_RIGHT,                 // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        1                          // Input Param
+    },
+    // 2 on hatswitch, press right
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_RIGHT,                 // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        2                          // Input Param
+    },
+    // 3 on hat, press right and down
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_RIGHT,                 // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        3                          // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_DOWN,                  // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        3                          // Input Param
+    },
+    // 4 on hat, press down
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_DOWN,                  // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        4                          // Input Param
+    },
+    // 5 on hat, press down and left
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_DOWN,                  // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        5                          // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_LEFT,                  // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        5                          // Input Param
+    },
+    // 6 on hat, press left
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_LEFT,                  // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        6                          // Input Param
+    },
+    // 7 on hat, press left and up
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_LEFT,                  // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        7                          // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_HATSWITCH,    // Usage
+        MAP_KEYBOARD,              // Output Channel
+        KEY_UP,                    // Output Control
+        MAP_TYPE_EQUAL,            // InputType
+        7                          // Input Param
+    },
+    // null to signify end
+    {
+        0, // Number
+        0, // Input Usage Page
+        0, // Input Usage
+        0, // Output Channel
+        0, // Output Control
+        0, // InputType
+        0  // Input Param
+    },
 
 };
 

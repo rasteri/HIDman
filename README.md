@@ -3,9 +3,9 @@
 
 This is a project to develop a device to adapt USB HID devices (keyboards, mice, joysticks) to work on PCs that support PS/2 devices.
 
-Currently only PS/2 computers are supported but plans are underway to support computers that require serial mice and AT keyboards.
+Currently only PS/2 computers are supported but plans are underway to support computers that require serial mice and XT keyboards.
 
-Uniquely, it allows you to connect a USB game controller and have it emulate a PS/2 keyboard - this allows you to use a gamepad to play games that never had joystick support.
+As a bonus, it allows you to connect a USB game controller and have it emulate a PS/2 keyboard and mouse - this allows you to use a gamepad to play games that never had joystick support.
 
 ## Technical description
 

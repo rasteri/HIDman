@@ -34,8 +34,8 @@
         "other_text_upright": false,
         "pads": {
           "drill": 3.5,
-          "height": 3.5,
-          "width": 3.5
+          "height": 5.0,
+          "width": 5.0
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -380,7 +380,7 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "G:/My Drive/ps2 usb adapter/3d/final question mark/frontcase.step",
+      "step": "rearcase.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""

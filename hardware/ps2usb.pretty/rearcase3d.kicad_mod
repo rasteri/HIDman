@@ -1,7 +1,6 @@
 (footprint "rearcase3d" (version 20211014) (generator pcbnew)
   (layer "F.Cu")
   (tedit 0)
-  (attr through_hole)
   (fp_text reference "REF**" (at 0 -0.5 unlocked) (layer "F.SilkS")
     (effects (font (size 1 1) (thickness 0.15)))
     (tstamp 5d88ae3d-cc2e-43e4-aefe-ca63fb4c3f83)

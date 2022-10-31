@@ -107,6 +107,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 
 	if (currSeg->InputType == MAP_TYPE_BITFIELD)
 	{
+
 		endbit = currSeg->startBit + currSeg->reportCount;
 		tmp = currSeg->OutputControl;
 		for (cnt = currSeg->startBit; cnt < endbit; cnt++)
@@ -117,8 +118,27 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			// find bit
 			if (*currByte & (0x01 << (cnt & 0x07)))
 			{
-				printf("oooh %x %hx\n", currSeg->startBit, *currByte);
-				SetKey(tmp, report);
+				if (currSeg->OutputChannel == MAP_KEYBOARD)
+				{
+					SetKey(tmp, report);
+					report->keyboardUpdated = 1;
+				}
+				else
+				{
+					switch (tmp)
+					{
+					case MAP_MOUSE_BUTTON1:
+						report->nextMousePacket[0] |= 0x01;
+						break;
+					case MAP_MOUSE_BUTTON2:
+						report->nextMousePacket[0] |= 0x02;
+						break;
+					case MAP_MOUSE_BUTTON3:
+						report->nextMousePacket[0] |= 0x04;
+						break;
+					}
+					report->mouseUpdated = 1;
+				}
 			}
 			tmp++;
 		}
@@ -157,7 +177,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 
 		if (make)
 		{
-			
+
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
 				SetKey(currSeg->OutputControl, report);

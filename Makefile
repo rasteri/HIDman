@@ -23,7 +23,8 @@ $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
-$(OBJDIR)/Uart.rel
+$(OBJDIR)/uart.rel \
+$(OBJDIR)/uart1.rel
 
 
 ifndef FREQ_SYS

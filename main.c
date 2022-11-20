@@ -18,9 +18,27 @@ SBIT(KEY_DATA, 0xB0, 5);
 SBIT(MOUSE_CLOCK, 0xA0, 0);
 SBIT(MOUSE_DATA, 0xA0, 1);
 
+typedef struct color
+{
+	uint8_t r, g, b;
+} color;
+
+color fadeseq[] =
+	{
+		{0x00, 0x00, 0xFF},
+		{0x00, 0xFF, 0xFF},
+		{0x00, 0xFF, 0x00},
+		{0xFF, 0xFF, 0x00},
+		{0xFF, 0x00, 0x00},
+		{0xFF, 0x00, 0xFF},
+		{0xFF, 0xFF, 0xFF},
+
+};
+
+uint8_t *fadepnt;
+
 __xdata uint8_t repeatDiv = 0;
 uint16_t ResetCounter;
-
 
 void mTimer2Interrupt(void) __interrupt(5);
 
@@ -53,8 +71,189 @@ void mTimer0Interrupt(void) __interrupt(1)
 	}
 }
 
+#define SetPWMClk(CK_SE) (PWM_CK_SE = CK_SE)   //Frequency division, default clock Fsys
+#define SetPWMCycle(Cycle) (PWM_CYCLE = Cycle) //Set the cycle period
+#define SetPWM1Dat(dat) (PWM_DATA = dat)	   //Set PWM output duty cycle
+#define SetPWM2Dat(dat) (PWM_DATA2 = dat)
+#define PWMPINAlter()              \
+	{                              \
+		P4_DIR |= bPWM2_ | bPWM1_; \
+		PIN_FUNC |= bPWM1_PIN_X;   \
+	} //Set PWM pin mapping
+
+/************************************************* ******************************
+* Function Name: InitPWM1(UINT8 polar)
+* Description: PWM1 initialization function
+* Input: polar=0 selects the default low level, high level output is valid;
+                   polar=1 selects the default high level, the low level output is valid;
+* Output: None
+* Return: None
+************************************************** *****************************/
+void InitPWM1(UINT8 polar)
+{
+	PWM_CTRL &= ~bPWM_CLR_ALL; //Clear FIFO and count
+	//PWM_CTRL &= ~bPWM_MOD_MFM;
+	//PWM_CTRL |= bPWM_IE_END; //Enable PWM counting cycle completion interrupt
+	PWM_CTRL |= bPWM_OUT_EN; //PWM1 output enable
+	PWM_CTRL |= bPWM_IF_END; //Clear all interrupt flags
+	if (polar)
+	{
+		PWM_CTRL |= bPWM_POLAR; //active low
+	}
+	else
+	{
+		PWM_CTRL &= ~bPWM_POLAR; //High level active
+	}
+}
+
+/************************************************* ******************************
+* Function Name: InitPWM2(UINT8 polar)
+* Description: PWM initialization function
+* Input: polar=0 selects the default low level, high level output is valid;
+                   polar=1 selects the default high level, the low level output is valid;
+* Output: None
+* Return: None
+************************************************** *****************************/
+void InitPWM2(UINT8 polar)
+{
+	PWM_CTRL &= ~bPWM_CLR_ALL; //Clear FIFO and count
+	//PWM_CTRL &= ~bPWM_MOD_MFM;
+	//PWM_CTRL |= bPWM_IE_END;  //Enable PWM counting cycle completion interrupt
+	PWM_CTRL |= bPWM2_OUT_EN; //PWM2 output enable
+	PWM_CTRL |= bPWM_IF_END;  //Clear all interrupt flags
+	if (polar)
+	{
+		PWM_CTRL |= bPWM2_POLAR; //active low
+	}
+	else
+	{
+		PWM_CTRL &= ~bPWM2_POLAR; //High level active
+	}
+}
+
+/************************************************* ******************************
+* Function Name: InitPWM2(UINT8 polar)
+* Description: PWM initialization function
+* Input: polar=0 selects the default low level, high level output is valid;
+                   polar=1 selects the default high level, the low level output is valid;
+* Output: None
+* Return: None
+************************************************** *****************************/
+void InitPWM3(UINT8 polar)
+{
+	T3_CTRL &= ~bT3_CLR_ALL;
+	T3_SETUP |= bT3_EN_CK_SE;
+	T3_CTRL |= bT3_OUT_EN | bT3_CNT_EN | bT3_PWM_POLAR;
+
+	PIN_FUNC |= bTMR3_PIN_X;
+}
+
+//PWM1, PWM2, PWM3_
 void main()
 {
+	//PORT_CFG &= ~bP2_OC;
+	P2_DIR |= bPWM1 | bPWM2; //It is recommended to set the pin to push-pull output when turning on PWM
+
+	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
+	InitPWM1(1);   //PWM1 initialization, active low
+	InitPWM2(1);   //PWM2 initialization, active high
+	InitPWM3(1);
+	SetPWMCycle(0xff);
+	SetPWM1Dat(0x00);
+	SetPWM2Dat(0x00);
+
+	P4_DIR &= ~0b00000100;
+	P4_DIR |= 0b00000100;
+	P4_OUT |= 0b00000100;
+	P4_PU = 0x00;
+	P4_CFG |= bP4_DRV;
+	PORT_CFG |= bP2_DRV;
+
+	P2 = 0xff;
+	P2_PU = 0x00;
+
+	T3_CK_SE_L = 0x20;
+	T3_CK_SE_H = 0;
+	T3_END_H = 0;
+	T3_END_L = 255;
+	T3_FIFO_L = 0;
+	T3_FIFO_H = 0;
+	uint8_t bright = 0;
+	uint8_t seq = 0, r = 0, g = 0, b = 0, nothere = 0;
+
+	/*
+			while (bright < 254)
+		{
+			bright++;
+			//SetPWM1Dat(bright);
+			T3_FIFO_L = bright;
+			T3_FIFO_H = 0;
+			//T3_FIFO_L = (uint8_t)(((uint16_t)255-bright * (uint16_t)255-bright) >> 8);
+			//SetPWM2Dat((uint8_t)(((uint16_t)255-bright * (uint16_t)255-bright) >> 8));
+			delayUs(2000);
+		};
+		while (bright > 1)
+		{
+			bright--;
+			//SetPWM1Dat(bright);
+			T3_FIFO_L = bright;
+			T3_FIFO_H = 0;
+			//T3_FIFO_L = (uint8_t)(((uint16_t)255-bright * (uint16_t)255-bright) >> 8);
+			//SetPWM1Dat((uint8_t)(((uint16_t)bright * (uint16_t)bright) >> 8));
+
+			//SetPWM2Dat((uint8_t)(((uint16_t)255-bright * (uint16_t)255-bright) >> 8));
+			delayUs(2000);
+		};
+	*/
+	while (1)
+	{
+		nothere = 0;
+		if (fadeseq[seq].r > r)
+		{
+			r++;
+			nothere = 1;
+		}
+		else if (fadeseq[seq].r < r)
+		{
+			r--;
+			nothere = 1;
+		}
+
+		if (fadeseq[seq].g > g)
+		{
+			g++;
+			nothere = 1;
+		}
+		else if (fadeseq[seq].g < g)
+		{
+			g--;
+			nothere = 1;
+		}
+
+		if (fadeseq[seq].b > b)
+		{
+			b++;
+			nothere = 1;
+		}
+		else if (fadeseq[seq].b < b)
+		{
+			b--;
+			nothere = 1;
+		}
+
+		SetPWM1Dat((uint8_t)(((uint16_t)r * (uint16_t)r) >> 10));
+		SetPWM2Dat((uint8_t)(((uint16_t)g * (uint16_t)g) >> 10));
+		T3_FIFO_L = (uint8_t)(((uint16_t)b * (uint16_t)b) >> 8);
+		T3_FIFO_H = 0;
+
+		if (!nothere)
+			seq++;
+
+		if (seq == 7)
+			seq = 0;
+
+		delayUs(1000);
+	}
 	InitSystem();
 
 	//port2 setup
@@ -64,20 +263,29 @@ void main()
 
 	// timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
-	TH0 = 0xBD; // 60khz
+	TH0 = 0xBD;					 // 60khz
 
 	TR0 = 1; // start timer0
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
 
-	P0_DIR = 0b01110000; // LEDs as output
+	/*P0_DIR = 0b01110000; // LEDs as output
 	P0_PU = 0x00;
 	P0 = 0x00;		 // all lit
 	P0 = 0b01110000; // none lit
-	P0 = 0b00110000; // one lit
+	P0 = 0b00110000; // one lit*/
+
+	// LEDs out
+	P2_DIR |= 0b00110000;
+	P4_DIR |= 0b00000100;
+
+	P2 &= 0b11001111;
+	P4_OUT &= 0b11111011;
+
+	P2 |= 0b00010000;
+	P4_OUT |= 0b00000100;
 
 	printf("Ready\n");
-	//sendProtocolMSG(MSG_TYPE_STARTUP,0, 0x00, 0x00, 0x00, 0);
 
 	OutPort(PORT_KEY, DATA, 1);
 	OutPort(PORT_KEY, CLOCK, 1);

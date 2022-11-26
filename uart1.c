@@ -6,8 +6,7 @@
 * Description: Provides the configuration function of UART1, provides query mode for data transmission and reception, and the use of serial port FIFO.
                        Data receiving and sending
 ************************************************** *****************************/
-#include "..\DEBUG.C" //Print debugging information
-#include "..\DEBUG.H"
+
 
 #pragma NOAREGS
 

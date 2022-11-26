@@ -12,11 +12,17 @@
 #include "menu.h"
 
 SBIT(LED, 0x90, 6);
-SBIT(KEY_CLOCK, 0xB0, 4);
+/*SBIT(KEY_CLOCK, 0xB0, 4);
 SBIT(KEY_DATA, 0xB0, 5);
 
 SBIT(MOUSE_CLOCK, 0xA0, 0);
-SBIT(MOUSE_DATA, 0xA0, 1);
+SBIT(MOUSE_DATA, 0xA0, 1);*/
+
+SBIT(KEY_CLOCK, 0x80, 5);
+SBIT(KEY_DATA, 0x80, 3);
+
+SBIT(MOUSE_CLOCK, 0xB0, 7);
+SBIT(MOUSE_DATA, 0xC1, 3);
 
 typedef struct color
 {
@@ -152,7 +158,7 @@ void InitPWM3(UINT8 polar)
 void main()
 {
 	//PORT_CFG &= ~bP2_OC;
-	P2_DIR |= bPWM1 | bPWM2; //It is recommended to set the pin to push-pull output when turning on PWM
+	/*P2_DIR |= bPWM1 | bPWM2; //It is recommended to set the pin to push-pull output when turning on PWM
 
 	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
 	InitPWM1(1);   //PWM1 initialization, active low
@@ -162,15 +168,21 @@ void main()
 	SetPWM1Dat(0x00);
 	SetPWM2Dat(0x00);
 
-	P4_DIR &= ~0b00000100;
-	P4_DIR |= 0b00000100;
-	P4_OUT |= 0b00000100;
-	P4_PU = 0x00;
-	P4_CFG |= bP4_DRV;
+	P0 = 0xFF;
+	P0_PU = 0x00;
+	PORT_CFG |= bP0_DRV;
+
+	P2 = 0xFF;
+	P2_PU = 0x00;
 	PORT_CFG |= bP2_DRV;
 
-	P2 = 0xff;
-	P2_PU = 0x00;
+	P4_DIR = 0xFF;
+	P4_OUT = 0xFF;
+	P4_PU = 0x00;
+	P4_CFG |= bP4_DRV;
+
+
+
 
 	T3_CK_SE_L = 0x20;
 	T3_CK_SE_H = 0;
@@ -179,7 +191,7 @@ void main()
 	T3_FIFO_L = 0;
 	T3_FIFO_H = 0;
 	uint8_t bright = 0;
-	uint8_t seq = 0, r = 0, g = 0, b = 0, nothere = 0;
+	uint8_t seq = 0, r = 0, g = 0, b = 0, nothere = 0;*/
 
 	/*
 			while (bright < 254)
@@ -205,7 +217,7 @@ void main()
 			delayUs(2000);
 		};
 	*/
-	while (1)
+	/*	while (1)
 	{
 		nothere = 0;
 		if (fadeseq[seq].r > r)
@@ -254,12 +266,30 @@ void main()
 
 		delayUs(1000);
 	}
+	*/
+
 	InitSystem();
 
+	//port0 setup
+	P0_DIR |= 0b11101000; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs
+	PORT_CFG |= bP0_OC;	  // open collector
+	P0_PU = 0x00;		  // no pullups
+	P0 = 0b11101000;	  // default high
+
 	//port2 setup
-	PORT_CFG |= bP2_OC; // open collector
-	P2_DIR = 0xff;		// output
-	P2_PU = 0x00;		// pull up - change this to 0x00 when we add the 5v pullup
+	P2_DIR |= 0b00110000; // 2.4, 2.5 are RED/GREEN LED outputs
+	PORT_CFG |= bP2_OC;	  // open collector
+	P2_PU = 0x00;		  // no pullups
+	P2 = 0b00110000;	  // LEDs off by default (i.e. high)
+
+	//port4 setup
+	P4_DIR = 0b00010100; //4.0 is RXD, 4.2 is Blue LED, 4.3 is MOUSE DATA (actually input, since we're faking open drain), 4.4 is TXD, 4.6 is SWITCH
+	P4_PU = 0x00;		 // no pullups
+	P4_OUT = 0b00000100; //LEDs off (i.e. HIGH), MOUSE DATA low (since it's switched by toggling input on and off, i.e. faking open drain)
+
+	// Switch on LEDs
+	/*P2 &= ~0b00110000;
+	P4_OUT &= ~0b00000100;*/
 
 	// timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
@@ -269,29 +299,27 @@ void main()
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
 
-	/*P0_DIR = 0b01110000; // LEDs as output
-	P0_PU = 0x00;
-	P0 = 0x00;		 // all lit
-	P0 = 0b01110000; // none lit
-	P0 = 0b00110000; // one lit*/
+	/*while (1)
+	{
 
-	// LEDs out
-	P2_DIR |= 0b00110000;
-	P4_DIR |= 0b00000100;
-
-	P2 &= 0b11001111;
-	P4_OUT &= 0b11111011;
-
-	P2 |= 0b00010000;
-	P4_OUT |= 0b00000100;
+		if (GetPort(PORT_MOUSE, DATA)){
+			//if (P4_IN &= 0b00001000){
+			P2 &= ~0b00110000;
+			P4_OUT &= ~0b00000100;
+		}
+		else {
+			P2 |= 0b00110000;
+			P4_OUT |= 0b00000100;
+		}
+	}*/
 
 	printf("Ready\n");
 
-	OutPort(PORT_KEY, DATA, 1);
+	/*OutPort(PORT_KEY, DATA, 1);
 	OutPort(PORT_KEY, CLOCK, 1);
 
 	OutPort(PORT_MOUSE, DATA, 1);
-	OutPort(PORT_MOUSE, CLOCK, 1);
+	OutPort(PORT_MOUSE, CLOCK, 1);*/
 
 	memset(SendBuffer, 0, 255);
 

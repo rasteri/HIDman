@@ -17,11 +17,17 @@
 #include "data.h"
 #include "ps2protocol.h"
 
-SBIT(KEY_CLOCK, 0xB0, 4);
+/*SBIT(KEY_CLOCK, 0xB0, 4);
 SBIT(KEY_DATA, 0xB0, 5);
 
 SBIT(MOUSE_CLOCK, 0xA0, 0);
-SBIT(MOUSE_DATA, 0xA0, 1);
+SBIT(MOUSE_DATA, 0xA0, 1);*/
+
+SBIT(KEY_CLOCK, 0x80, 5);
+SBIT(KEY_DATA, 0x80, 3);
+
+SBIT(MOUSE_CLOCK, 0xB0, 7);
+SBIT(MOUSE_DATA, 0xC1, 3);
 
 __xdata ps2port ports[] = {
 	// keyboard
@@ -79,7 +85,8 @@ bool GetPort(uint8_t port, uint8_t channel)
 		if (channel == CLOCK)
 			return MOUSE_CLOCK;
 		else
-			return MOUSE_DATA;
+			if (P4_IN &= 0b00001000) return 1;
+			else return 0;
 }
 
 void SimonSaysSendKeyboard(const uint8_t *chunk)

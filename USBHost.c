@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "UsbDef.h"
 #include "UsbHost.h"
+#include "menu.h"
 
 #include "KeyboardLed.h"
 #include "ParseDescriptor.h"
@@ -764,6 +765,15 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 						TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
+						if (DumpReport)
+						{
+							SendKeyboardString("I%hX L%X- ", i, len);
+							for (uint8_t tmp = 0; tmp < len; tmp++)
+							{
+								SendKeyboardString("%hX ", ReceiveDataBuffer[tmp]);
+							}
+							SendKeyboardString("\n");
+						}
 						ParseReport(&pInterface->HidSegStruct, len * 8, ReceiveDataBuffer);
 					}
 				}
@@ -1225,7 +1235,7 @@ static UINT8 QueryHubPortAttach(void)
 
 void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 {
-	UINT8 i, s;
+	UINT8 i, s, c;
 	UINT16 len;
 	USB_DEVICE *pUsbDevice = &pUsbHubPort->UsbDevice;
 	if (pUsbDevice->DeviceClass != USB_DEV_CLASS_HUB)
@@ -1261,7 +1271,7 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 
 				if (s != ERR_SUCCESS)
 				{
-					return;// FALSE;
+					return; // FALSE;
 				}
 
 				TRACE("GetReportDescriptor OK\r\n");
@@ -1277,6 +1287,21 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 					TRACE("\r\n");
 				}
 #endif
+
+				if (DumpReport)
+				{
+					SendKeyboardString("\n\nInterface %hx Report Descriptor - \n", i);
+					for (c = 0; c < len; c++)
+					{
+						if (!(c & 0x000F))
+							SendKeyboardString("\n");
+
+						SendKeyboardString("%02X ", ReceiveDataBuffer[c]);
+					}
+					SendKeyboardString("\n");
+					SendKeyboardString("\n");
+				}
+
 				ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct, 0);
 				HID_REPORT_DESC *bleh = &pInterface->HidSegStruct;
 				HID_SEG *tmpseg;

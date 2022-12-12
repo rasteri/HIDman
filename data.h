@@ -47,4 +47,7 @@ extern const uint8_t * const ModtoPS2_MAKE[];
 extern __code uint8_t ASCIItoHID[];
 
 extern __code JoyPreset DefaultJoyMaps[];
+
+extern __xdata uint8_t StandardKeyboardDescriptor[];
+extern __xdata uint8_t StandardMouseDescriptor[];
 #endif

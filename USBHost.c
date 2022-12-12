@@ -8,6 +8,7 @@
 #include "UsbDef.h"
 #include "UsbHost.h"
 #include "menu.h"
+#include "data.h"
 
 #include "KeyboardLed.h"
 #include "ParseDescriptor.h"
@@ -669,6 +670,19 @@ static UINT8 GetReportDescriptor(USB_DEVICE *pUsbDevice, UINT8 interface, UINT8 
 	return s;
 }
 
+static UINT8 SetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
+{
+	UINT8 s;
+
+	USB_SETUP_REQ SetupReq;
+
+	FillSetupReq(&SetupReq, 0b00100001, HID_SET_PROTOCOL, 0, interface, 0);
+
+	s = HostCtrlTransfer(&SetupReq, pUsbDevice->MaxPacketSize0, NULL, NULL);
+
+	return s;
+}
+
 //-----------------------------------------------------------------------------------------
 static UINT8 SetIdle(USB_DEVICE *pUsbDevice, UINT16 durationMs, UINT8 reportID, UINT8 interface)
 {
@@ -741,7 +755,7 @@ static UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen)
 //-------------------------------------------------------------------------------------------
 static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 {
-	UINT8 s;
+	UINT8 s, p;
 	int i, j;
 	int interfaceNum;
 	int endpointNum;
@@ -765,16 +779,16 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 						TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
+						ParseReport(&pInterface->HidSegStruct, len * 8, ReceiveDataBuffer);
 						if (DumpReport)
 						{
 							SendKeyboardString("I%hX L%X- ", i, len);
-							for (uint8_t tmp = 0; tmp < len; tmp++)
+							for (p = 0; p < len; p++)
 							{
-								SendKeyboardString("%hX ", ReceiveDataBuffer[tmp]);
+								SendKeyboardString("%hX ", ReceiveDataBuffer[p]);
 							}
 							SendKeyboardString("\n");
 						}
-						ParseReport(&pInterface->HidSegStruct, len * 8, ReceiveDataBuffer);
 					}
 				}
 			}
@@ -1266,6 +1280,8 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				TRACE1("Interface %bd:", i);
 				TRACE1("InterfaceProtocol:%bd\r\n", pInterface->InterfaceProtocol);
 
+				SetBootProtocol(pUsbDevice, i);
+
 				TRACE1("Report Size:%d\r\n", pInterface->ReportSize);
 				s = GetReportDescriptor(pUsbDevice, i, ReceiveDataBuffer, pInterface->ReportSize <= sizeof(ReceiveDataBuffer) ? pInterface->ReportSize : sizeof(ReceiveDataBuffer), &len);
 
@@ -1302,7 +1318,16 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 					SendKeyboardString("\n");
 				}
 
-				ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct, 0);
+				// hack - use default boot mode descriptors if a keyboard or mouse is detected
+				// Mouse first
+				if (ReceiveDataBuffer[0] == 0x05 && ReceiveDataBuffer[1] == 0x01 && ReceiveDataBuffer[2] == 0x09 && ReceiveDataBuffer[3] == 0x02)
+					ParseReportDescriptor(StandardMouseDescriptor, 50, &pInterface->HidSegStruct, 0);
+				// keyboard next
+				else if (ReceiveDataBuffer[0] == 0x05 && ReceiveDataBuffer[1] == 0x01 && ReceiveDataBuffer[2] == 0x09 && ReceiveDataBuffer[3] == 0x06)
+					ParseReportDescriptor(StandardKeyboardDescriptor, 63, &pInterface->HidSegStruct, 0);
+				else 
+					ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct, 0);
+					
 				HID_REPORT_DESC *bleh = &pInterface->HidSegStruct;
 				HID_SEG *tmpseg;
 				for (uint8_t x = 0; x < MAX_REPORTS; x++)

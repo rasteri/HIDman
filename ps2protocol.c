@@ -270,12 +270,12 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 		descReport = desc->reports[0];
 	}
 
-	// sanity check length
-	if (descReport->length != len)
+	// sanity check length - bypass because some reports ARE larger
+	/*if (descReport->length != len)
 	{
 		printf("Bad length - %u -> %lu\n", descReport->length, len);
 		return 0;
-	}
+	}*/
 
 	currSeg = descReport->firstHidSeg;
 

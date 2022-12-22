@@ -1303,7 +1303,8 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 
 				TRACE1("Before %x\n", GetBootProtocol(pUsbDevice, i));
 				SetBootProtocol(pUsbDevice, i);
-				TRACE1("After %x\n", GetBootProtocol(pUsbDevice, i));
+				if (DumpReport)
+					SendKeyboardString("Protocol %x\n", GetBootProtocol(pUsbDevice, i));
 
 				TRACE1("Report Size:%d\r\n", pInterface->ReportSize);
 				s = GetReportDescriptor(pUsbDevice, i, ReceiveDataBuffer, pInterface->ReportSize <= sizeof(ReceiveDataBuffer) ? pInterface->ReportSize : sizeof(ReceiveDataBuffer), &len);

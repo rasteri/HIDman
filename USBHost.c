@@ -9,6 +9,7 @@
 #include "UsbHost.h"
 #include "menu.h"
 #include "data.h"
+#include "util.h"
 
 #include "KeyboardLed.h"
 #include "ParseDescriptor.h"
@@ -683,6 +684,20 @@ static UINT8 SetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
 	return s;
 }
 
+static UINT8 GetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
+{
+	UINT8 s;
+	UINT8 ret;
+
+	USB_SETUP_REQ SetupReq;
+
+	FillSetupReq(&SetupReq, 0b10100001, HID_GET_PROTOCOL, 0, interface, 1);
+
+	s = HostCtrlTransfer(&SetupReq, pUsbDevice->MaxPacketSize0, &ret, 1);
+
+	return ret;
+}
+
 //-----------------------------------------------------------------------------------------
 static UINT8 SetIdle(USB_DEVICE *pUsbDevice, UINT16 durationMs, UINT8 reportID, UINT8 interface)
 {
@@ -776,7 +791,7 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len);
 					if (s == ERR_SUCCESS)
 					{
-						TRACE1("interface %d data:", (UINT16)i);
+						//TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
 						ParseReport(&pInterface->HidSegStruct, len * 8, ReceiveDataBuffer);
@@ -789,6 +804,12 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 							}
 							SendKeyboardString("\n");
 						}
+						DEBUG_OUT("I%h02X L%h02X- ", i, len);
+						for (p = 0; p < len; p++)
+						{
+							DEBUG_OUT("%h02X ", ReceiveDataBuffer[p]);
+						}
+						DEBUG_OUT("\n");
 					}
 				}
 			}
@@ -1280,7 +1301,9 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				TRACE1("Interface %bd:", i);
 				TRACE1("InterfaceProtocol:%bd\r\n", pInterface->InterfaceProtocol);
 
+				TRACE1("Before %x\n", GetBootProtocol(pUsbDevice, i));
 				SetBootProtocol(pUsbDevice, i);
+				TRACE1("After %x\n", GetBootProtocol(pUsbDevice, i));
 
 				TRACE1("Report Size:%d\r\n", pInterface->ReportSize);
 				s = GetReportDescriptor(pUsbDevice, i, ReceiveDataBuffer, pInterface->ReportSize <= sizeof(ReceiveDataBuffer) ? pInterface->ReportSize : sizeof(ReceiveDataBuffer), &len);
@@ -1320,14 +1343,14 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 
 				// hack - use default boot mode descriptors if a keyboard or mouse is detected
 				// Mouse first
-				if (ReceiveDataBuffer[0] == 0x05 && ReceiveDataBuffer[1] == 0x01 && ReceiveDataBuffer[2] == 0x09 && ReceiveDataBuffer[3] == 0x02)
+				if (pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE)
 					ParseReportDescriptor(StandardMouseDescriptor, 50, &pInterface->HidSegStruct, 0);
 				// keyboard next
-				else if (ReceiveDataBuffer[0] == 0x05 && ReceiveDataBuffer[1] == 0x01 && ReceiveDataBuffer[2] == 0x09 && ReceiveDataBuffer[3] == 0x06)
+				else if (pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD)
 					ParseReportDescriptor(StandardKeyboardDescriptor, 63, &pInterface->HidSegStruct, 0);
-				else 
+				else
 					ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct, 0);
-					
+
 				HID_REPORT_DESC *bleh = &pInterface->HidSegStruct;
 				HID_SEG *tmpseg;
 				for (uint8_t x = 0; x < MAX_REPORTS; x++)
@@ -1336,10 +1359,10 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 					{
 						tmpseg = bleh->reports[x]->firstHidSeg;
 
-						printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
+						DEBUG_OUT("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
 						while (tmpseg != NULL)
 						{
-							printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
+							DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
 							tmpseg = tmpseg->next;
 						}
 					}
@@ -1496,13 +1519,13 @@ void UpdateUsbKeyboardLed(UINT8 led)
 {
 	HID_REPORT_DESC *bleh;
 	HID_SEG *tmpseg;
-	printf("\033[2J\033[H");
+	DEBUG_OUT("\033[2J\033[H");
 	for (uint8_t y = 0; y < MAX_HID_DEVICES; y++)
 	{
 
 		if (HIDdevice[y].connected)
 		{
-			printf("---- DEVICE %d ----\n", y);
+			DEBUG_OUT("---- DEVICE %d ----\n", y);
 			bleh = &(HIDdevice[y].HidSegStruct);
 			for (uint8_t x = 0; x < MAX_REPORTS; x++)
 			{
@@ -1510,10 +1533,10 @@ void UpdateUsbKeyboardLed(UINT8 led)
 				{
 					tmpseg = bleh->reports[x]->firstHidSeg;
 
-					printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
+					DEBUG_OUT("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
 					while (tmpseg != NULL)
 					{
-						printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
+						DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
 						tmpseg = tmpseg->next;
 					}
 				}

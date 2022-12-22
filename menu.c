@@ -39,7 +39,7 @@ uint8_t sendBufferState = SEND_STATE_IDLE;
                 sendBufferState = SEND_STATE_SHIFTON;
                 reEnter = 1;
             }
-            printf("idle\n");
+            DEBUG_OUT("idle\n");
             break;
         case SEND_STATE_SHIFTON:
             currchar = SendBuffer[BufferIndex];
@@ -65,7 +65,7 @@ uint8_t sendBufferState = SEND_STATE_IDLE;
                 BufferIndex = 0;
                 SendBuffer[0] = 0;
             }
-            printf("Shifton\n");
+            DEBUG_OUT("Shifton\n");
             break;
 
         case SEND_STATE_MAKE:
@@ -74,7 +74,7 @@ uint8_t sendBufferState = SEND_STATE_IDLE;
                 sendBufferState = SEND_STATE_BREAK;
                 reEnter = 1;
             }
-            printf("Make\n");
+            DEBUG_OUT("Make\n");
             break;
 
         case SEND_STATE_BREAK:
@@ -83,7 +83,7 @@ uint8_t sendBufferState = SEND_STATE_IDLE;
                 sendBufferState = SEND_STATE_SHIFTOFF;
                 reEnter = 1;
             }
-            printf("Break\n");
+            DEBUG_OUT("Break\n");
             break;
 
         case SEND_STATE_SHIFTOFF:
@@ -93,7 +93,7 @@ uint8_t sendBufferState = SEND_STATE_IDLE;
                 sendBufferState = SEND_STATE_SHIFTON;
                 reEnter = 1;
             }
-            printf("Shiftoff\n");
+            DEBUG_OUT("Shiftoff\n");
             break;
         }
     } while (reEnter);

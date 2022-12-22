@@ -290,7 +290,7 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 #define CreateMapping()                                                        \
 	{                                                                          \
 		k = 0;                                                                 \
-		printf("rrrrs %hx\n", hidGlobalPnt->reportSize);                       \
+		DEBUG_OUT("rrrrs %hx\n", hidGlobalPnt->reportSize);                       \
 		while (DefaultJoyMaps[k].InputType != MAP_TYPE_NONE)                   \
 		{                                                                      \
 			if (DefaultJoyMaps[k].InputUsagePage == hidGlobalPnt->usagePage && \

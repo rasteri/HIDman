@@ -187,7 +187,7 @@ void main()
 	EA = 1;	 // enable all interrupts
 
 
-	printf("Ready\n");
+	DEBUG_OUT("Ready\n");
 
 
 	memset(SendBuffer, 0, 255);

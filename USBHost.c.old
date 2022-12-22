@@ -1017,13 +1017,13 @@ void DumpyTown()
 {
 	HID_REPORT_DESC *bleh;
 	HID_SEG *tmpseg;
-	printf("\033[2J\033[H");
+	DEBUG_OUT("\033[2J\033[H");
 	for (uint8_t y = 0; y < MAX_HID_DEVICES; y++)
 	{
 
 		if (HIDdevice[y].connected)
 		{
-			printf("---- DEVICE %d ----\n", y);
+			DEBUG_OUT("---- DEVICE %d ----\n", y);
 			bleh = &(HIDdevice[y].HidSegStruct);
 			for (uint8_t x = 0; x < MAX_REPORTS; x++)
 			{
@@ -1031,10 +1031,10 @@ void DumpyTown()
 				{
 					tmpseg = bleh->reports[x]->firstHidSeg;
 
-					printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
+					DEBUG_OUT("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
 					while (tmpseg != NULL)
 					{
-						printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
+						DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
 						tmpseg = tmpseg->next;
 					}
 				}

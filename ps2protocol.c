@@ -207,24 +207,24 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				{
 				// TODO scaling
 				case MAP_MOUSE_X:
-					//printf("%hd ", currSeg->value);
+					//DEBUG_OUT("%hd ", currSeg->value);
 					if (currSeg->InputParam == 2)
 						currSeg->value = (uint8_t)((int8_t)((currSeg->value + 8) >> 4) - 0x08);
 					else
 						currSeg->value = currSeg->value;
 					report->nextMousePacket[1] = currSeg->value;
 					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11101111) | ((currSeg->value >> 3) & 0b00010000);
-					//printf("%hd\n", report->nextMousePacket[1]);
+					//DEBUG_OUT("%hd\n", report->nextMousePacket[1]);
 					break;
 				case MAP_MOUSE_Y:
-					printf("%hd ", currSeg->value);
+					DEBUG_OUT("%hd ", currSeg->value);
 					if (currSeg->InputParam == 2)
 						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
 					else
 						currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
 					report->nextMousePacket[2] = currSeg->value;
 					report->nextMousePacket[0] = (report->nextMousePacket[0] & 0b11011111) | ((currSeg->value >> 2) & 0b00100000);
-					printf("%hd\n", report->nextMousePacket[2]);
+					DEBUG_OUT("%hd\n", report->nextMousePacket[2]);
 					break;
 				}
 			}
@@ -256,9 +256,9 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	uint32_t tmp;
 	/*for (tmp = 0; tmp < (len >> 3); tmp++)
 	{
-		printf("%x ", report[tmp]);
+		DEBUG_OUT("%x ", report[tmp]);
 	}
-	printf("\n\n");*/
+	DEBUG_OUT("\n\n");*/
 
 	if (desc->usesReports)
 	{
@@ -273,7 +273,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	// sanity check length - bypass because some reports ARE larger
 	/*if (descReport->length != len)
 	{
-		printf("Bad length - %u -> %lu\n", descReport->length, len);
+		DEBUG_OUT("Bad length - %u -> %lu\n", descReport->length, len);
 		return 0;
 	}*/
 
@@ -308,7 +308,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 					Menu_Press_Key(c);
 				else
 				{
-					printf("\nSendn %x\n", c);
+					DEBUG_OUT("\nSendn %x\n", c);
 					// Make
 					if (c <= 0x67)
 					{

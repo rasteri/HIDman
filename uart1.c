@@ -29,12 +29,12 @@ UINT8 Str[] = {"hello world!"};
 ************************************************** *****************************/
 void UART1RegCfgValue()
 {
-    printf("SER1_IER %02X\n",(UINT16)SER1_IER); //0x27/0x17/0x37 are all possible
-    printf("SER1_IIR %02X\n",(UINT16)SER1_IIR); //0xc1/0xC2 no interrupt or empty interrupt, "C" means FIFO is on
-    printf("SER1_LCR %02X\n",(UINT16)SER1_LCR); //0x03 data format configuration, indicating wireless path interval, no parity, 1 stop bit, 8 data bits
-    printf("SER1_MCR %02X\n",(UINT16)SER1_MCR); //0x08 interrupt output enable, excluding other functions such as flow control on
-    printf("SER1_LSR %02X\n",(UINT16)SER1_LSR); //0x60, FIFO and line status
-    printf("SER1_MSR %02X\n",(UINT16)SER1_MSR);
+    DEBUG_OUT("SER1_IER %02X\n",(UINT16)SER1_IER); //0x27/0x17/0x37 are all possible
+    DEBUG_OUT("SER1_IIR %02X\n",(UINT16)SER1_IIR); //0xc1/0xC2 no interrupt or empty interrupt, "C" means FIFO is on
+    DEBUG_OUT("SER1_LCR %02X\n",(UINT16)SER1_LCR); //0x03 data format configuration, indicating wireless path interval, no parity, 1 stop bit, 8 data bits
+    DEBUG_OUT("SER1_MCR %02X\n",(UINT16)SER1_MCR); //0x08 interrupt output enable, excluding other functions such as flow control on
+    DEBUG_OUT("SER1_LSR %02X\n",(UINT16)SER1_LSR); //0x60, FIFO and line status
+    DEBUG_OUT("SER1_MSR %02X\n",(UINT16)SER1_MSR);
 }
 
 /************************************************* ******************************
@@ -230,7 +230,7 @@ main()
 // mDelaymS(5); //Wait for the external crystal oscillator to stabilize
 
     mInitSTDIO( ); //Serial port 0, can be used for debugging
-    printf("start ...\n");
+    DEBUG_OUT("start ...\n");
 To
     CH559UART1Init(13,1,2);
     UART1RegCfgValue( ); //UART1 register configuration

@@ -10,6 +10,7 @@
 #include "ps2.h"
 #include "parsedescriptor.h"
 #include "menu.h"
+#include "mouse.h"
 
 SBIT(LED, 0x90, 6);
 /*SBIT(KEY_CLOCK, 0xB0, 4);
@@ -174,9 +175,8 @@ void main()
 
 	//port4 setup
 	P4_DIR = 0b00010100; //4.0 is RXD, 4.2 is Blue LED, 4.3 is MOUSE DATA (actually input, since we're faking open drain), 4.4 is TXD, 4.6 is SWITCH
-	P4_PU =  0b01000000;		 // pullup on switch
+	P4_PU = 0b01000000;	 // pullup on switch
 	P4_OUT = 0b00000100; //LEDs off (i.e. HIGH), MOUSE DATA low (since it's switched by toggling input on and off, i.e. faking open drain)
-
 
 	// timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
@@ -186,14 +186,13 @@ void main()
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
 
-
-	DEBUG_OUT("Ready\n");
-
+	printf("Ready\n");
 
 	memset(SendBuffer, 0, 255);
 
 	SendKeyboardString("We are go\n");
-
+	uint8_t Buttons;
+	int16_t X, Y;
 	while (1)
 	{
 		if (!(P4_IN & (1 << 6)))
@@ -205,5 +204,25 @@ void main()
 		ProcessUsbHostPort();
 		ProcessKeyboardLed();
 		HandleRepeats();
+
+		uint8_t byte1, byte2, byte3;
+
+		if (GetMouseUpdate(0, -255, 255, &X, &Y, &Buttons))
+		{
+			/*X=-255;
+			Y=255;*/
+			printf("%hX %hX\n", X, Y);
+			byte1 = 0b00001000 |			   //bit3 always set
+					((Y >> 10) & 0b00100000) | // Y sign bit
+					((X >> 11) & 0b00010000) | // X sign bit
+					(Buttons & 0x07);
+
+			byte2 = (X & 0xFF);
+			byte3 = (Y & 0xFF);
+
+			SendMouse3(byte1, byte2, byte3);
+
+			printf("%hhx %hhx %hhx\n", byte1, byte2, byte3);
+		}
 	}
 }

@@ -23,7 +23,9 @@ $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
-$(OBJDIR)/uart.rel 
+$(OBJDIR)/uart.rel \
+$(OBJDIR)/mouse.rel 
+
 
 
 ifndef FREQ_SYS

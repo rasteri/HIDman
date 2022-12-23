@@ -248,14 +248,12 @@ typedef struct _HID_REPORT
 	uint16_t appUsagePage;
 	uint16_t length;
 
-	bool mouseUpdated;
 	bool keyboardUpdated;
 
 	// bit map for currently pressed keys (0-256)
 	uint8_t KeyboardKeyMap[32];
 	uint8_t oldKeyboardKeyMap[32];
 
-	unsigned char nextMousePacket[3];
 	HID_SEG *firstHidSeg;
 } HID_REPORT;
 

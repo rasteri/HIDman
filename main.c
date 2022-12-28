@@ -211,7 +211,6 @@ void main()
 		{
 			/*X=-255;
 			Y=255;*/
-			printf("%hX %hX\n", X, Y);
 			byte1 = 0b00001000 |			   //bit3 always set
 					((Y >> 10) & 0b00100000) | // Y sign bit
 					((X >> 11) & 0b00010000) | // X sign bit
@@ -221,8 +220,22 @@ void main()
 			byte3 = (Y & 0xFF);
 
 			SendMouse3(byte1, byte2, byte3);
+		}
 
-			printf("%hhx %hhx %hhx\n", byte1, byte2, byte3);
+		if (GetMouseUpdate(1, -127, 127, &X, &Y, &Buttons))
+		{
+			byte1 = 0b01000000 |			  // bit6 always set
+					((buttons & 0x01) << 5) | // left button
+					((buttons & 0x02) << 3) | // right button
+					((Y >> 4) & 0b00001100) | // top two bits of Y
+					((X >> 11) & 0b00000011); // top two bits of X
+
+			byte2 = (X & 0x3F); // rest of X
+			byte3 = (Y & 0x3F); // rest of Y
+
+			//SendMouse3(byte1, byte2, byte3);
+
+			//printf("%hhx %hhx %hhx\n", byte1, byte2, byte3);
 		}
 	}
 }

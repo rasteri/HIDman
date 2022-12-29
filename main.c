@@ -190,6 +190,16 @@ void main()
 
 	memset(SendBuffer, 0, 255);
 
+	CH559UART1Init(20, 1, 1);
+
+	while (1)
+	{
+		//CH559UART1SendStr("bawbag");
+		CH559UART1SendByte(0x55);
+		CH559UART1SendByte(0xAA);
+		delayUs(6000);
+	}
+
 	SendKeyboardString("We are go\n");
 	uint8_t Buttons;
 	int16_t X, Y;
@@ -207,35 +217,44 @@ void main()
 
 		uint8_t byte1, byte2, byte3;
 
-		if (GetMouseUpdate(0, -255, 255, &X, &Y, &Buttons))
+		// make sure there's space in the buffer before we pop any mouse updates
+		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
 		{
-			/*X=-255;
-			Y=255;*/
-			byte1 = 0b00001000 |			   //bit3 always set
-					((Y >> 10) & 0b00100000) | // Y sign bit
-					((X >> 11) & 0b00010000) | // X sign bit
-					(Buttons & 0x07);
+			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Buttons))
+			{
+				/*X=-255;
+				Y=255;*/
+				byte1 = 0b00001000 |			   //bit3 always set
+						((Y >> 10) & 0b00100000) | // Y sign bit
+						((X >> 11) & 0b00010000) | // X sign bit
+						(Buttons & 0x07);
 
-			byte2 = (X & 0xFF);
-			byte3 = (Y & 0xFF);
+				byte2 = (X & 0xFF);
+				byte3 = (Y & 0xFF);
 
-			SendMouse3(byte1, byte2, byte3);
+				SendMouse3(byte1, byte2, byte3);
+			}
 		}
 
-		if (GetMouseUpdate(1, -127, 127, &X, &Y, &Buttons))
+		// make sure there's space in the fifo before we pop any mouse updates
+		// i.e. if there's at least 3 bytes left (or it's empty, the two might be exclusive)
+		/*if (CH559UART1_FIFO_CNT >= 3 || SER1_LSR & bLSR_T_FIFO_EMP)
 		{
-			byte1 = 0b01000000 |			  // bit6 always set
-					((buttons & 0x01) << 5) | // left button
-					((buttons & 0x02) << 3) | // right button
-					((Y >> 4) & 0b00001100) | // top two bits of Y
-					((X >> 11) & 0b00000011); // top two bits of X
+			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Buttons))
+			{
+				byte1 = 0b01000000 |			  // bit6 always set
+						((Buttons & 0x01) << 5) | // left button
+						((Buttons & 0x02) << 3) | // right button
+						((Y >> 4) & 0b00001100) | // top two bits of Y
+						((X >> 11) & 0b00000011); // top two bits of X
 
-			byte2 = (X & 0x3F); // rest of X
-			byte3 = (Y & 0x3F); // rest of Y
+				byte2 = (X & 0x3F); // rest of X
+				byte3 = (Y & 0x3F); // rest of Y
 
-			//SendMouse3(byte1, byte2, byte3);
-
-			//printf("%hhx %hhx %hhx\n", byte1, byte2, byte3);
-		}
+				CH559UART1SendByte(byte1);
+				CH559UART1SendByte(byte2);
+				CH559UART1SendByte(byte3);
+			}
+		}*/
 	}
 }

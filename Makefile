@@ -24,6 +24,7 @@ $(OBJDIR)/ps2.rel \
 $(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
 $(OBJDIR)/uart.rel \
+$(OBJDIR)/uart1.rel \
 $(OBJDIR)/mouse.rel 
 
 

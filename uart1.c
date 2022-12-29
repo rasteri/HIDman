@@ -8,9 +8,20 @@
 ************************************************** *****************************/
 
 
-#pragma NOAREGS
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include "CH559.h"
+#include "util.h"
+#include "USBHost.h"
+#include "uart.h"
+#include "ps2.h"
+#include "data.h"
+#include "ps2protocol.h"
+#include "menu.h"
 
-#define CH559UART1_BPS 57600 /*Define CH559 serial port 1 communication baud rate*/
+#define CH559UART1_BPS 1200 /*Define CH559 serial port 1 communication baud rate*/
 #define CH559UART1_FIFO_EN 1 //Enable CH559 serial port 1 receiving FIFO (receive and send 8 bytes each)
 
 #if CH559UART1_FIFO_EN
@@ -99,15 +110,15 @@ SER1_MCR |= bMCR_HALF; //485 mode can only use half-duplex mode
     SER1_LCR &= ~(bLCR_PAR_EN | bLCR_STOP_BIT); //Wireless path interval, no parity, 1 stop bit, 8 data bits
 
     SER1_MCR &= ~bMCR_TNOW;
-    SER1_IER |= bIER_EN_MODEM_O;
+    //SER1_IER |= bIER_EN_MODEM_O;
     SER1_IER |= ((pin << 4) & MASK_U1_PIN_MOD); //Serial port mode configuration
-    SER1_IER |= /*bIER_MODEM_CHG | */bIER_LINE_STAT | bIER_THR_EMPTY | bIER_RECV_RDY;//Interrupt enable configuration
+    //SER1_IER |= /*bIER_MODEM_CHG | bIER_LINE_STAT | bIER_THR_EMPTY | bIER_RECV_RD;//Interrupt enable configuration
 
 #if CH559UART1_FIFO_EN
     SER1_FCR |= MASK_U1_FIFO_TRIG | bFCR_T_FIFO_CLR | bFCR_R_FIFO_CLR | bFCR_FIFO_EN;//FIFO controller
                                                                                //Empty the receive and transmit FIFO, 7-byte receive trigger, FIFO enable
 #endif
-    SER1_MCR |= bMCR_OUT2; //MODEM control register
+    //SER1_MCR |= bMCR_OUT2; //MODEM control register
                                                                                //Interrupt request output, no actual interrupt
     SER1_ADDR |= 0xff; //Close multi-machine communication
 }
@@ -221,7 +232,7 @@ void CH559UART1SendStr(PUINT8 SendStr)
     }
 #endif
 }
-
+/*
 main()
 {
    UINT8 i;
@@ -246,4 +257,4 @@ To
            CH559UART1SendByte(buffer[i]);
        }
     }
-}
+}*/

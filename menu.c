@@ -1,3 +1,10 @@
+/*
+    menu.c
+
+    Handles the menu that appears when you press HIDman's button
+*/
+
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -9,7 +16,7 @@
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
-#include "protocol.h"
+#include "ps2protocol.h"
 
 __xdata char SendBuffer[255];
 

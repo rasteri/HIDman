@@ -2,7 +2,6 @@
 	mouse.c
 	
     Keeps track of a particular mouse output channel
-
 */
 
 #include <stdint.h>

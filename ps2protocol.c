@@ -1,9 +1,8 @@
 /*
-	protocol.c
+	ps2protocol.c
 	
 	Handles the higher-level parts of the PS/2 protocol
 	HID conversion, responding to host commands
-
 */
 
 #include <stdint.h>

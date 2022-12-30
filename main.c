@@ -6,7 +6,7 @@
 #include "util.h"
 #include "USBHost.h"
 #include "uart.h"
-#include "protocol.h"
+#include "ps2protocol.h"
 #include "ps2.h"
 #include "parsedescriptor.h"
 #include "menu.h"

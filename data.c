@@ -1,3 +1,11 @@
+/*
+    data.c
+    
+    Various tables - 
+    Joystick mapping presets, Keyboard scancodes, HID->PS2 mappings, etc
+*/
+
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

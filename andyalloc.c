@@ -1,3 +1,9 @@
+/*
+	andyalloc.c
+	
+	Trivial allocator that just chucks everything on a heap in order
+    Can't deallocate, all memory must be wiped and re-filled
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +26,7 @@ void __xdata *andyalloc(size_t size)
     return tmp;
 }
 
-void andyclearmem(){
+void andyclearmem()
+{
     MemPoolPtr = MemPool;
 }

@@ -1,6 +1,7 @@
 #include "Type.h"
-#include "Protocol.h"
+#include "ps2protocol.h"
 #include "RecvBuffer.h"
+#include "defs.h"
 
 //buffer struct
 typedef struct _BUFFER_STRUCT

@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include "Type.h"
 
-#include "PinDefine.h"
-
 #include "Mcu.h"
 #include "System.h"
 #include "Gpio.h"
@@ -14,7 +12,7 @@
 #include "KeyboardLed.h"
 
 #include "RecvBuffer.h"
-#include "Protocol.h"
+#include "ps2protocol.h"
 
 
 #include "Task.h"

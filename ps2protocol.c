@@ -226,8 +226,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
 					else*/
 
-					currSeg->value = (uint8_t)(-((int8_t)currSeg->value));
-
 					MouseMove(0, (int8_t)currSeg->value);
 
 					break;

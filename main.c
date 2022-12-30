@@ -192,13 +192,12 @@ void main()
 
 	CH559UART1Init(20, 1, 1);
 
-	while (1)
+	/*while (1)
 	{
 		//CH559UART1SendStr("bawbag");
-		CH559UART1SendByte(0x55);
-		CH559UART1SendByte(0xAA);
+		CH559UART1SendByte('M');
 		delayUs(6000);
-	}
+	}*/
 
 	SendKeyboardString("We are go\n");
 	uint8_t Buttons;
@@ -222,8 +221,10 @@ void main()
 		{
 			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Buttons))
 			{
-				/*X=-255;
-				Y=255;*/
+
+				// ps2 is inverted compared to USB
+				Y = -Y;
+
 				byte1 = 0b00001000 |			   //bit3 always set
 						((Y >> 10) & 0b00100000) | // Y sign bit
 						((X >> 11) & 0b00010000) | // X sign bit
@@ -238,7 +239,7 @@ void main()
 
 		// make sure there's space in the fifo before we pop any mouse updates
 		// i.e. if there's at least 3 bytes left (or it's empty, the two might be exclusive)
-		/*if (CH559UART1_FIFO_CNT >= 3 || SER1_LSR & bLSR_T_FIFO_EMP)
+		if (CH559UART1_FIFO_CNT >= 3 || SER1_LSR & bLSR_T_FIFO_EMP)
 		{
 			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Buttons))
 			{
@@ -255,6 +256,6 @@ void main()
 				CH559UART1SendByte(byte2);
 				CH559UART1SendByte(byte3);
 			}
-		}*/
+		}
 	}
 }

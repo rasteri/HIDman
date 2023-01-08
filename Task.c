@@ -67,7 +67,7 @@ static void InitTimer2(void)
 void InitSystem(void)
 {
 	CfgFsys();      //CH559ʱ��ѡ������   
-    mDelaymS(200);   
+    mDelaymS(500);   
 
     CH559GPIODrivCap(3, 1);
 

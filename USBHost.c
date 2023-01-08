@@ -1301,10 +1301,15 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				TRACE1("Interface %bd:", i);
 				TRACE1("InterfaceProtocol:%bd\r\n", pInterface->InterfaceProtocol);
 
-				TRACE1("Before %x\n", GetBootProtocol(pUsbDevice, i));
-				SetBootProtocol(pUsbDevice, i);
 				if (DumpReport)
-					SendKeyboardString("Protocol %x\n", GetBootProtocol(pUsbDevice, i));
+					SendKeyboardString("Old Protocol %x\n", GetBootProtocol(pUsbDevice, i));
+
+				TRACE1("Before %x\n", GetBootProtocol(pUsbDevice, i));
+				
+				SetBootProtocol(pUsbDevice, i);
+
+				if (DumpReport)
+					SendKeyboardString("New Protocol %x\n", GetBootProtocol(pUsbDevice, i));
 
 				TRACE1("Report Size:%d\r\n", pInterface->ReportSize);
 				s = GetReportDescriptor(pUsbDevice, i, ReceiveDataBuffer, pInterface->ReportSize <= sizeof(ReceiveDataBuffer) ? pInterface->ReportSize : sizeof(ReceiveDataBuffer), &len);

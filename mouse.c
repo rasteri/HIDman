@@ -24,7 +24,7 @@ void InitMice()
 {
     memset(OutputMice, 0x00, sizeof(OutputMice));
 }
-
+uint8_t updates = 0;
 void MouseMove(int16_t DeltaX, int16_t DeltaY)
 {
     for (int x = 0; x < 2; x++)

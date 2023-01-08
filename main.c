@@ -25,25 +25,6 @@ SBIT(KEY_DATA, 0x80, 3);
 SBIT(MOUSE_CLOCK, 0xB0, 7);
 SBIT(MOUSE_DATA, 0xC1, 3);
 
-typedef struct color
-{
-	uint8_t r, g, b;
-} color;
-
-color fadeseq[] =
-	{
-		{0x00, 0x00, 0xFF},
-		{0x00, 0xFF, 0xFF},
-		{0x00, 0xFF, 0x00},
-		{0xFF, 0xFF, 0x00},
-		{0xFF, 0x00, 0x00},
-		{0xFF, 0x00, 0xFF},
-		{0xFF, 0xFF, 0xFF},
-
-};
-
-uint8_t *fadepnt;
-
 __xdata uint8_t repeatDiv = 0;
 uint16_t ResetCounter;
 
@@ -75,6 +56,15 @@ void mTimer0Interrupt(void) __interrupt(1)
 		}
 		else
 			ResetCounter = 0;
+			
+		// turn red LED off (and green on) if we haven't seen any activity in a while
+		if (LEDDelay)
+			LEDDelay--;
+		else
+		{
+			P2 |= 0b00010000;
+			P2 &= ~0b00100000;
+		}
 	}
 }
 
@@ -155,6 +145,9 @@ void InitPWM3(UINT8 polar)
 	PIN_FUNC |= bTMR3_PIN_X;
 }
 
+uint8_t DetectCountdown = 0;
+uint8_t PrevRTSState = 0;
+
 //PWM1, PWM2, PWM3_
 void main()
 {
@@ -162,7 +155,7 @@ void main()
 	InitSystem();
 
 	//port0 setup
-	P0_DIR |= 0b11101000; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs
+	P0_DIR |= 0b11101000; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host)
 	PORT_CFG |= bP0_OC;	  // open collector
 	P0_PU = 0x00;		  // no pullups
 	P0 = 0b11101000;	  // default high
@@ -172,6 +165,12 @@ void main()
 	PORT_CFG |= bP2_OC;	  // open collector
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00110000;	  // LEDs off by default (i.e. high)
+
+	//port3 setup
+	P3_DIR |= 0b11100010; // 5,6,7 are PS2 outputs, 1 is UART0 TXD
+	PORT_CFG |= bP3_OC;	  // open collector
+	P3_PU = 0x00;		  // no pullups
+	P3 = 0b11100010;	  // default high
 
 	//port4 setup
 	P4_DIR = 0b00010100; //4.0 is RXD, 4.2 is Blue LED, 4.3 is MOUSE DATA (actually input, since we're faking open drain), 4.4 is TXD, 4.6 is SWITCH
@@ -188,18 +187,13 @@ void main()
 
 	printf("Ready\n");
 
+	// GREEN LED ON
+	P2 &= ~0b00100000;
 	memset(SendBuffer, 0, 255);
 
 	CH559UART1Init(20, 1, 1);
 
-	/*while (1)
-	{
-		//CH559UART1SendStr("bawbag");
-		CH559UART1SendByte('M');
-		delayUs(6000);
-	}*/
-
-	SendKeyboardString("We are go\n");
+	//SendKeyboardString("We are go\n");
 	uint8_t Buttons;
 	int16_t X, Y;
 	while (1)
@@ -216,6 +210,7 @@ void main()
 
 		uint8_t byte1, byte2, byte3;
 
+		// Send PS/2 Mouse Packet if neccessary
 		// make sure there's space in the buffer before we pop any mouse updates
 		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
 		{
@@ -237,24 +232,42 @@ void main()
 			}
 		}
 
+		// falling edge of RTS (P0.4) means host is resetting mouse
+		if (!(P0 & 0b00010000) && PrevRTSState)
+		{
+			DetectCountdown = 20;
+		}
+
+		PrevRTSState = P0 & 0b00010000;
+
+		// send a bunch of "M"s to identify MS mouse
+		if (DetectCountdown)
+		{
+			if (SER1_LSR & bLSR_T_FIFO_EMP)
+			{
+				CH559UART1SendByte('M');
+				DetectCountdown--;
+			}
+		}
+		// Send Serial Mouse Packet if neccessary
 		// make sure there's space in the fifo before we pop any mouse updates
-		// i.e. if there's at least 3 bytes left (or it's empty, the two might be exclusive)
-		if (CH559UART1_FIFO_CNT >= 3 || SER1_LSR & bLSR_T_FIFO_EMP)
+		else if (/*CH559UART1_FIFO_CNT >= 3 || */ SER1_LSR & bLSR_T_FIFO_EMP)
 		{
 			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Buttons))
 			{
-				byte1 = 0b01000000 |			  // bit6 always set
+				byte1 = 0b11000000 |			  // bit6 always set
 						((Buttons & 0x01) << 5) | // left button
 						((Buttons & 0x02) << 3) | // right button
 						((Y >> 4) & 0b00001100) | // top two bits of Y
 						((X >> 11) & 0b00000011); // top two bits of X
 
-				byte2 = (X & 0x3F); // rest of X
-				byte3 = (Y & 0x3F); // rest of Y
+				byte2 = 0b10000000 | (X & 0x3F); // rest of X
+				byte3 = 0b10000000 | (Y & 0x3F); // rest of Y
 
 				CH559UART1SendByte(byte1);
 				CH559UART1SendByte(byte2);
 				CH559UART1SendByte(byte3);
+				P3 ^= 0b01000000;
 			}
 		}
 	}

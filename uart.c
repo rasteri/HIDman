@@ -1,7 +1,7 @@
-#include "Type.h"
-#include "CH559.h" 
-#include "System.h"
-#include "Uart.h"
+#include "type.h"
+#include "ch559.h" 
+#include "system.h"
+#include "uart.h"
 
 /*******************************************************************************
 * Function Name  : CH559UART0Alter()

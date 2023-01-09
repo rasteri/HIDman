@@ -1,13 +1,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "Type.h"
-#include "UsbDef.h"
+#include "type.h"
+#include "usbdef.h"
 #include "ch559.h"
 
 #include "defs.h"
 
-#include "UsbHost.h"
+#include "usbhost.h"
 #include "ps2protocol.h"
 #include "data.h"
 #include "ps2.h"
@@ -462,12 +462,15 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 						appUsage == REPORT_USAGE_KEYBOARD &&
 						hidGlobalPnt->usagePage == REPORT_USAGE_PAGE_KEYBOARD)
 					{
+						
 						// need to make a seg for each report seg
 						for (i = 0; i < hidGlobalPnt->reportCount; i++)
 						{
+					 		
 							CreateSeg();
 							currSegPnt->OutputChannel = MAP_KEYBOARD;
 							currSegPnt->InputType = MAP_TYPE_ARRAY;
+							printf("seggage %hhx %hhx\n", i, hidGlobalPnt->reportCount);
 						}
 					}
 				}

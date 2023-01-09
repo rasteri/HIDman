@@ -1,23 +1,23 @@
 
 #include <stdio.h>
-#include "Type.h"
+#include "type.h"
 
-#include "Mcu.h"
-#include "System.h"
-#include "Gpio.h"
-#include "Uart.h"
-#include "Timer2.h"
+#include "mcu.h"
+#include "system.h"
+#include "gpio.h"
+#include "uart.h"
+#include "timer2.h"
 
-#include "UsbHost.h"
-#include "KeyboardLed.h"
+#include "usbhost.h"
+#include "keyboardled.h"
 
-#include "RecvBuffer.h"
+#include "recvbuffer.h"
 #include "ps2protocol.h"
 
 
-#include "Task.h"
+#include "task.h"
 
-#include "Trace.h"
+#include "trace.h"
 
 static UINT8 volatile s_5MsCounter = 0;
 

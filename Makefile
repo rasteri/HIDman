@@ -7,15 +7,15 @@ OBJDIR = ./build
 TARGET = hidman
 
 OBJECTS = \
-$(OBJDIR)/CH559.rel \
-$(OBJDIR)/GPIO.rel \
-$(OBJDIR)/KeyboardLed.rel \
-$(OBJDIR)/Main.rel \
-$(OBJDIR)/ParseDescriptor.rel \
-$(OBJDIR)/System.rel \
-$(OBJDIR)/Task.rel \
-$(OBJDIR)/Timer2.rel \
-$(OBJDIR)/UsbHost.rel \
+$(OBJDIR)/ch559.rel \
+$(OBJDIR)/gpio.rel \
+$(OBJDIR)/keyboardled.rel \
+$(OBJDIR)/main.rel \
+$(OBJDIR)/parsedescriptor.rel \
+$(OBJDIR)/system.rel \
+$(OBJDIR)/task.rel \
+$(OBJDIR)/timer2.rel \
+$(OBJDIR)/usbhost.rel \
 $(OBJDIR)/recvbuffer.rel \
 $(OBJDIR)/data.rel \
 $(OBJDIR)/menu.rel \
@@ -45,7 +45,7 @@ ifndef CODE_SIZE
 CODE_SIZE = 0xEFFF
 endif
 
-CFLAGS := -V -mmcs51 --model-large --stack-auto \
+CFLAGS := -V -mmcs51 --debug --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
 	--code-size $(CODE_SIZE) \
 	-I/ -DFREQ_SYS=$(FREQ_SYS) \
@@ -61,6 +61,7 @@ $(OBJDIR)/%.rel : %.c
 
 $(OBJDIR)/$(TARGET).ihx: $(OBJECTS)
 	$(CC) $(OBJECTS) $(LFLAGS) -o $(OBJDIR)/$(TARGET).ihx
+	
 
 $(OBJDIR)/$(TARGET).hex: $(OBJDIR)/$(TARGET).ihx
 	$(PACK_HEX) $(OBJDIR)/$(TARGET).ihx > $(OBJDIR)/$(TARGET).hex
@@ -77,4 +78,6 @@ all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 clean:
 	rm -f $(OBJDIR)/*
 
-
+test: $(OBJECTS) $(OBJDIR)/test.rel
+	$(CC) build/test.rel build/parsedescriptor.rel build/andyalloc.rel build/data.rel build/uart.rel $(LFLAGS) -o $(OBJDIR)/test.ihx
+	s51 build/test -s -

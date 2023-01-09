@@ -1,7 +1,7 @@
-#include "Type.h"
+#include "type.h"
 #include "mcu.h"
 
-#include "KeyboardLed.h"
+#include "keyboardled.h"
 
 static UINT8 keyboardLed = 0x00;
 

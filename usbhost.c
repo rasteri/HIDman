@@ -1,20 +1,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Type.h"
-#include "CH559.h"
-#include "System.h"
+#include "type.h"
+#include "ch559.h"
+#include "system.h"
 #include "defs.h"
-#include "UsbDef.h"
-#include "UsbHost.h"
+#include "usbdef.h"
+#include "usbhost.h"
 #include "menu.h"
 #include "data.h"
 #include "util.h"
 
-#include "KeyboardLed.h"
-#include "ParseDescriptor.h"
+#include "keyboardled.h"
+#include "parsedescriptor.h"
 
-#include "Trace.h"
+#include "trace.h"
 
 #define WAIT_USB_TOUT_200US 800 // �ȴ�USB�жϳ�ʱʱ��200uS
 

@@ -1,3 +1,9 @@
+BOARD_TYPE = BOARD_AXD
+#BOARD_TYPE = BOARD_MINI
+#BOARD_TYPE = BOARD_MICRO
+
+#BOARD_OPTIONS = SWAP_KBD_MSC
+
 CC = sdcc
 OBJCOPY = sdobjcopy
 PACK_HEX = packihx
@@ -24,10 +30,11 @@ $(OBJDIR)/ps2.rel \
 $(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
 $(OBJDIR)/uart.rel \
-$(OBJDIR)/uart1.rel \
-$(OBJDIR)/mouse.rel 
+$(OBJDIR)/mouse.rel
 
-
+ifneq ($(BOARD_TYPE), BOARD_MICRO)
+	OBJECTS += $(OBJDIR)/uart1.rel
+endif
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -48,7 +55,7 @@ endif
 CFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
 	--code-size $(CODE_SIZE) \
-	-I/ -DFREQ_SYS=$(FREQ_SYS) \
+	-I/ -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) \
 	$(EXTRA_FLAGS)
 
 LFLAGS := $(CFLAGS)
@@ -68,7 +75,13 @@ $(OBJDIR)/$(TARGET).hex: $(OBJDIR)/$(TARGET).ihx
 $(OBJDIR)/$(TARGET).bin: $(OBJDIR)/$(TARGET).ihx
 	$(OBJCOPY) -I ihex -O binary $(OBJDIR)/$(TARGET).ihx $(OBJDIR)/$(TARGET).bin
 
-flash: $(OBJDIR)/$(TARGET).bin pre-flash
+size: $(OBJDIR)/$(TARGET).ihx
+	@echo '---------- Segments ----------'
+	@egrep '(ABS,CON)|(REL,CON)' $(OBJDIR)/$(TARGET).map | gawk --non-decimal-data '{dec = sprintf("%d","0x" $$2); print dec " " $$0}' | /usr/bin/sort -n -k1 | cut -f2- -d' ' | uniq
+	@echo '---------- Memory ----------'
+	@egrep 'available|EXTERNAL|FLASH' $(OBJDIR)/$(TARGET).mem
+
+flash: $(OBJDIR)/$(TARGET).bin
 	$(WCHISP) -f $(OBJDIR)/$(TARGET).bin -g
 
 .DEFAULT_GOAL := all

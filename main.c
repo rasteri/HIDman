@@ -208,9 +208,9 @@ void main()
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
 
+#if !defined(BOARD_MICRO)
 	printf("Ready\n");
 
-#if !defined(BOARD_MICRO)
 	// GREEN LED ON
 	P2 &= ~0b00100000;
 

@@ -29,10 +29,10 @@ $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
-$(OBJDIR)/uart.rel \
 $(OBJDIR)/mouse.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)
+  OBJECTS += $(OBJDIR)/uart.rel
 	OBJECTS += $(OBJDIR)/uart1.rel
 endif
 

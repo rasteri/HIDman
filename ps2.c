@@ -17,9 +17,9 @@
 #include "data.h"
 #include "ps2protocol.h"
 
-#if defined(BOARD_MICRO)      // Pinouts for HIDman-micro
+#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
-	#if defined(SWAP_KBD_MSC)   // Makes it easier to direct solder combo PS/2 port
+	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
 		SBIT(KEY_DATA, 0x90, 6);
 		SBIT(MOUSE_CLOCK, 0x90, 4);
 	#else
@@ -27,7 +27,7 @@
 		SBIT(MOUSE_CLOCK, 0x90, 6);
 	#endif
 	SBIT(MOUSE_DATA, 0x90, 5);
-#else                         // Default pinouts (HIDman-AXD, HIDman-mini)
+#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
 	SBIT(KEY_CLOCK, 0x80, 5);
 	SBIT(KEY_DATA, 0x80, 3);
 

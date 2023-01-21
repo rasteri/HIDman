@@ -12,9 +12,9 @@
 #include "menu.h"
 #include "mouse.h"
 
-#if defined(BOARD_MICRO)      // Pinouts for HIDman-micro
+#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
-	#if defined(SWAP_KBD_MSC)   // Makes it easier to direct solder combo PS/2 port
+	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
 		SBIT(KEY_DATA, 0x90, 6);
 		SBIT(MOUSE_CLOCK, 0x90, 4);
 	#else
@@ -22,7 +22,7 @@
 		SBIT(MOUSE_CLOCK, 0x90, 6);
 	#endif
 	SBIT(MOUSE_DATA, 0x90, 5);
-#else                         // Default pinouts (HIDman-AXD, HIDman-mini)
+#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
 	SBIT(KEY_CLOCK, 0x80, 5);
 	SBIT(KEY_DATA, 0x80, 3);
 
@@ -163,7 +163,7 @@ void main()
 
 	InitSystem();
 
-#if defined(BOARD_MICRO)      // Pinouts for HIDman-micro
+#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	//port1 setup
 	P1_DIR |= 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
 	PORT_CFG |= bP1_OC;	  // open collector
@@ -175,7 +175,7 @@ void main()
 	PORT_CFG |= bP2_OC;	  // open collector
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00100000;	  // LED off by default (i.e. high)
-#else                         // Default pinouts (HIDman-AXD, HIDman-mini)
+#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
 	//port0 setup
 	P0_DIR |= 0b11101000; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host)
 	PORT_CFG |= bP0_OC;	  // open collector

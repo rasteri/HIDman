@@ -12,18 +12,23 @@
 #include "menu.h"
 #include "mouse.h"
 
-SBIT(LED, 0x90, 6);
-/*SBIT(KEY_CLOCK, 0xB0, 4);
-SBIT(KEY_DATA, 0xB0, 5);
+#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
+	SBIT(KEY_CLOCK, 0x90, 7);
+	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
+		SBIT(KEY_DATA, 0x90, 6);
+		SBIT(MOUSE_CLOCK, 0x90, 4);
+	#else
+		SBIT(KEY_DATA, 0x90, 4);
+		SBIT(MOUSE_CLOCK, 0x90, 6);
+	#endif
+	SBIT(MOUSE_DATA, 0x90, 5);
+#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
+	SBIT(KEY_CLOCK, 0x80, 5);
+	SBIT(KEY_DATA, 0x80, 3);
 
-SBIT(MOUSE_CLOCK, 0xA0, 0);
-SBIT(MOUSE_DATA, 0xA0, 1);*/
-
-SBIT(KEY_CLOCK, 0x80, 5);
-SBIT(KEY_DATA, 0x80, 3);
-
-SBIT(MOUSE_CLOCK, 0xB0, 7);
-SBIT(MOUSE_DATA, 0xC1, 3);
+	SBIT(MOUSE_CLOCK, 0xB0, 7);
+	SBIT(MOUSE_DATA, 0xC1, 3);
+#endif
 
 __xdata uint8_t repeatDiv = 0;
 uint16_t ResetCounter;
@@ -62,8 +67,12 @@ void mTimer0Interrupt(void) __interrupt(1)
 			LEDDelay--;
 		else
 		{
+#if defined(BOARD_MICRO)
+			P2 |= 0b00100000;
+#else
 			P2 |= 0b00010000;
 			P2 &= ~0b00100000;
+#endif
 		}
 	}
 }
@@ -154,6 +163,19 @@ void main()
 
 	InitSystem();
 
+#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
+	//port1 setup
+	P1_DIR |= 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
+	PORT_CFG |= bP1_OC;	  // open collector
+	P1_PU = 0x00;		  // no pullups
+	P1 = 0b11110000;	  // default high
+
+	//port2 setup
+	P2_DIR |= 0b00100000; // 2.5 is LED output
+	PORT_CFG |= bP2_OC;	  // open collector
+	P2_PU = 0x00;		  // no pullups
+	P2 = 0b00100000;	  // LED off by default (i.e. high)
+#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
 	//port0 setup
 	P0_DIR |= 0b11101000; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host)
 	PORT_CFG |= bP0_OC;	  // open collector
@@ -176,6 +198,7 @@ void main()
 	P4_DIR = 0b00010100; //4.0 is RXD, 4.2 is Blue LED, 4.3 is MOUSE DATA (actually input, since we're faking open drain), 4.4 is TXD, 4.6 is SWITCH
 	P4_PU = 0b01000000;	 // pullup on switch
 	P4_OUT = 0b00000100; //LEDs off (i.e. HIGH), MOUSE DATA low (since it's switched by toggling input on and off, i.e. faking open drain)
+#endif
 
 	// timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
@@ -185,14 +208,16 @@ void main()
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
 
+#if !defined(BOARD_MICRO)
 	printf("Ready\n");
 
 	// GREEN LED ON
 	P2 &= ~0b00100000;
-	memset(SendBuffer, 0, 255);
 
 	CH559UART1Init(20, 1, 1);
+#endif
 
+	memset(SendBuffer, 0, 255);
 	//SendKeyboardString("We are go\n");
 	uint8_t Buttons;
 	int16_t X, Y;
@@ -232,6 +257,7 @@ void main()
 			}
 		}
 
+#if !defined(BOARD_MICRO)
 		// falling edge of RTS (P0.4) means host is resetting mouse
 		if (!(P0 & 0b00010000) && PrevRTSState)
 		{
@@ -270,5 +296,6 @@ void main()
 				P3 ^= 0b01000000;
 			}
 		}
+#endif
 	}
 }

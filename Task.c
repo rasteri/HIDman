@@ -81,7 +81,9 @@ void InitSystem(void)
 	
 	InitTimer2();
 
+#if !defined(BOARD_MICRO)
 	InitUART0();
+#endif
 
 	InitUsbData();
 	InitUsbHost();

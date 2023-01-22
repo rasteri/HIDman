@@ -1,12 +1,10 @@
-
 #ifndef __PS2_H__
 #define __PS2_H__
+
 #include <stdbool.h>
+
 #define PORT_KEY 0
 #define PORT_MOUSE 1
-
-#define CLOCK 0
-#define DATA 1
 
 typedef union sendbuffer
 {
@@ -47,7 +45,8 @@ typedef struct ps2port
 
 extern __xdata ps2port ports[];
 
-bool GetPort(unsigned char port, unsigned char channel);
+bool ReadPS2Clock(unsigned char port);
+bool ReadPS2Data(unsigned char port);
 
 bool SendKeyboard(const uint8_t *chunk);
 //void SendMouse();
@@ -112,30 +111,35 @@ void PS2ProcessPort(uint8_t port);
 	SimonSaysSendMouse4(__VA_ARGS__); \
 	TR0 = 1;
 
-//P4 dir should be 1 (output) when low, 0 (input) when high
 
-#define OutPort(port, channel, val)   \
-	if (port == PORT_KEY)             \
-		if (channel == CLOCK)         \
-			KEY_CLOCK = val;          \
-		else                          \
-			KEY_DATA = val;           \
-	else if (port == PORT_MOUSE)      \
-		if (channel == DATA)          \
-		{                             \
-			if (val)                  \
-			{                         \
-				P4_OUT |= 0b00001000; \
-				P4_DIR &= 0b11110111; \
-			}                         \
-			else                      \
-			{                         \
-				P4_OUT &= 0b11110111; \
-				P4_DIR |= 0b00001000; \
-			}                         \
-		}                             \
-		else                          \
+#define WritePS2Clock(port, val)    \
+	if (port == PORT_KEY)        \
+			KEY_CLOCK = val;         \
+	else if (port == PORT_MOUSE) \
 			MOUSE_CLOCK = val;
+
+#if defined(BOARD_MICRO)
+
+#define WritePS2Data(port, val)     \
+	if (port == PORT_KEY)        \
+			KEY_DATA = val;          \
+	else if (port == PORT_MOUSE) \
+			MOUSE_DATA = val;
+#else
+
+	//P4 dir should be 1 (output) when low, 0 (input) when high
+#define WritePS2Data(port, val)     \
+	if (port == PORT_KEY)        \
+		KEY_DATA = val;            \
+	else if (port == PORT_MOUSE) \
+		if (val) {                 \
+			P4_OUT |= 0b00001000;    \
+			P4_DIR &= 0b11110111;    \
+		} else {                   \
+			P4_OUT &= 0b11110111;    \
+			P4_DIR |= 0b00001000;    \
+		}
+#endif
 
 #define S_INIT 0
 #define S_IDLE 1

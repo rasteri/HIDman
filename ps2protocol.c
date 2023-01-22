@@ -260,7 +260,11 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	uint32_t tmp;
 
 	// Light RED LED for a while
+#if defined(BOARD_MICRO)
+	P2 &= ~0b00100000;
+#else
 	P2 &= ~0b00010000;
+#endif
 	LEDDelay = 255;
 
 	if (desc->usesReports)

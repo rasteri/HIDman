@@ -88,6 +88,7 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_DEVICE *pUs
 
 				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceClass = pItfDescr->bInterfaceClass;
 				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceProtocol = pItfDescr->bInterfaceProtocol;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceSubClass = pItfDescr->bInterfaceSubClass;
 			}
 		}
 		else if (descrType == USB_DESCR_TYP_HID)

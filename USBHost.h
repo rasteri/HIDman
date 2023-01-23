@@ -135,6 +135,7 @@ typedef struct _HID_ITEM_INFO
 typedef struct _INTERFACE
 {
 	UINT8     InterfaceClass;
+	UINT8	  InterfaceSubClass;
 	UINT8     InterfaceProtocol;
 
 	UINT16    ReportSize;

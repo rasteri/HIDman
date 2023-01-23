@@ -16,6 +16,6 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report);
     RepeatState = st;      \
     TR0 = 1;
 
-extern uint8_t LEDDelay;
+extern uint16_t LEDDelay;
 
 #endif //__PROTOCOL_H__

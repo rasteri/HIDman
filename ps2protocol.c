@@ -31,7 +31,7 @@ __xdata int16_t RepeatRate = -1000;
 
 __xdata char lastKeyboardHID[8];
 
-uint8_t LEDDelay = 0;
+uint16_t LEDDelay = 0;
 
 // runs in interupt to keep timings
 void RepeatTimer()
@@ -265,7 +265,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 #else
 	P2 &= ~0b00010000;
 #endif
-	LEDDelay = 255;
+	LEDDelay = 500;
 
 	if (desc->usesReports)
 	{

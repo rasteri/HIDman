@@ -680,7 +680,6 @@ static UINT8 SetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
 	FillSetupReq(&SetupReq, 0b00100001, HID_SET_PROTOCOL, 0, interface, 0);
 
 	s = HostCtrlTransfer(&SetupReq, pUsbDevice->MaxPacketSize0, NULL, NULL);
-
 	return s;
 }
 
@@ -1298,18 +1297,24 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 					TRACE("SetIdle OK\r\n");
 				}
 
-				TRACE1("Interface %bd:", i);
-				TRACE1("InterfaceProtocol:%bd\r\n", pInterface->InterfaceProtocol);
+				DEBUG_OUT("Interface %x:\n", i);
+				DEBUG_OUT("InterfaceProtocol: %x\r\n", pInterface->InterfaceProtocol);
 
-				if (DumpReport)
-					SendKeyboardString("Old Protocol %x\n", GetBootProtocol(pUsbDevice, i));
-
-				TRACE1("Before %x\n", GetBootProtocol(pUsbDevice, i));
 				
-				SetBootProtocol(pUsbDevice, i);
+				if (pInterface->InterfaceSubClass == 0x01)
+				{
+					if (DumpReport)
+						SendKeyboardString("Old Protocol %x\n", GetBootProtocol(pUsbDevice, i));
 
-				if (DumpReport)
-					SendKeyboardString("New Protocol %x\n", GetBootProtocol(pUsbDevice, i));
+					DEBUG_OUT("before %x\n", GetBootProtocol(pUsbDevice, i));
+
+					SetBootProtocol(pUsbDevice, i);
+
+					if (DumpReport)
+						SendKeyboardString("New Protocol %x\n", GetBootProtocol(pUsbDevice, i));
+
+					DEBUG_OUT("after %x\n", GetBootProtocol(pUsbDevice, i));
+				}
 
 				TRACE1("Report Size:%d\r\n", pInterface->ReportSize);
 				s = GetReportDescriptor(pUsbDevice, i, ReceiveDataBuffer, pInterface->ReportSize <= sizeof(ReceiveDataBuffer) ? pInterface->ReportSize : sizeof(ReceiveDataBuffer), &len);
@@ -1349,10 +1354,10 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 
 				// hack - use default boot mode descriptors if a keyboard or mouse is detected
 				// Mouse first
-				if (pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE)
+				if (pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE && pInterface->InterfaceSubClass == 0x01)
 					ParseReportDescriptor(StandardMouseDescriptor, 50, &pInterface->HidSegStruct, 0);
 				// keyboard next
-				else if (pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD)
+				else if (pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD && pInterface->InterfaceSubClass == 0x01)
 					ParseReportDescriptor(StandardKeyboardDescriptor, 63, &pInterface->HidSegStruct, 0);
 				else
 					ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct, 0);

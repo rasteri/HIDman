@@ -168,7 +168,7 @@ void main()
 	P1_DIR |= 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
 	PORT_CFG |= bP1_OC;	  // open collector
 	P1_PU = 0x00;		  // no pullups
-	P1 = 0b11110000;	  // default high
+	P1 = 0b11110000;	  // default pin states
 
 	//port2 setup
 	P2_DIR |= 0b00100000; // 2.5 is LED output
@@ -177,22 +177,22 @@ void main()
 	P2 = 0b00100000;	  // LED off by default (i.e. high)
 #else                           // Default pinouts (HIDman-AXD, HIDman-mini)
 	//port0 setup
-	P0_DIR |= 0b11101000; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host)
+	P0_DIR = 0b11101010; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host), 0.1 is RTS (i.e. CTS on host)
 	PORT_CFG |= bP0_OC;	  // open collector
 	P0_PU = 0x00;		  // no pullups
-	P0 = 0b11101000;	  // default high
+	P0 = 0b11101010;	  // default pin states
 
 	//port2 setup
-	P2_DIR |= 0b00110000; // 2.4, 2.5 are RED/GREEN LED outputs
+	P2_DIR = 0b00110000; // 2.4, 2.5 are RED/GREEN LED outputs
 	PORT_CFG |= bP2_OC;	  // open collector
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00110000;	  // LEDs off by default (i.e. high)
 
 	//port3 setup
-	P3_DIR |= 0b11100010; // 5,6,7 are PS2 outputs, 1 is UART0 TXD
+	P3_DIR = 0b11100010; // 5,6,7 are PS2 outputs, 1 is UART0 TXD
 	PORT_CFG |= bP3_OC;	  // open collector
 	P3_PU = 0x00;		  // no pullups
-	P3 = 0b11100010;	  // default high
+	P3 = 0b11100010;	  // default pin states
 
 	//port4 setup
 	P4_DIR = 0b00010100; //4.0 is RXD, 4.2 is Blue LED, 4.3 is MOUSE DATA (actually input, since we're faking open drain), 4.4 is TXD, 4.6 is SWITCH
@@ -285,7 +285,7 @@ void main()
 						((Buttons & 0x01) << 5) | // left button
 						((Buttons & 0x02) << 3) | // right button
 						((Y >> 4) & 0b00001100) | // top two bits of Y
-						((X >> 11) & 0b00000011); // top two bits of X
+						((X >> 6) & 0b00000011); // top two bits of X
 
 				byte2 = 0b10000000 | (X & 0x3F); // rest of X
 				byte3 = 0b10000000 | (Y & 0x3F); // rest of Y

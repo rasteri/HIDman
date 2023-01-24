@@ -1,56 +1,56 @@
 
-#include "Type.h"
-#include "CH559.h"
-#include "System.h"
+#include "type.h"
+#include "ch559.h"
+#include "system.h"
 
 /*******************************************************************************
 * Function Name  : CfgFsys( )
-* Description    : CH559Ê±ÖÓÑ¡ÔñºÍÅäÖÃº¯Êý,Ä¬ÈÏÊ¹ÓÃÄÚ²¿¾§Õñ12MHz£¬Èç¹û¶¨ÒåÁËFREQ_SYS¿ÉÒÔ
-                   ¸ù¾ÝPLL_CFGºÍCLOCK_CFGÅäÖÃµÃµ½£¬¹«Ê½ÈçÏÂ£º
+* Description    : CH559Ê±ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½,Ä¬ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½12MHzï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FREQ_SYSï¿½ï¿½ï¿½ï¿½
+                   ï¿½ï¿½ï¿½ï¿½PLL_CFGï¿½ï¿½CLOCK_CFGï¿½ï¿½ï¿½ÃµÃµï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½Â£ï¿½
                    Fsys = (Fosc * ( PLL_CFG & MASK_PLL_MULT ))/(CLOCK_CFG & MASK_SYS_CK_DIV);
-                   ¾ßÌåÊ±ÖÓÐèÒª×Ô¼ºÅäÖÃ
+                   ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Òªï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½
 * Input          : None
 * Output         : None
 * Return         : None
 *******************************************************************************/ 
 void CfgFsys()	
 {
-	SAFE_MOD = 0x55;														   //¿ªÆô°²È«Ä£Ê½
+	SAFE_MOD = 0x55;														   //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«Ä£Ê½
 	SAFE_MOD = 0xAA;												 
-//	CLOCK_CFG |= bOSC_EN_XT;												   //Ê¹ÄÜÍâ²¿¾§Õñ										  
+//	CLOCK_CFG |= bOSC_EN_XT;												   //Ê¹ï¿½ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½										  
 //	CLOCK_CFG &= ~bOSC_EN_INT;												
 //	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
-//	CLOCK_CFG |= 6; 														   //ÅäÖÃÏµÍ³Ê±ÖÓ48MHz
-//	CLOCK_CFG |= 8; 														   //ÅäÖÃÏµÍ³Ê±ÖÓ36MHz
-//	CLOCK_CFG |= 10;														   //ÅäÖÃÏµÍ³Ê±ÖÓ28.8MHz
-//	CLOCK_CFG |= 12;														   //ÅäÖÃÏµÍ³Ê±ÖÓ24MHz
-//	CLOCK_CFG |= 16;														   //ÅäÖÃÏµÍ³Ê±ÖÓ18MHz	
+//	CLOCK_CFG |= 6; 														   //ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½48MHz
+//	CLOCK_CFG |= 8; 														   //ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½36MHz
+//	CLOCK_CFG |= 10;														   //ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½28.8MHz
+//	CLOCK_CFG |= 12;														   //ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½24MHz
+//	CLOCK_CFG |= 16;														   //ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½18MHz	
 
 	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
 
 #if 1
-	//ÅäÖÃÏµÍ³Ê±ÖÓ48MHz
+	//ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½48MHz
 	CLOCK_CFG |= 6; 															  
 	PLL_CFG = (24 << 0) | (6 << 5);
 #else
-	//ÅäÖÃÏµÍ³Ê±ÖÓ56MHz
+	//ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½56MHz
 	CLOCK_CFG |= 6; 															  
 	PLL_CFG = (28 << 0) | (7 << 5);
 #endif	
 	
-	SAFE_MOD = 0xFF;														   //¹Ø±Õ°²È«Ä£Ê½  
-//	Èç¹ûÐÞ¸ÄÖ÷Æµ£¬ÒªÍ¬Ê±ÐÞ¸ÄFREQ_SYS£¬·ñÔò»áÔì³ÉÑÓÊ±º¯Êý²»×¼
+	SAFE_MOD = 0xFF;														   //ï¿½Ø±Õ°ï¿½È«Ä£Ê½  
+//	ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½ï¿½Æµï¿½ï¿½ÒªÍ¬Ê±ï¿½Þ¸ï¿½FREQ_SYSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼
 }
 
 
 /*******************************************************************************
 * Function Name  : mDelayus(UNIT16 n)
-* Description    : usÑÓÊ±º¯Êý
+* Description    : usï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
 * Input          : UNIT16 n
 * Output         : None
 * Return         : None
 *******************************************************************************/ 
-void mDelayuS( UINT16 n )  // ÒÔuSÎªµ¥Î»ÑÓÊ±
+void mDelayuS( UINT16 n )  // ï¿½ï¿½uSÎªï¿½ï¿½Î»ï¿½ï¿½Ê±
 {
 	while ( n ) {  // total = 12~13 Fsys cycles, 1uS @Fsys=12MHz
 		++ SAFE_MOD;  // 2 Fsys cycles, for higher Fsys, add operation here
@@ -129,12 +129,12 @@ void mDelayuS( UINT16 n )  // ÒÔuSÎªµ¥Î»ÑÓÊ±
 
 /*******************************************************************************
 * Function Name  : mDelayms(UNIT16 n)
-* Description    : msÑÓÊ±º¯Êý
+* Description    : msï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
 * Input          : UNIT16 n
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void	mDelaymS( UINT16 n )                                                  // ÒÔmSÎªµ¥Î»ÑÓÊ±
+void	mDelaymS( UINT16 n )                                                  // ï¿½ï¿½mSÎªï¿½ï¿½Î»ï¿½ï¿½Ê±
 {
 	while ( n ) 
 	{

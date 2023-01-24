@@ -1,18 +1,18 @@
 /*
-	andyalloc.c
-	
-	Trivial allocator that just chucks everything on a heap in order
+    andyalloc.c
+
+    Trivial allocator that just chucks everything on a heap in order
     Can't deallocate, all memory must be wiped and re-filled
 */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Type.h"
-#include "CH559.h"
-#include "System.h"
+#include "type.h"
+#include "ch559.h"
+#include "system.h"
 #include "defs.h"
-#include "UsbDef.h"
-#include "UsbHost.h"
+#include "usbdef.h"
+#include "usbhost.h"
 #include "andyalloc.h"
 
 __xdata uint8_t MemPool[MEMPOOLMAXSIZE];

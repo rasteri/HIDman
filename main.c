@@ -180,7 +180,7 @@ void main()
 	P0_DIR = 0b11101010; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host), 0.1 is RTS (i.e. CTS on host)
 	PORT_CFG |= bP0_OC;	  // open collector
 	P0_PU = 0x00;		  // no pullups
-	P0 = 0b11101010;	  // default pin states
+	P0 = 0b11111010;	  // default pin states
 
 	//port2 setup
 	P2_DIR = 0b00110000; // 2.4, 2.5 are RED/GREEN LED outputs

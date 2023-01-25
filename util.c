@@ -1,4 +1,4 @@
-#include "ch559.h"
+#include "CH559.h"
 #include "util.h"
 
 FunctionReference runBootloader = (FunctionReference)0xF400;

@@ -215,7 +215,7 @@ void main()
 	P2 &= ~0b00100000;
 
 	uint32_t serialMouseBps = 1200; // can do 19200 with custom mouse driver
-	CH559UART1Init(20, 1, 1, serialMouseBps);
+	CH559UART1Init(20, 1, 1, serialMouseBps, 7);
 #endif
 
 	memset(SendBuffer, 0, 255);

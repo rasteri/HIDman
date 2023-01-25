@@ -105,8 +105,8 @@ PIN_FUNC |= bXBUS_AL_OE;
 XBUS_AUX &= ~bALE_CLK_EN;
 SER1_MCR |= bMCR_HALF; //485 mode can only use half-duplex mode
     }
-    SER1_LCR |= ( MASK_U1_WORD_SZ | bLCR_WORD_SZ1 | bLCR_WORD_SZ0); //Line control, 8 data bits
-    SER1_LCR &= ~(bLCR_PAR_EN | bLCR_STOP_BIT); //Wireless path interval, no parity, 1 stop bit
+    SER1_LCR |= bLCR_WORD_SZ1; SER1_LCR &= ~bLCR_WORD_SZ0; //Line control, 7 data bits
+    SER1_LCR &= ~(bLCR_PAR_EN | bLCR_STOP_BIT | bLCR_WORD_SZ0); //Wireless path interval, no parity, 1 stop bit
 
     SER1_MCR &= ~bMCR_TNOW;
     //SER1_IER |= bIER_EN_MODEM_O;

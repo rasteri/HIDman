@@ -214,7 +214,8 @@ void main()
 	// GREEN LED ON
 	P2 &= ~0b00100000;
 
-	CH559UART1Init(20, 1, 1);
+	uint32_t serialMouseBps = 1200; // can do 19200 with custom mouse driver
+	CH559UART1Init(20, 1, 1, serialMouseBps);
 #endif
 
 	memset(SendBuffer, 0, 255);

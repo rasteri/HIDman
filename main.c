@@ -2,9 +2,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "CH559.h"
+#include "ch559.h"
 #include "util.h"
-#include "USBHost.h"
+#include "usbhost.h"
 #include "uart.h"
 #include "ps2protocol.h"
 #include "ps2.h"
@@ -156,6 +156,7 @@ void InitPWM3(UINT8 polar)
 
 uint8_t DetectCountdown = 0;
 uint8_t PrevRTSState = 0;
+uint8_t PrevButtons = 0;
 
 //PWM1, PWM2, PWM3_
 void main()
@@ -180,7 +181,7 @@ void main()
 	P0_DIR = 0b11101010; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host), 0.1 is RTS (i.e. CTS on host)
 	PORT_CFG |= bP0_OC;	  // open collector
 	P0_PU = 0x00;		  // no pullups
-	P0 = 0b11101010;	  // default pin states
+	P0 = 0b11111010;	  // default pin states
 
 	//port2 setup
 	P2_DIR = 0b00110000; // 2.4, 2.5 are RED/GREEN LED outputs
@@ -214,7 +215,8 @@ void main()
 	// GREEN LED ON
 	P2 &= ~0b00100000;
 
-	CH559UART1Init(20, 1, 1);
+	uint32_t serialMouseBps = 1200; // can do 19200 with custom mouse driver
+	CH559UART1Init(20, 1, 1, serialMouseBps, 7);
 #endif
 
 	memset(SendBuffer, 0, 255);
@@ -266,12 +268,14 @@ void main()
 
 		PrevRTSState = P0 & 0b00010000;
 
+		char serialMouseType = 'M'; // Logitech 3 button: '3', Microsoft: 'M'
+
 		// send a bunch of "M"s to identify MS mouse
 		if (DetectCountdown)
 		{
 			if (SER1_LSR & bLSR_T_FIFO_EMP)
 			{
-				CH559UART1SendByte('M');
+				CH559UART1SendByte(serialMouseType);
 				DetectCountdown--;
 			}
 		}
@@ -293,6 +297,17 @@ void main()
 				CH559UART1SendByte(byte1);
 				CH559UART1SendByte(byte2);
 				CH559UART1SendByte(byte3);
+
+				if (serialMouseType == '3')
+				{
+					if (Buttons & 0x04)
+						CH559UART1SendByte(0b10100000);
+					else if (PrevButtons & 0x04)
+						CH559UART1SendByte(0b10000000);
+
+					PrevButtons = Buttons;
+				}
+
 				P3 ^= 0b01000000;
 			}
 		}

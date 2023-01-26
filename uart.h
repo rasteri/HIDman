@@ -15,7 +15,7 @@ extern void CH559UART0SendData(UINT8 *pData, UINT8 len);
 
 void UART1RegCfgValue();
 void ResetUART1();
-void CH559UART1Init(UINT8 DIV,UINT8 mode,UINT8 pin);
+void CH559UART1Init(UINT8 DIV,UINT8 mode,UINT8 pin,UINT32 bps,UINT8 databits);
 UINT8 CH559UART1RcvByte();
 void CH559UART1Rcv(PUINT8 buf,UINT8 len);
 void CH559UART1SendByte(UINT8 SendDat);

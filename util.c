@@ -54,7 +54,11 @@ void initUART0(unsigned long baud, int alt)
 
     TMOD = TMOD & ~ bT1_GATE & ~ bT1_CT & ~ MASK_T1_MOD | bT1_M1;
     T2MOD = T2MOD | bTMR_CLK | bT1_CLK;
-    TH1 = (256 - x) & 255;
+
+    // TH1 = ((256ul - x) & 255ul); // ICE on some compilers :(
+    unsigned long a = 256 - x;    
+    a &= 255;
+    TH1 = a;
     TR1 = 1;
 	TI = 1;
 }

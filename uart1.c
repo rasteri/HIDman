@@ -12,16 +12,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "CH559.h"
+#include "ch559.h"
 #include "util.h"
-#include "USBHost.h"
+#include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
 #include "ps2protocol.h"
 #include "menu.h"
 
-#define CH559UART1_BPS 1200 /*Define CH559 serial port 1 communication baud rate*/
 #define CH559UART1_FIFO_EN 1 //Enable CH559 serial port 1 receiving FIFO (receive and send 8 bytes each)
 
 #if CH559UART1_FIFO_EN
@@ -77,17 +76,19 @@ void ResetUART1()
                    1: Connect P5.4&P5.5 to 485, TNOW=P4.4;
                    2: P5.4&P5.5 connect to 485;
                    3: P5.4&P5.5 connect to 485, TNOW=P2.5;
+                   UINT32 bps, transfer rate in baud
+                   UINT8 databits, databits per word, must be 5, 6, 7 or 8
 * Output: None
 * Return: None
 ************************************************** *****************************/
-void CH559UART1Init(UINT8 DIV,UINT8 mode,UINT8 pin)
+void CH559UART1Init(UINT8 DIV,UINT8 mode,UINT8 pin,UINT32 bps,UINT8 databits)
 {
     UINT32 x;
     UINT8 x2;
 
     SER1_LCR |= bLCR_DLAB; // DLAB bit is 1, write DLL, DLM and DIV registers
     SER1_DIV = DIV; // Prescaler
-    x = 10 * FREQ_SYS *2 / DIV / 16 / CH559UART1_BPS;
+    x = 10 * FREQ_SYS *2 / DIV / 16 / bps;
     x2 = x% 10;
     x /= 10;
     if (x2 >= 5) x ++; //Rounding
@@ -106,7 +107,7 @@ PIN_FUNC |= bXBUS_AL_OE;
 XBUS_AUX &= ~bALE_CLK_EN;
 SER1_MCR |= bMCR_HALF; //485 mode can only use half-duplex mode
     }
-    SER1_LCR |= ( MASK_U1_WORD_SZ | bLCR_WORD_SZ1 | bLCR_WORD_SZ0); //Line control, 8 data bits
+    SER1_LCR = (SER1_LCR & ~MASK_U1_WORD_SZ) | ((databits - 5) & MASK_U1_WORD_SZ); //Line control, 5, 6, 7 or 8 databits
     SER1_LCR &= ~(bLCR_PAR_EN | bLCR_STOP_BIT); //Wireless path interval, no parity, 1 stop bit
 
     SER1_MCR &= ~bMCR_TNOW;

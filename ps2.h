@@ -2,48 +2,10 @@
 #define __PS2_H__
 
 #include <stdbool.h>
+#include "defs.h"
 
-#define PORT_KEY 0
-#define PORT_MOUSE 1
 
-typedef union sendbuffer
-{
-	// pointers to chunks in code space
-	const uint8_t *chunky[64];
 
-	// chunks of up to 8 bytes, first byte is length
-	uint8_t chonky[8][8];
-} sendbuffer;
-
-typedef struct ps2port
-{
-	uint8_t state;
-	uint8_t port;
-	uint8_t data;
-	uint8_t sendbit;
-	uint8_t recvbit;
-	uint8_t parity;
-	uint8_t sendingCustom;
-
-	uint8_t recvstate;
-
-	// byte number within current chunk
-	uint8_t bytenum;
-
-	uint8_t recvout;
-	uint8_t sendDisabled;
-
-	uint8_t lastByte;
-
-	// ring buffer (pointers to chunks)
-	uint8_t sendBuffStart;
-	uint8_t sendBuffEnd;
-	sendbuffer sendBuff;
-	uint8_t recvBuff;
-
-} ps2port;
-
-extern __xdata ps2port ports[];
 
 bool ReadPS2Clock(unsigned char port);
 bool ReadPS2Data(unsigned char port);
@@ -127,7 +89,7 @@ void PS2ProcessPort(uint8_t port);
 			MOUSE_DATA = val;
 #else
 
-	//P4 dir should be 1 (output) when low, 0 (input) when high
+//P4 dir should be 1 (output) when low, 0 (input) when high
 #define WritePS2Data(port, val)     \
 	if (port == PORT_KEY)        \
 		KEY_DATA = val;            \
@@ -160,6 +122,9 @@ void PS2ProcessPort(uint8_t port);
 #define S_INHIBIT 10
 #define S_WAIT 11
 #define S_MIDSEND_PAUSE 18
+
+#define S_RTS 19
+#define S_WAITING_CTS 20
 
 #define R_IDLE 0
 #define R_LEDS 1

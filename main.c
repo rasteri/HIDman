@@ -11,6 +11,7 @@
 #include "parsedescriptor.h"
 #include "menu.h"
 #include "mouse.h"
+#include "xt.h"
 
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
@@ -39,11 +40,9 @@ void mTimer2Interrupt(void) __interrupt(5);
 // i.e. 60khz
 void mTimer0Interrupt(void) __interrupt(1)
 {
-	// Reload to 60KHz
-
-	PS2ProcessPort(PORT_KEY);
-	PS2ProcessPort(PORT_MOUSE);
-
+	//PS2ProcessPort(PORT_KEY);
+	//PS2ProcessPort(PORT_MOUSE);
+	XTProcessPort();
 	// now handle keyboard typematic repeat timers
 	// divide down to 15KHz to make maths easier
 	if (++repeatDiv == 4)

@@ -298,4 +298,47 @@ typedef struct _HID_REPORT_DESC
 	HID_REPORT *reports[MAX_REPORTS];
 } HID_REPORT_DESC;
 
+
+typedef union sendbuffer
+{
+	// pointers to chunks in code space
+	const uint8_t *chunky[64];
+
+	// chunks of up to 8 bytes, first byte is length
+	uint8_t chonky[8][8];
+} sendbuffer;
+
+#define PORT_KEY 0
+#define PORT_MOUSE 1
+
+typedef struct ps2port
+{
+	uint8_t state;
+	uint8_t data;
+	uint8_t sendbit;
+	uint8_t recvbit; // also used as a cycle counter for XT sending
+	uint8_t parity;
+	uint8_t sendingCustom;
+
+	uint8_t recvstate;
+
+	// byte number within current chunk
+	uint8_t bytenum;
+
+	uint8_t recvout;
+	uint8_t sendDisabled;
+
+	uint8_t lastByte;
+
+	// ring buffer (pointers to chunks)
+	uint8_t sendBuffStart;
+	uint8_t sendBuffEnd;
+	sendbuffer sendBuff;
+	uint8_t recvBuff;
+
+} ps2port;
+
+extern __xdata ps2port ports[];
+
+
 #endif

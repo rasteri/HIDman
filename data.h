@@ -44,6 +44,11 @@ extern const uint8_t * const HIDtoPS2_Break[];
 extern const uint8_t * const ModtoPS2_BREAK[];
 extern const uint8_t * const ModtoPS2_MAKE[];
 
+extern const uint8_t * const HIDtoXT_Make[];
+extern const uint8_t * const HIDtoXT_Break[];
+extern const uint8_t * const ModtoXT_BREAK[];
+extern const uint8_t * const ModtoXT_MAKE[];
+
 extern __code uint8_t ASCIItoHID[];
 
 extern __code JoyPreset DefaultJoyMaps[];

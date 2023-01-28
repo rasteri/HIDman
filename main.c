@@ -12,6 +12,10 @@
 #include "menu.h"
 #include "mouse.h"
 
+#if !defined(BOARD_MICRO)
+	#define OPT_SERIAL_MOUSE
+#endif
+
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
 	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
@@ -30,8 +34,15 @@
 	SBIT(MOUSE_DATA, 0xC1, 3);
 #endif
 
-__xdata uint8_t repeatDiv = 0;
-uint16_t ResetCounter;
+#if defined(OPT_SERIAL_MOUSE)
+	#define SERIAL_MOUSE_MODE_OFF    0
+	#define SERIAL_MOUSE_MODE_RESET  1
+	#define SERIAL_MOUSE_MODE_INIT   2
+	#define SERIAL_MOUSE_MODE_ACTIVE 3
+
+	uint8_t serialMouseMode = SERIAL_MOUSE_MODE_OFF;
+	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
+#endif
 
 void mTimer2Interrupt(void) __interrupt(5);
 
@@ -44,36 +55,65 @@ void mTimer0Interrupt(void) __interrupt(1)
 	PS2ProcessPort(PORT_KEY);
 	PS2ProcessPort(PORT_MOUSE);
 
-	// now handle keyboard typematic repeat timers
-	// divide down to 15KHz to make maths easier
-	if (++repeatDiv == 4)
-	{
-		RepeatTimer();
+	// Handle keyboard typematic repeat timers
+	// (divide timer down to 15KHz to make maths easier)
+	static uint8_t repeatDiv = 0;
+	if (++repeatDiv == 4) {
 		repeatDiv = 0;
+		RepeatTimer();
+	}
 
-		if (!(P4_IN & (1 << 6)))
-		{
-			ResetCounter++;
-			if (ResetCounter > 10000)
-			{
-				runBootloader();
+	static uint8_t msDiv = 0;
+	if (++msDiv == 60) {
+		msDiv = 0;
+		EveryMillisecond();
+	}
+}
+
+void EveryMillisecond() {
+
+#if defined(OPT_SERIAL_MOUSE)
+	static uint8_t RTSHighCounter = 0;
+	static __xdata uint8_t serialMousePrevMode = SERIAL_MOUSE_MODE_OFF;
+  // High toggle (> 50ms) of RTS (P0.4) means host is resetting mouse.  Wait until falling edge and send mouse identification.
+	if (P0 & 0b00010000) { // RTS is high (mouse is resetting)
+		if (serialMouseMode != SERIAL_MOUSE_MODE_RESET) {
+			serialMousePrevMode = serialMouseMode;
+			serialMouseMode = SERIAL_MOUSE_MODE_RESET;
+		}
+		if (RTSHighCounter < 255) RTSHighCounter++;
+	} else { // RTS is low
+	  if (serialMouseMode == SERIAL_MOUSE_MODE_RESET) {
+			if (RTSHighCounter > 50) { // Check if RTS was high long enough to indicate reset...
+				serialMouseMode = SERIAL_MOUSE_MODE_INIT;
+			} else {
+				serialMouseMode = serialMousePrevMode;
 			}
+			RTSHighCounter = 0;
 		}
-		else
-			ResetCounter = 0;
-			
-		// turn red LED off (and green on) if we haven't seen any activity in a while
-		if (LEDDelay)
-			LEDDelay--;
-		else
-		{
-#if defined(BOARD_MICRO)
-			P2 |= 0b00100000;
-#else
-			P2 |= 0b00010000;
-			P2 &= ~0b00100000;
+	}
 #endif
+
+	static uint16_t ResetCounter = 0;
+	if (!(P4_IN & (1 << 6))) {
+		ResetCounter++;
+		if (ResetCounter > 1000) {
+			runBootloader();
 		}
+	} else {
+		ResetCounter = 0;
+	}
+
+	// Turn red LED off (and green on) if we haven't seen any activity in a while
+	if (LEDDelayMs) {
+		LEDDelayMs--;
+	} else {
+#if defined(BOARD_MICRO)
+		P2 |= 0b00100000;
+#else
+		P2 |= 0b00010000;
+		P2 &= ~0b00100000;
+#endif
 	}
 }
 
@@ -154,10 +194,6 @@ void InitPWM3(UINT8 polar)
 	PIN_FUNC |= bTMR3_PIN_X;
 }
 
-uint8_t DetectCountdown = 0;
-uint8_t PrevRTSState = 0;
-uint8_t PrevButtons = 0;
-
 //PWM1, PWM2, PWM3_
 void main()
 {
@@ -166,13 +202,13 @@ void main()
 
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	//port1 setup
-	P1_DIR |= 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
+	P1_DIR = 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
 	PORT_CFG |= bP1_OC;	  // open collector
 	P1_PU = 0x00;		  // no pullups
 	P1 = 0b11110000;	  // default pin states
 
 	//port2 setup
-	P2_DIR |= 0b00100000; // 2.5 is LED output
+	P2_DIR = 0b00100000; // 2.5 is LED output
 	PORT_CFG |= bP2_OC;	  // open collector
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00100000;	  // LED off by default (i.e. high)
@@ -214,15 +250,18 @@ void main()
 
 	// GREEN LED ON
 	P2 &= ~0b00100000;
+#endif
 
+#if defined(OPT_SERIAL_MOUSE)
 	uint32_t serialMouseBps = 1200; // can do 19200 with custom mouse driver
-	CH559UART1Init(20, 1, 1, serialMouseBps, 7);
+	CH559UART1Init(20, 1, 1, serialMouseBps, 8);
 #endif
 
 	memset(SendBuffer, 0, 255);
 	//SendKeyboardString("We are go\n");
 	uint8_t Buttons;
-	int16_t X, Y;
+	uint8_t PrevButtons = 0;
+
 	while (1)
 	{
 		if (!(P4_IN & (1 << 6)))
@@ -235,9 +274,10 @@ void main()
 		ProcessKeyboardLed();
 		HandleRepeats();
 
+		int16_t X, Y;
 		uint8_t byte1, byte2, byte3;
 
-		// Send PS/2 Mouse Packet if neccessary
+		// Send PS/2 Mouse Packet if necessary
 		// make sure there's space in the buffer before we pop any mouse updates
 		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
 		{
@@ -259,29 +299,21 @@ void main()
 			}
 		}
 
-#if !defined(BOARD_MICRO)
-		// falling edge of RTS (P0.4) means host is resetting mouse
-		if (!(P0 & 0b00010000) && PrevRTSState)
-		{
-			DetectCountdown = 20;
-		}
-
-		PrevRTSState = P0 & 0b00010000;
-
-		char serialMouseType = 'M'; // Logitech 3 button: '3', Microsoft: 'M'
-
-		// send a bunch of "M"s to identify MS mouse
-		if (DetectCountdown)
-		{
-			if (SER1_LSR & bLSR_T_FIFO_EMP)
-			{
+#if defined(OPT_SERIAL_MOUSE)
+		if (serialMouseMode == SERIAL_MOUSE_MODE_INIT) {
+			// Delay a bit and send 'M' to identify as a mouse
+			delay(5);
+			CH559UART1SendByte('M');
+			if (serialMouseType != 'M') {
+				// Delay a bit longer and send '2' or '3' to further identify # of buttons
+				delay(10);
 				CH559UART1SendByte(serialMouseType);
-				DetectCountdown--;
 			}
+			serialMouseMode = SERIAL_MOUSE_MODE_ACTIVE;
 		}
-		// Send Serial Mouse Packet if neccessary
+		// Send Serial Mouse Packet if necessary
 		// make sure there's space in the fifo before we pop any mouse updates
-		else if (/*CH559UART1_FIFO_CNT >= 3 || */ SER1_LSR & bLSR_T_FIFO_EMP)
+		else if (serialMouseMode == SERIAL_MOUSE_MODE_ACTIVE && (/*CH559UART1_FIFO_CNT >= 3 || */ SER1_LSR & bLSR_T_FIFO_EMP))
 		{
 			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Buttons))
 			{

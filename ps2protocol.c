@@ -18,6 +18,7 @@
 #include "ps2protocol.h"
 #include "menu.h"
 #include "mouse.h"
+#include "pwm.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
@@ -263,9 +264,12 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 #if defined(BOARD_MICRO)
 	P2 &= ~0b00100000;
 #else
-	P2 &= ~0b00010000;
+	SetPWM1Dat(0x00);
+	SetPWM2Dat(0x00);
+	T3_FIFO_L = 0;
+	T3_FIFO_H = 0;
 #endif
-	LEDDelay = 500;
+	LEDDelay = 250;
 
 	if (desc->usesReports)
 	{

@@ -30,6 +30,7 @@ $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
+$(OBJDIR)/pwm.rel \
 $(OBJDIR)/mouse.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)

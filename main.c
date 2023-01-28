@@ -11,27 +11,31 @@
 #include "parsedescriptor.h"
 #include "menu.h"
 #include "mouse.h"
+#include "pwm.h"
 
-#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
-	SBIT(KEY_CLOCK, 0x90, 7);
-	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
-		SBIT(KEY_DATA, 0x90, 6);
-		SBIT(MOUSE_CLOCK, 0x90, 4);
-	#else
-		SBIT(KEY_DATA, 0x90, 4);
-		SBIT(MOUSE_CLOCK, 0x90, 6);
-	#endif
-	SBIT(MOUSE_DATA, 0x90, 5);
-#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
-	SBIT(KEY_CLOCK, 0x80, 5);
-	SBIT(KEY_DATA, 0x80, 3);
+#if defined(BOARD_MICRO) // Pinouts for HIDman-micro
+SBIT(KEY_CLOCK, 0x90, 7);
+#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
+SBIT(KEY_DATA, 0x90, 6);
+SBIT(MOUSE_CLOCK, 0x90, 4);
+#else
+SBIT(KEY_DATA, 0x90, 4);
+SBIT(MOUSE_CLOCK, 0x90, 6);
+#endif
+SBIT(MOUSE_DATA, 0x90, 5);
+#else // Default pinouts (HIDman-AXD, HIDman-mini)
+SBIT(KEY_CLOCK, 0x80, 5);
+SBIT(KEY_DATA, 0x80, 3);
 
-	SBIT(MOUSE_CLOCK, 0xB0, 7);
-	SBIT(MOUSE_DATA, 0xC1, 3);
+SBIT(MOUSE_CLOCK, 0xB0, 7);
+SBIT(MOUSE_DATA, 0xC1, 3);
 #endif
 
 __xdata uint8_t repeatDiv = 0;
 uint16_t ResetCounter;
+
+// green LED on by default
+uint8_t LEDStatus = 0x02;
 
 void mTimer2Interrupt(void) __interrupt(5);
 
@@ -61,8 +65,8 @@ void mTimer0Interrupt(void) __interrupt(1)
 		}
 		else
 			ResetCounter = 0;
-			
-		// turn red LED off (and green on) if we haven't seen any activity in a while
+
+		// turn current LED on if we've seen no activity in a while
 		if (LEDDelay)
 			LEDDelay--;
 		else
@@ -70,101 +74,45 @@ void mTimer0Interrupt(void) __interrupt(1)
 #if defined(BOARD_MICRO)
 			P2 |= 0b00100000;
 #else
-			P2 |= 0b00010000;
-			P2 &= ~0b00100000;
+			if (LEDStatus & 0x01)
+				SetPWM1Dat(0x18);
+			if (LEDStatus & 0x02)
+				SetPWM2Dat(0x30);
+			if (LEDStatus & 0x04)
+			{
+				T3_FIFO_L = 0xFF; // blue needs to be brighter
+				T3_FIFO_H = 0;
+			}
 #endif
 		}
 	}
-}
-
-#define SetPWMClk(CK_SE) (PWM_CK_SE = CK_SE)   //Frequency division, default clock Fsys
-#define SetPWMCycle(Cycle) (PWM_CYCLE = Cycle) //Set the cycle period
-#define SetPWM1Dat(dat) (PWM_DATA = dat)	   //Set PWM output duty cycle
-#define SetPWM2Dat(dat) (PWM_DATA2 = dat)
-#define PWMPINAlter()              \
-	{                              \
-		P4_DIR |= bPWM2_ | bPWM1_; \
-		PIN_FUNC |= bPWM1_PIN_X;   \
-	} //Set PWM pin mapping
-
-/************************************************* ******************************
-* Function Name: InitPWM1(UINT8 polar)
-* Description: PWM1 initialization function
-* Input: polar=0 selects the default low level, high level output is valid;
-                   polar=1 selects the default high level, the low level output is valid;
-* Output: None
-* Return: None
-************************************************** *****************************/
-void InitPWM1(UINT8 polar)
-{
-	PWM_CTRL &= ~bPWM_CLR_ALL; //Clear FIFO and count
-	//PWM_CTRL &= ~bPWM_MOD_MFM;
-	//PWM_CTRL |= bPWM_IE_END; //Enable PWM counting cycle completion interrupt
-	PWM_CTRL |= bPWM_OUT_EN; //PWM1 output enable
-	PWM_CTRL |= bPWM_IF_END; //Clear all interrupt flags
-	if (polar)
-	{
-		PWM_CTRL |= bPWM_POLAR; //active low
-	}
-	else
-	{
-		PWM_CTRL &= ~bPWM_POLAR; //High level active
-	}
-}
-
-/************************************************* ******************************
-* Function Name: InitPWM2(UINT8 polar)
-* Description: PWM initialization function
-* Input: polar=0 selects the default low level, high level output is valid;
-                   polar=1 selects the default high level, the low level output is valid;
-* Output: None
-* Return: None
-************************************************** *****************************/
-void InitPWM2(UINT8 polar)
-{
-	PWM_CTRL &= ~bPWM_CLR_ALL; //Clear FIFO and count
-	//PWM_CTRL &= ~bPWM_MOD_MFM;
-	//PWM_CTRL |= bPWM_IE_END;  //Enable PWM counting cycle completion interrupt
-	PWM_CTRL |= bPWM2_OUT_EN; //PWM2 output enable
-	PWM_CTRL |= bPWM_IF_END;  //Clear all interrupt flags
-	if (polar)
-	{
-		PWM_CTRL |= bPWM2_POLAR; //active low
-	}
-	else
-	{
-		PWM_CTRL &= ~bPWM2_POLAR; //High level active
-	}
-}
-
-/************************************************* ******************************
-* Function Name: InitPWM2(UINT8 polar)
-* Description: PWM initialization function
-* Input: polar=0 selects the default low level, high level output is valid;
-                   polar=1 selects the default high level, the low level output is valid;
-* Output: None
-* Return: None
-************************************************** *****************************/
-void InitPWM3(UINT8 polar)
-{
-	T3_CTRL &= ~bT3_CLR_ALL;
-	T3_SETUP |= bT3_EN_CK_SE;
-	T3_CTRL |= bT3_OUT_EN | bT3_CNT_EN | bT3_PWM_POLAR;
-
-	PIN_FUNC |= bTMR3_PIN_X;
 }
 
 uint8_t DetectCountdown = 0;
 uint8_t PrevRTSState = 0;
 uint8_t PrevButtons = 0;
 
-//PWM1, PWM2, PWM3_
 void main()
 {
 
 	InitSystem();
 
-#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
+	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
+	InitPWM1(1);   //PWM1 initialization, active low
+	InitPWM2(1);   //PWM2 initialization, active high
+	InitPWM3(1);
+	SetPWMCycle(0xff);
+	SetPWM1Dat(0x00);
+	SetPWM2Dat(0x00);
+
+	T3_CK_SE_L = 0x20;
+	T3_CK_SE_H = 0;
+	T3_END_H = 0;
+	T3_END_L = 255;
+	T3_FIFO_L = 0;
+	T3_FIFO_H = 0;
+
+#if defined(BOARD_MICRO) // Pinouts for HIDman-micro
 	//port1 setup
 	P1_DIR |= 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
 	PORT_CFG |= bP1_OC;	  // open collector
@@ -176,24 +124,24 @@ void main()
 	PORT_CFG |= bP2_OC;	  // open collector
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00100000;	  // LED off by default (i.e. high)
-#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
+#else					  // Default pinouts (HIDman-AXD, HIDman-mini)
 	//port0 setup
 	P0_DIR = 0b11101010; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host), 0.1 is RTS (i.e. CTS on host)
-	PORT_CFG |= bP0_OC;	  // open collector
-	P0_PU = 0x00;		  // no pullups
-	P0 = 0b11111010;	  // default pin states
+	PORT_CFG |= bP0_OC;	 // open collector
+	P0_PU = 0x00;		 // no pullups
+	P0 = 0b11111010;	 // default pin states
 
 	//port2 setup
 	P2_DIR = 0b00110000; // 2.4, 2.5 are RED/GREEN LED outputs
-	PORT_CFG |= bP2_OC;	  // open collector
-	P2_PU = 0x00;		  // no pullups
-	P2 = 0b00110000;	  // LEDs off by default (i.e. high)
+	PORT_CFG |= bP2_OC;	 // open collector
+	P2_PU = 0x00;		 // no pullups
+	P2 = 0b00110000;	 // LEDs off by default (i.e. high)
 
 	//port3 setup
 	P3_DIR = 0b11100010; // 5,6,7 are PS2 outputs, 1 is UART0 TXD
-	PORT_CFG |= bP3_OC;	  // open collector
-	P3_PU = 0x00;		  // no pullups
-	P3 = 0b11100010;	  // default pin states
+	PORT_CFG |= bP3_OC;	 // open collector
+	P3_PU = 0x00;		 // no pullups
+	P3 = 0b11100010;	 // default pin states
 
 	//port4 setup
 	P4_DIR = 0b00010100; //4.0 is RXD, 4.2 is Blue LED, 4.3 is MOUSE DATA (actually input, since we're faking open drain), 4.4 is TXD, 4.6 is SWITCH
@@ -211,9 +159,6 @@ void main()
 
 #if !defined(BOARD_MICRO)
 	printf("Ready\n");
-
-	// GREEN LED ON
-	P2 &= ~0b00100000;
 
 	uint32_t serialMouseBps = 1200; // can do 19200 with custom mouse driver
 	CH559UART1Init(20, 1, 1, serialMouseBps, 7);
@@ -289,7 +234,7 @@ void main()
 						((Buttons & 0x01) << 5) | // left button
 						((Buttons & 0x02) << 3) | // right button
 						((Y >> 4) & 0b00001100) | // top two bits of Y
-						((X >> 6) & 0b00000011); // top two bits of X
+						((X >> 6) & 0b00000011);  // top two bits of X
 
 				byte2 = 0b10000000 | (X & 0x3F); // rest of X
 				byte3 = 0b10000000 | (Y & 0x3F); // rest of Y

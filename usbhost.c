@@ -1300,20 +1300,9 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				DEBUG_OUT("Interface %x:\n", i);
 				DEBUG_OUT("InterfaceProtocol: %x\r\n", pInterface->InterfaceProtocol);
 
-				
 				if (pInterface->InterfaceSubClass == 0x01)
 				{
-					if (DumpReport)
-						SendKeyboardString("Old Protocol %x\n", GetBootProtocol(pUsbDevice, i));
-
-					DEBUG_OUT("before %x\n", GetBootProtocol(pUsbDevice, i));
-
 					SetBootProtocol(pUsbDevice, i);
-
-					if (DumpReport)
-						SendKeyboardString("New Protocol %x\n", GetBootProtocol(pUsbDevice, i));
-
-					DEBUG_OUT("after %x\n", GetBootProtocol(pUsbDevice, i));
 				}
 
 				TRACE1("Report Size:%d\r\n", pInterface->ReportSize);

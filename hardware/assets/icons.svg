@@ -7,8 +7,38 @@
    viewBox="0 0 210 297"
    version="1.1"
    id="svg875"
+   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   sodipodi:docname="mode.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview877"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="0.74564395"
+     inkscape:cx="482.80416"
+     inkscape:cy="434.52375"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid1111"
+       spacingx="2.6458333"
+       spacingy="2.6458333" />
+  </sodipodi:namedview>
   <defs
      id="defs872">
     <rect
@@ -37,6 +67,8 @@
        id="rect998" />
   </defs>
   <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
      id="layer1">
     <text
        xml:space="preserve"
@@ -60,19 +92,23 @@
     <path
        style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
        d="m 37.037808,105.82947 c 0.22204,0.22204 -4.409727,-4.40972 -5.291671,-5.29167 l 5.291671,-5.291664"
-       id="path6102" />
+       id="path6102"
+       sodipodi:nodetypes="ccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
        d="M 34.395835,100.54166 H 44.979166 V 111.125"
-       id="path6834" />
+       id="path6834"
+       sodipodi:nodetypes="ccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
        d="m 26.45833,119.06251 c -0.22204,-0.22204 4.409727,4.40972 5.291671,5.29166 l -5.291671,5.29167"
-       id="path6102-5" />
+       id="path6102-5"
+       sodipodi:nodetypes="ccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
        d="M 29.104166,124.35418 H 18.520835 v -10.58334"
-       id="path6834-6" />
+       id="path6834-6"
+       sodipodi:nodetypes="ccc" />
     <rect
        style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
        id="rect18408"
@@ -156,7 +192,8 @@
     <path
        id="rect22502"
        style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:round;stroke-dasharray:none;stop-color:#000000"
-       d="m 164.66763,86.015212 v 21.408178 m -11.89343,0 h 23.78687 m -23.78687,-4.75737 c 0,-5.271169 4.24359,-9.514747 9.51475,-9.514747 h 4.75737 c 5.27118,0 9.51475,4.243578 9.51475,9.514747 l -1e-5,19.02949 c 0,6.58897 -5.30447,11.89344 -11.89343,11.89344 -6.58896,0 -11.89343,-5.30447 -11.89343,-11.89344 z" />
+       d="m 164.66763,86.015212 v 21.408178 m -11.89343,0 h 23.78687 m -23.78687,-4.75737 c 0,-5.271169 4.24359,-9.514747 9.51475,-9.514747 h 4.75737 c 5.27118,0 9.51475,4.243578 9.51475,9.514747 l -1e-5,19.02949 c 0,6.58897 -5.30447,11.89344 -11.89343,11.89344 -6.58896,0 -11.89343,-5.30447 -11.89343,-11.89344 z"
+       sodipodi:nodetypes="ccccsssscscs" />
     <g
        aria-label=""
        transform="matrix(1.4587561,0,0,1.4587561,-175.5123,-790.55846)"

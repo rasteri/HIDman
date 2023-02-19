@@ -471,7 +471,6 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 							CreateSeg();
 							currSegPnt->OutputChannel = MAP_KEYBOARD;
 							currSegPnt->InputType = MAP_TYPE_ARRAY;
-							printf("seggage %hhx %hhx\n", i, hidGlobalPnt->reportCount);
 						}
 					}
 				}

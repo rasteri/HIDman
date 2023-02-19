@@ -54,7 +54,7 @@ ifndef CODE_SIZE
 CODE_SIZE = 0xEFFF
 endif
 
-CFLAGS := -V -mmcs51 --debug --model-large --stack-auto \
+CFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
 	--code-size $(CODE_SIZE) \
 	-I/ -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) \

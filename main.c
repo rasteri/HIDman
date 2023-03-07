@@ -252,8 +252,6 @@ void main()
 
 					PrevButtons = Buttons;
 				}
-
-				P3 ^= 0b01000000;
 			}
 		}
 #endif

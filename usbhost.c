@@ -1401,6 +1401,7 @@ void RegrabDeviceReports(UINT8 port)
 	{
 		if (pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
 		{
+			SelectHubPort(port, EXHUB_PORT_NONE);
 			regrabinterfaces(pUsbHubPort);
 		}
 		else
@@ -1414,6 +1415,7 @@ void RegrabDeviceReports(UINT8 port)
 
 				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
 				{
+					SelectHubPort(port, i);
 					regrabinterfaces(pUsbHubPort);
 				}
 			}

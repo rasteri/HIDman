@@ -34,13 +34,15 @@
 #define ROOT_HUB_PORT_NUM      2
 
 //maximum number of external hub ports
-#define MAX_EXHUB_PORT_NUM     2
+#define MAX_EXHUB_PORT_NUM     4
 
 //none external hub port
 #define EXHUB_PORT_NONE        0xff
 
 //maximum number of interfaces per devicve
 #define MAX_INTERFACE_NUM      4
+//maximum number of interfaces across all devices
+#define MAX_GLOBAL_INTERFACE_NUM      16
 //maximum number of endpoints per interface
 #define MAX_ENDPOINT_NUM       4
 //maximum level of external hub
@@ -160,7 +162,7 @@ typedef struct _USB_DEVICE
 	UINT8       DeviceAddress;
 	UINT8       DeviceSpeed;
 	UINT8       InterfaceNum;
-	INTERFACE   Interface[MAX_INTERFACE_NUM];
+	INTERFACE*  Interface;
 	
 	UINT8       HubPortNum;
 } USB_DEVICE, *PUSB_DEVICE;
@@ -187,6 +189,7 @@ extern void InitUsbData(void);
 extern void DealUsbPort(void);
 extern void InterruptProcessRootHubPort(UINT8 port_index);
 extern void UpdateUsbKeyboardLed(UINT8 led);
+extern INTERFACE* AllocInterface(UINT8 count);
 
 #endif
 

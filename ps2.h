@@ -113,9 +113,9 @@ void PS2ProcessPort(uint8_t port);
 
 
 #define WritePS2Clock(port, val)    \
-	if (port == PORT_KEY)        \
+	if (port == PORT_KEY)        	\
 			KEY_CLOCK = val;         \
-	else if (port == PORT_MOUSE) \
+	else if (port == PORT_MOUSE) 	\
 			MOUSE_CLOCK = val;
 
 #if defined(BOARD_MICRO)

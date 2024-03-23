@@ -19,6 +19,7 @@
 #include "menu.h"
 #include "mouse.h"
 #include "pwm.h"
+#include "keyboardled.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
@@ -454,7 +455,7 @@ void HandleReceived(uint8_t port)
 			ports[PORT_KEY].recvstate = R_IDLE;
 			break;
 
-		// not a command byte - this is fine if we're in another state, otherwise we send an error
+		// not a command byte - this is fine if we're in another sstate, otherwise we send an error
 		default:
 			switch (ports[PORT_KEY].recvstate)
 			{
@@ -462,6 +463,7 @@ void HandleReceived(uint8_t port)
 			case R_LEDS:
 				// TODO blinkenlights
 				SimonSaysSendKeyboard(KEY_ACK);
+				SetKeyboardLedStatusFromPS2(ports[PORT_KEY].recvout);
 				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 

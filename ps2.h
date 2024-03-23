@@ -167,4 +167,9 @@ void PS2ProcessPort(uint8_t port);
 #define R_SCANCODESET 3
 #define R_KEYLIST 4
 
+#define PS2_KEY_LED_SCROLLLOCK  0b00000001
+#define PS2_KEY_LED_NUMLOCK     0b00000010
+#define PS2_KEY_LED_CAPSLOCK    0b00000100
+#define PS2_KEY_LED_KANA        0b00010000 // this might not actually be correct
+
 #endif

@@ -12,6 +12,7 @@
 #include "menu.h"
 #include "mouse.h"
 #include "pwm.h"
+#include "keyboardled.h"
 
 #if defined(BOARD_MICRO) // Pinouts for HIDman-micro
 SBIT(KEY_CLOCK, 0x90, 7);
@@ -177,6 +178,7 @@ void main()
 			Menu_Task();
 
 		ProcessUsbHostPort();
+
 		ProcessKeyboardLed();
 		HandleRepeats();
 

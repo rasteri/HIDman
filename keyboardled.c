@@ -5,8 +5,8 @@
 #include "usbhidkeys.h"
 #include "ps2.h"
 
-static UINT8 keyboardLed = 0xFF;
-static UINT8 oldLed = 0xFF;
+static UINT8 keyboardLed = 0x00;
+static UINT8 oldLed = 0x00;
 
 
 void SetKeyboardLedStatus(UINT8 led)

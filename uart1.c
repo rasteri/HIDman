@@ -25,7 +25,7 @@
 
 #if CH559UART1_FIFO_EN
 UINT8 CH559UART1_FIFO_CNT = 0;
-#define CH559UART1_FIFO_TRIG 7 // FIFO full 7 bytes trigger interrupt (1, 2, 4, 7 optional)
+#define CH559UART1_FIFO_TRIG 7 // FIFO full 7 bytes trigger interrupt (1, 2, 4, or 7 bytes)
 #endif
 
 UINT8 Str[] = {"hello world!"};
@@ -116,7 +116,7 @@ SER1_MCR |= bMCR_HALF; //485 mode can only use half-duplex mode
     //SER1_IER |= /*bIER_MODEM_CHG | bIER_LINE_STAT | bIER_THR_EMPTY | bIER_RECV_RD;//Interrupt enable configuration
 
 #if CH559UART1_FIFO_EN
-    SER1_FCR |= MASK_U1_FIFO_TRIG | bFCR_T_FIFO_CLR | bFCR_R_FIFO_CLR | bFCR_FIFO_EN;//FIFO controller
+    SER1_FCR |= (MASK_U1_FIFO_TRIG & (CH559UART1_FIFO_TRIG << 5)) | bFCR_T_FIFO_CLR | bFCR_R_FIFO_CLR | bFCR_FIFO_EN;//FIFO controller
                                                                                //Empty the receive and transmit FIFO, 7-byte receive trigger, FIFO enable
 #endif
     //SER1_MCR |= bMCR_OUT2; //MODEM control register
@@ -195,7 +195,7 @@ void CH559UART1SendByte(UINT8 SendDat)
             break;
         }
         while ((SER1_LSR & bLSR_T_FIFO_EMP) == 0 );//It is found that the FIFO is full and can only wait for the first 1 byte to be sent
-}
+    }
 #else
     while ((SER1_LSR & bLSR_T_ALL_EMP) == 0 );//Do not open FIFO, wait for the completion of 1 byte transmission
     SER1_THR = SendDat;

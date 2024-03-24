@@ -29,11 +29,41 @@ static USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
 
 //sub hub port
 static USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
+static INTERFACE __xdata sInterfacePool[MAX_GLOBAL_INTERFACE_NUM];
+static UINT8 sInterfacePoolPos = 0;
+
+static void InitInterface(INTERFACE* Interface)
+{
+	Interface->InterfaceClass = USB_DEV_CLASS_RESERVED;
+	Interface->InterfaceProtocol = USB_PROTOCOL_NONE;
+	Interface->ReportSize = 0;
+	Interface->EndpointNum = 0;
+
+	for (int j = 0; j < MAX_ENDPOINT_NUM; j++)
+	{
+		Interface->Endpoint[j].EndpointAddr = 0;
+		Interface->Endpoint[j].MaxPacketSize = 0;
+		Interface->Endpoint[j].EndpointDir = ENDPOINT_IN;
+		Interface->Endpoint[j].TOG = FALSE;
+	}
+}
+
+INTERFACE* AllocInterface(UINT8 count)
+{
+	if (count + sInterfacePoolPos > MAX_GLOBAL_INTERFACE_NUM)
+		return 0;
+
+	INTERFACE* ptr = sInterfacePool + sInterfacePoolPos;
+	sInterfacePoolPos += count;
+
+	for (UINT8 i = 0; i < count; ++i)
+		InitInterface(ptr + i);
+
+	return ptr;
+}
 
 static void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 {
-	int i, j;
-
 	pUsbHubPort->HubPortStatus = PORT_DEVICE_NONE;
 	pUsbHubPort->UsbDevice.DeviceClass = USB_DEV_CLASS_RESERVED;
 	pUsbHubPort->UsbDevice.MaxPacketSize0 = DEFAULT_ENDP0_SIZE;
@@ -45,25 +75,7 @@ static void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 	pUsbHubPort->UsbDevice.DeviceAddress = 0;
 	pUsbHubPort->UsbDevice.DeviceSpeed = FULL_SPEED;
 	pUsbHubPort->UsbDevice.InterfaceNum = 0;
-
-	for (i = 0; i < MAX_INTERFACE_NUM; i++)
-	{
-		UINT8 k;
-
-		pUsbHubPort->UsbDevice.Interface[i].InterfaceClass = USB_DEV_CLASS_RESERVED;
-		pUsbHubPort->UsbDevice.Interface[i].InterfaceProtocol = USB_PROTOCOL_NONE;
-		pUsbHubPort->UsbDevice.Interface[i].ReportSize = 0;
-
-		pUsbHubPort->UsbDevice.Interface[i].EndpointNum = 0;
-
-		for (j = 0; j < MAX_ENDPOINT_NUM; j++)
-		{
-			pUsbHubPort->UsbDevice.Interface[i].Endpoint[j].EndpointAddr = 0;
-			pUsbHubPort->UsbDevice.Interface[i].Endpoint[j].MaxPacketSize = 0;
-			pUsbHubPort->UsbDevice.Interface[i].Endpoint[j].EndpointDir = ENDPOINT_IN;
-			pUsbHubPort->UsbDevice.Interface[i].Endpoint[j].TOG = FALSE;
-		}
-	}
+	pUsbHubPort->UsbDevice.Interface = 0;
 
 	pUsbHubPort->UsbDevice.HubPortNum = 0;
 }
@@ -1389,6 +1401,7 @@ void RegrabDeviceReports(UINT8 port)
 	{
 		if (pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
 		{
+			SelectHubPort(port, EXHUB_PORT_NONE);
 			regrabinterfaces(pUsbHubPort);
 		}
 		else
@@ -1402,6 +1415,7 @@ void RegrabDeviceReports(UINT8 port)
 
 				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
 				{
+					SelectHubPort(port, i);
 					regrabinterfaces(pUsbHubPort);
 				}
 			}
@@ -1420,6 +1434,7 @@ void DealUsbPort(void) //main function should use it at least 500ms
 		mDelaymS(150);
 		TR0 = 0;
 		andyclearmem();
+		sInterfacePoolPos = 0;
 		for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 		{
 			EnumerateRootHubPort(i);

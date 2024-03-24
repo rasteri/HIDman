@@ -62,6 +62,8 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_DEVICE *pUs
 		pUsbDevice->InterfaceNum = MAX_INTERFACE_NUM;
 	}
 
+	pUsbDevice->Interface = AllocInterface(pUsbDevice->InterfaceNum);
+
 	pDescr = (UINT8 *)pCfgDescr;
 
 	pDescr += pCfgDescr->bLength;

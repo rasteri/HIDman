@@ -137,9 +137,7 @@ void SendKeyboardBuffer()
 
 uint8_t fuckcount = 1;
 
-#define MENU_STATE_INIT 0
-#define MENU_STATE_MAIN 1
-#define MENU_STATE_DUMPING 2
+
 
 uint8_t menuState = MENU_STATE_INIT;
 

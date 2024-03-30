@@ -11,6 +11,7 @@
 #include "parsedescriptor.h"
 #include "menu.h"
 #include "mouse.h"
+#include "xt.h"
 #include "pwm.h"
 #include "keyboardled.h"
 
@@ -32,8 +33,14 @@
 	SBIT(KEY_CLOCK, 0x80, 5);
 	SBIT(KEY_DATA, 0x80, 3);
 
-SBIT(MOUSE_CLOCK, 0xB0, 7);
-SBIT(MOUSE_DATA, 0xC1, 3);
+	SBIT(KEYAUX_CLOCK, 0xB0, 5);
+	SBIT(KEYAUX_DATA, 0xB0, 6);
+
+	SBIT(MOUSE_CLOCK, 0xB0, 7);
+	SBIT(MOUSE_DATA, 0xC1, 3);
+
+	SBIT(MOUSEAUX_CLOCK, 0x80, 7);
+	SBIT(MOUSEAUX_DATA, 0x80, 6);
 #endif
 
 #if defined(OPT_SERIAL_MOUSE)
@@ -46,8 +53,16 @@ SBIT(MOUSE_DATA, 0xC1, 3);
 	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
 #endif
 
-// green LED on by default
-uint8_t LEDStatus = 0x02;
+
+// Status Modes (PS2, XT, MENU)
+#define MODE_PS2 0
+#define MODE_XT 1
+#define MODE_AMSTRAD 2
+
+uint8_t StatusMode = MODE_PS2;
+
+// blue LED on by default
+uint8_t LEDStatus = 0x04;
 
 void mTimer2Interrupt(void) __interrupt(5);
 
@@ -57,7 +72,17 @@ void mTimer0Interrupt(void) __interrupt(1)
 {
 	// Reload to 60KHz
 
-	PS2ProcessPort(PORT_KEY);
+	switch (StatusMode) {
+		case (MODE_PS2):
+			PS2ProcessPort(PORT_KEY);
+			break;
+
+		case (MODE_XT):
+			XTProcessPort();
+			break;
+	}
+
+	// May as well do this even in XT mode, can't hurt
 	PS2ProcessPort(PORT_MOUSE);
 
 	// Handle keyboard typematic repeat timers
@@ -75,39 +100,144 @@ void mTimer0Interrupt(void) __interrupt(1)
 	}
 }
 
-void EveryMillisecond() {
+int16_t gpiodebounce = 0;
 
-#if defined(OPT_SERIAL_MOUSE)
-	static uint8_t RTSHighCounter = 0;
-	static __xdata uint8_t serialMousePrevMode = SERIAL_MOUSE_MODE_OFF;
-  // High toggle (> 50ms) of RTS (P0.4) means host is resetting mouse.  Wait until falling edge and send mouse identification.
-	if (P0 & 0b00010000) { // RTS is high (mouse is resetting)
-		if (serialMouseMode != SERIAL_MOUSE_MODE_RESET) {
-			serialMousePrevMode = serialMouseMode;
-			serialMouseMode = SERIAL_MOUSE_MODE_RESET;
-		}
-		if (RTSHighCounter < 255) RTSHighCounter++;
-	} else { // RTS is low
-	  if (serialMouseMode == SERIAL_MOUSE_MODE_RESET) {
-			if (RTSHighCounter > 50) { // Check if RTS was high long enough to indicate reset...
-				serialMouseMode = SERIAL_MOUSE_MODE_INIT;
-			} else {
-				serialMouseMode = serialMousePrevMode;
-			}
-			RTSHighCounter = 0;
-		}
-	}
-#endif
+// How long to wait in ms before input event can be triggered again
+#define DEBOUNCETIME 25
+
+// How long in ms a button has to be pressed before it's considered held
+#define HOLDTIME 2000
+
+//should be run every 1ms
+void inputProcess() {
+
+	uint8_t butstate = 0;
 
 	static uint16_t ResetCounter = 0;
-	if (!(P4_IN & (1 << 6))) {
+
+	if (!(P4_IN & (1 << 6))){
+
+		butstate = 1;
+
+		// go into bootloader if user holds button for more than 5 seconds regardless of what else is going on
 		ResetCounter++;
-		if (ResetCounter > 1000) {
+		if (ResetCounter > 5000) {
 			runBootloader();
 		}
-	} else {
-		ResetCounter = 0;
 	}
+
+	else 
+		ResetCounter = 0;
+
+	// gpiodebounce = 0 when button not pressed
+	// > 0 and < DEBOUNCETIME when debouncing positive edge
+	// >= DEBOUNCETIME and < HOLDTIME when waiting for release or hold action
+	// = HOLDTIME when we register it as a hold action
+	// > HOLDTIME when waiting for release
+	// > -DEBOUNCETIME and < 0 when debouncing negative edge
+
+	// Button not pressed, check for button
+	if (gpiodebounce == 0) {
+		if (butstate) {
+			// button pressed
+			StatusMode++;
+			if (StatusMode > 2) 
+				StatusMode = 0;
+
+			switch (StatusMode){
+				case MODE_PS2:
+					LEDStatus = 0x04;
+				break;
+				case MODE_XT:
+					LEDStatus = 0x02;
+				break;
+				case MODE_AMSTRAD:
+					LEDStatus = 0x01;
+				break;
+
+			}
+
+			// start the counter
+			gpiodebounce++;
+		}
+	}
+
+	// Debouncing positive edge, increment value
+	else if (gpiodebounce > 0 && gpiodebounce < DEBOUNCETIME) {
+		gpiodebounce++;
+	}
+
+	// debounce finished, keep incrementing until hold reached
+	else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME) {
+		// check to see if unpressed
+		if (!butstate) {
+			//IOevent(i, IOEVENT_RELEASE);
+			// start the counter
+			gpiodebounce = -DEBOUNCETIME;
+		}
+
+		else
+			gpiodebounce++;
+	}
+	// Button has been held for a while
+	else if (gpiodebounce == HOLDTIME) {
+		MenuActive = 1;
+		gpiodebounce++;
+	}
+
+	// Button still holding, check for release
+	else if (gpiodebounce > HOLDTIME) {
+		// Still pressing, do action repeatedly
+		if (butstate) {
+		}
+		// not still pressing, debounce release
+		else {
+			//IOevent(i, IOEVENT_HOLDRELEASE);
+			// start the counter
+			gpiodebounce = -DEBOUNCETIME;
+		}
+	}
+
+	// Debouncing negative edge, increment value - will reset when zero is reached
+	else if (gpiodebounce < 0) {
+		gpiodebounce++;
+	}
+
+
+
+
+}
+
+void EveryMillisecond() {
+
+
+	// handle serial mouse
+	#if defined(OPT_SERIAL_MOUSE)
+		static uint8_t RTSHighCounter = 0;
+		static __xdata uint8_t serialMousePrevMode = SERIAL_MOUSE_MODE_OFF;
+
+		// High toggle (> 50ms) of RTS (P0.4) means host is resetting mouse.  Wait until falling edge and send mouse identification.
+
+		if (P0 & 0b00010000) { // RTS is high (mouse is resetting)
+			if (serialMouseMode != SERIAL_MOUSE_MODE_RESET) {
+				serialMousePrevMode = serialMouseMode;
+				serialMouseMode = SERIAL_MOUSE_MODE_RESET;
+			}
+			if (RTSHighCounter < 255) RTSHighCounter++;
+			
+		} else { // RTS is low
+		if (serialMouseMode == SERIAL_MOUSE_MODE_RESET) {
+				if (RTSHighCounter > 50) { // Check if RTS was high long enough to indicate reset...
+					serialMouseMode = SERIAL_MOUSE_MODE_INIT;
+				} else {
+					serialMouseMode = serialMousePrevMode;
+				}
+				RTSHighCounter = 0;
+			}
+		}
+	#endif
+
+	inputProcess();
 
 	// Turn current LED on if we haven't seen any activity in a while
 	if (LEDDelayMs) {
@@ -116,8 +246,13 @@ void EveryMillisecond() {
 #if defined(BOARD_MICRO)
 		P2 |= 0b00100000;
 #else
+			SetPWM1Dat(0x00);
+			SetPWM2Dat(0x00);
+			T3_FIFO_L = 0;
+			T3_FIFO_H = 0;
+
 			if (LEDStatus & 0x01)
-				SetPWM1Dat(0x18);
+				SetPWM1Dat(0x30);
 			if (LEDStatus & 0x02)
 				SetPWM2Dat(0x30);
 			if (LEDStatus & 0x04)
@@ -266,8 +401,6 @@ void main()
 
 	while (1)
 	{
-		if (!(P4_IN & (1 << 6)))
-			MenuActive = 1;
 
 		if (MenuActive)
 			Menu_Task();

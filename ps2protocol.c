@@ -20,6 +20,7 @@
 #include "mouse.h"
 #include "pwm.h"
 #include "keyboardled.h"
+#include "xt.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
@@ -93,7 +94,7 @@ void HandleRepeats()
 	}
 	else if (RepeatState < RepeatRate)
 	{
-		SendKeyboard(HIDtoPS2_Make[RepeatKey]);
+		SendKeyboard(HIDtoXT_Make[RepeatKey]);
 		SetRepeatState(-1);
 	}
 }
@@ -318,13 +319,13 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 					// Make
 					if (c <= 0x67)
 					{
-						SendKeyboard(HIDtoPS2_Make[c]);
+						SendKeyboard(HIDtoXT_Make[c]);
 						RepeatKey = c;
 						SetRepeatState(1);
 					}
 					else if (c >= 0xE0 && c <= 0xE7)
 					{
-						SendKeyboard(ModtoPS2_MAKE[c - 0xE0]);
+						SendKeyboard(ModtoXT_MAKE[c - 0xE0]);
 					}
 				}
 			}
@@ -346,11 +347,11 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 						if (c == 0x48)
 							continue;
 
-						SendKeyboard(HIDtoPS2_Break[c]);
+						SendKeyboard(HIDtoXT_Break[c]);
 					}
 					else if (c >= 0xE0 && c <= 0xE7)
 					{
-						SendKeyboard(ModtoPS2_BREAK[c - 0xE0]);
+						SendKeyboard(ModtoXT_BREAK[c - 0xE0]);
 					}
 				}
 			}

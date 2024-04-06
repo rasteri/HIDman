@@ -78,7 +78,7 @@ bool ReadPS2Data(uint8_t port)
 		return KEY_DATA & KEYAUX_DATA;
 	else { /*if (port == PORT_MOUSE)*/
 #if defined(BOARD_AXP) || defined(BOARD_MINI)
-		if (P4_IN &= 0b00001000 && MOUSEAUX_DATA) 
+		if ((P4_IN & 0b00001000) && MOUSEAUX_DATA) 
 			return 1;
 		else 
 			return 0;

@@ -1351,8 +1351,6 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 					}
 					SendKeyboardString("\n");
 					SendKeyboardString("\n");
-
-					delay(2000);
 				}
 
 				// hack - use default boot mode descriptors if a keyboard or mouse is detected

@@ -55,24 +55,6 @@ __code JoyPreset DefaultJoyMaps[] = {
         1,                        // Number
         REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
         5,                        // Input Usage
-        MAP_MOUSE,                // Output Channel
-        MAP_MOUSE_BUTTON2,        // Output Control
-        MAP_TYPE_THRESHOLD_ABOVE, // InputType
-        0                         // Input Param
-    },
-    {
-        1,                        // Number
-        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        6,                        // Input Usage
-        MAP_MOUSE,                // Output Channel
-        MAP_MOUSE_BUTTON1,        // Output Control
-        MAP_TYPE_THRESHOLD_ABOVE, // InputType
-        0                         // Input Param
-    },
-    {
-        1,                        // Number
-        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        7,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_E,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
@@ -81,9 +63,27 @@ __code JoyPreset DefaultJoyMaps[] = {
     {
         1,                        // Number
         REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        8,                        // Input Usage
+        6,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_F,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        7,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_G,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        8,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_H,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
@@ -120,6 +120,42 @@ __code JoyPreset DefaultJoyMaps[] = {
         12,                       // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_J,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        13,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_K,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        14,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_L,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        15,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_M,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        16,                       // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_N,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },

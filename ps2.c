@@ -17,23 +17,7 @@
 #include "data.h"
 #include "ps2protocol.h"
 
-#if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
-	SBIT(KEY_CLOCK, 0x90, 7);
-	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
-		SBIT(KEY_DATA, 0x90, 6);
-		SBIT(MOUSE_CLOCK, 0x90, 4);
-	#else
-		SBIT(KEY_DATA, 0x90, 4);
-		SBIT(MOUSE_CLOCK, 0x90, 6);
-	#endif
-	SBIT(MOUSE_DATA, 0x90, 5);
-#else                           // Default pinouts (HIDman-AXD, HIDman-mini)
-	SBIT(KEY_CLOCK, 0x80, 5);
-	SBIT(KEY_DATA, 0x80, 3);
 
-	SBIT(MOUSE_CLOCK, 0xB0, 7);
-	SBIT(MOUSE_DATA, 0xC1, 3);
-#endif
 
 __xdata ps2port ports[] = {
 	// keyboard
@@ -82,22 +66,28 @@ __xdata ps2port ports[] = {
 bool ReadPS2Clock(uint8_t port)
 {
 	if (port == PORT_KEY)
-		return KEY_CLOCK;
-	else /*if (port == PORT_MOUSE)*/
-		return MOUSE_CLOCK;
+		return KEY_CLOCK & KEYAUX_CLOCK;
+	else {/*if (port == PORT_MOUSE)*/
+		return MOUSEAUX_CLOCK & MOUSE_CLOCK;
+	}
 }
 
 bool ReadPS2Data(uint8_t port)
 {
 	if (port == PORT_KEY)
-		return KEY_DATA;
-	else /*if (port == PORT_MOUSE)*/
-#if defined(BOARD_MICRO)
-		return MOUSE_DATA;
+		return KEY_DATA & KEYAUX_DATA;
+	else { /*if (port == PORT_MOUSE)*/
+#if defined(BOARD_AXP) || defined(BOARD_MINI)
+		if (P4_IN &= 0b00001000 && MOUSEAUX_DATA) 
+			return 1;
+		else 
+			return 0;
+
 #else
-		if (P4_IN &= 0b00001000) return 1;
-		else return 0;
+		return MOUSE_DATA & MOUSEAUX_DATA;
 #endif
+	}
+
 }
 
 void SimonSaysSendKeyboard(const uint8_t *chunk)

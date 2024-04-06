@@ -1,0 +1,43 @@
+din8 - 
+MOUSE
+main pins
+data - 1 - p4.3
+clk - 6 - p3.7
+
+secondary pins
+data - 2 - p3.6
+clk - 8 - p3.5
+
+KEYBOARD
+main pins
+data - 1 - p0.3
+clk - 6 - p0.5
+
+secondary pins
+data - 2 - p0.6
+clk - 8 - p0.7
+
+
+
+----------
+PS2-
+----------
+
+din8 - 
+MOUSE
+main pins
+data - 1 - p2.1
+clk - 6 - p2.0
+
+secondary pins
+data - 2 - p3.7
+clk - 8 - p3.6
+
+KEYBOARD
+main pins
+data - 1 - p3.5
+clk - 6 - p3.4
+
+secondary pins
+data - 2 - p3.3
+clk - 8 - p3.2

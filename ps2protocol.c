@@ -94,7 +94,7 @@ void HandleRepeats()
 	}
 	else if (RepeatState < RepeatRate)
 	{
-		SendKeyboard(HIDtoXT_Make[RepeatKey]);
+		SendKeyboard(HIDtoPS2_Make[RepeatKey]);
 		SetRepeatState(-1);
 	}
 }
@@ -319,13 +319,13 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 					// Make
 					if (c <= 0x67)
 					{
-						SendKeyboard(HIDtoXT_Make[c]);
+						SendKeyboard(HIDtoPS2_Make[c]);
 						RepeatKey = c;
 						SetRepeatState(1);
 					}
 					else if (c >= 0xE0 && c <= 0xE7)
 					{
-						SendKeyboard(ModtoXT_MAKE[c - 0xE0]);
+						SendKeyboard(ModtoPS2_MAKE[c - 0xE0]);
 					}
 				}
 			}
@@ -347,11 +347,11 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 						if (c == 0x48)
 							continue;
 
-						SendKeyboard(HIDtoXT_Break[c]);
+						SendKeyboard(HIDtoPS2_Break[c]);
 					}
 					else if (c >= 0xE0 && c <= 0xE7)
 					{
-						SendKeyboard(ModtoXT_BREAK[c - 0xE0]);
+						SendKeyboard(ModtoPS2_BREAK[c - 0xE0]);
 					}
 				}
 			}

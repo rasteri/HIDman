@@ -119,16 +119,20 @@ void SendKeyboardBuffer()
             return;
 
         if (currchar >= 0x41 && currchar <= 0x5A)
-            while (!SendKeyboard(KEY_LSHIFT_MAKE))
+            while (!SendKeyboard(StatusMode == MODE_PS2 ? KEY_LSHIFT_MAKE : XT_KEY_LSHIFT_MAKE))
                 delay(10);
 
-        while (!SendKeyboard(HIDtoPS2_Make[ASCIItoHID[currchar]]))
+        while (!SendKeyboard(
+            StatusMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]
+            ))
             delay(10);
-        while (!SendKeyboard(HIDtoPS2_Break[ASCIItoHID[currchar]]))
+        while (!SendKeyboard(
+             StatusMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]
+            ))
             delay(10);
         if (currchar >= 0x41 && currchar <= 0x5A)
         {
-            while (!SendKeyboard(KEY_LSHIFT_BREAK))
+            while (!SendKeyboard(StatusMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK))
                 delay(10);
         }
         BufferIndex++;

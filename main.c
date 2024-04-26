@@ -32,12 +32,7 @@
 #endif
 
 
-// Status Modes (PS2, XT, MENU)
-#define MODE_PS2 0
-#define MODE_XT 1
-#define MODE_AMSTRAD 2
 
-uint8_t StatusMode = MODE_PS2;
 
 // blue LED on by default
 uint8_t LEDStatus = 0x04;
@@ -118,6 +113,23 @@ void inputProcess() {
 	if (gpiodebounce == 0) {
 		if (butstate) {
 			// button pressed
+
+
+			// start the counter
+			gpiodebounce++;
+		}
+	}
+
+	// Debouncing positive edge, increment value
+	else if (gpiodebounce > 0 && gpiodebounce < DEBOUNCETIME) {
+		gpiodebounce++;
+	}
+
+	// debounce finished, keep incrementing until hold reached
+	else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME) {
+		// check to see if unpressed
+		if (!butstate) {
+			// cycle through modes on unpress of button
 			StatusMode++;
 			if (StatusMode > 2) 
 				StatusMode = 0;
@@ -135,21 +147,6 @@ void inputProcess() {
 
 			}
 
-			// start the counter
-			gpiodebounce++;
-		}
-	}
-
-	// Debouncing positive edge, increment value
-	else if (gpiodebounce > 0 && gpiodebounce < DEBOUNCETIME) {
-		gpiodebounce++;
-	}
-
-	// debounce finished, keep incrementing until hold reached
-	else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME) {
-		// check to see if unpressed
-		if (!butstate) {
-			//IOevent(i, IOEVENT_RELEASE);
 			// start the counter
 			gpiodebounce = -DEBOUNCETIME;
 		}

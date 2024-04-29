@@ -526,6 +526,7 @@ void HandleReceived(uint8_t port)
 			switch (ports[port].recvout)
 			{
 			case 0xE9:							// Status Request
+				// TODO: construct bytes 2 and 3 from real state
 				SimonSaysSendMouse1(0xFA);		// ACK
 				SimonSaysSendMouse3(0b00100000, // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
 									0x02,		// Resolution 4 counts/mm
@@ -538,14 +539,34 @@ void HandleReceived(uint8_t port)
 				SimonSaysSendMouse1(0x00); // Standard mouse
 				break;
 
+			// Enable Reporting
+			case 0xF4: 
+				SimonSaysSendMouse1(0xFA); // ACK
+				Ps2MouseSetReporting(MOUSE_PS2_REPORTING_ON);
+				break; 
+				
+			// Disable Reporting
+			case 0xF5: 
+				SimonSaysSendMouse1(0xFA); // ACK
+				Ps2MouseSetReporting(MOUSE_PS2_REPORTING_OFF);
+				break;
+			
+			// Set Defaults
+			case 0xF6: 
+				SimonSaysSendMouse1(0xFA); // ACK
+				Ps2MouseSetDefaults();
+				break;
+			
 			// Reset
 			case 0xFF:
 				SimonSaysSendMouse1(0xFA); // ACK
 				SimonSaysSendMouse1(0xAA); // POST OK
 				SimonSaysSendMouse1(0x00); // Squeek Squeek I'm a mouse
+				Ps2MouseSetDefaults();
 				break;
 
 			// unimplemented command
+			// TODO: implement, we already have some functions in mouse.c
 			case 0xE6: // Set Scaling 1:1
 			case 0xE7: // Set Scaling 2:1
 			case 0xE8: // Set Resolution
@@ -555,9 +576,6 @@ void HandleReceived(uint8_t port)
 			case 0xEE: // Set Wrap Mode
 			case 0xF0: // Remote Mode
 			case 0xF3: // Set Sample Rate
-			case 0xF4: // Enable Reporting
-			case 0xF5: // Disable Reporting
-			case 0xF6: // Set Defaults
 			case 0xFE: // Resend
 			default:   // argument from command?
 

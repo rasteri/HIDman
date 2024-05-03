@@ -398,6 +398,7 @@ void main()
 				// ps2 is inverted compared to USB
 				Y = -Y;
 
+				// TODO: construct bytes from real state
 				byte1 = 0b00001000 |			   //bit3 always set
 						((Y >> 10) & 0b00100000) | // Y sign bit
 						((X >> 11) & 0b00010000) | // X sign bit

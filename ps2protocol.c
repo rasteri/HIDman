@@ -38,6 +38,9 @@ uint8_t LEDDelayMs = 0;
 
 uint8_t StatusMode = MODE_PS2;
 
+uint8_t	MouseIntelliInit[] = {0x50, 0xF3, 0x64, 0xF3, 0xC8, 0xF3};
+uint8_t	MouseRecvHistory[] = {0, 0, 0, 0, 0, 0};
+
 // runs in interrupt to keep timings
 void RepeatTimer()
 {
@@ -522,11 +525,34 @@ void HandleReceived(uint8_t port)
 		switch (ports[PORT_KEY].recvstate)
 		{
 		case R_IDLE:
+		
+			// maintain command history for intellimouse detection sequence etc.
+			memmove(MouseRecvHistory+1, MouseRecvHistory, sizeof(MouseRecvHistory)-sizeof(MouseRecvHistory[0]));
+			MouseRecvHistory[0] = ports[port].recvout;
 
 			switch (ports[port].recvout)
 			{
-			case 0xE9:							// Status Request
-				// TODO: construct bytes 2 and 3 from real state
+				
+			// Set Scaling 1:1
+			case 0xE6:
+				SimonSaysSendMouse1(0xFA); // ACK
+				Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);
+				break;
+				
+			// Set Scaling 2:1
+			case 0xE7: 
+				SimonSaysSendMouse1(0xFA); // ACK
+				Ps2MouseSetScaling(MOUSE_PS2_SCALING_2X);
+				break;
+				
+			// Set Resolution (need 1 additional data byte)
+			case 0xE8: 
+				SimonSaysSendMouse1(0xFA); // ACK
+				break;
+			
+			// Status Request
+			case 0xE9:							
+				// TODO: construct bytes from real state
 				SimonSaysSendMouse1(0xFA);		// ACK
 				SimonSaysSendMouse3(0b00100000, // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
 									0x02,		// Resolution 4 counts/mm
@@ -566,10 +592,6 @@ void HandleReceived(uint8_t port)
 				break;
 
 			// unimplemented command
-			// TODO: implement, we already have some functions in mouse.c
-			case 0xE6: // Set Scaling 1:1
-			case 0xE7: // Set Scaling 2:1
-			case 0xE8: // Set Resolution
 			case 0xEA: // Set Stream Mode
 			case 0xEB: // Read Data
 			case 0xEC: // Reset Wrap Mode
@@ -578,8 +600,16 @@ void HandleReceived(uint8_t port)
 			case 0xF3: // Set Sample Rate
 			case 0xFE: // Resend
 			default:   // argument from command?
-
-				SimonSaysSendMouse1(0xFA); // Just smile and nod
+				if (MouseRecvHistory[1] == 0xE8) 
+				{
+					// Previous command was set Resolution, this should be actual resolution
+					SimonSaysSendMouse1(0xFA); // ACK
+					Ps2MouseSetResolution(MouseRecvHistory[0]);
+				} 
+				else
+				{
+					SimonSaysSendMouse1(0xFA); // Just smile and nod
+				}
 				break;
 			}
 		}

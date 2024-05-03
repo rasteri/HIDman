@@ -4,6 +4,7 @@
     Keeps track of a particular mouse output channel
 */
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -18,6 +19,9 @@
 #include "menu.h"
 #include "mouse.h"
 
+uint8_t Ps2MouseResolutionTable[] = {8, 4, 2, 1};
+int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
+
 MOUSE OutputMice[2];
 
 void InitMice()
@@ -31,6 +35,12 @@ void MouseMove(int16_t DeltaX, int16_t DeltaY)
     for (int x = 0; x < 2; x++)
     {
         MOUSE *m = &OutputMice[x];
+		if (x == MOUSE_PORT_PS2) {
+			// apply resolution for ps2 mouse
+			// TODO: can we do this on USB driver level?
+			DeltaX /= Ps2MouseResolutionTable[m->Ps2Resolution];
+			DeltaY /= Ps2MouseResolutionTable[m->Ps2Resolution];
+		}
         m->DeltaX += DeltaX;
         m->DeltaY += DeltaY;
         m->NeedsUpdating = 1;
@@ -88,6 +98,16 @@ uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, in
         }
 
         *Buttons = m->Buttons;
+		
+		if (MouseNo == MOUSE_PORT_PS2 && m->Ps2Scaling == MOUSE_PS2_SCALING_2X)
+		{
+			// Apply 2:1 scaling for ps2 mouse
+			// Note: scaled values should only be reported on automatic reports, not when 
+			// report has been requested by host by command 0xEB (remote mode or reporting off)
+			*X = (abs(*X) < 6 ? Ps2MouseScalingTable[(*X)+5] : (*X)*2);
+			*Y = (abs(*Y) < 6 ? Ps2MouseScalingTable[(*Y)+5] : (*Y)*2);
+		}
+		
         return 1;
     }
     else
@@ -149,14 +169,12 @@ void Ps2MouseSetRate(uint8_t Rate) {
 }
 
 void Ps2MouseSetResolution(uint8_t Resolution) {
-	// TODO: implement
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Resolution = Resolution;
 	Ps2MouseSetXY(0, 0);
 }
 
 void Ps2MouseSetScaling(uint8_t Scaling) {
-	// TODO: implement
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Scaling = Scaling;
 }
@@ -164,7 +182,6 @@ void Ps2MouseSetScaling(uint8_t Scaling) {
 void Ps2MouseSetReporting(bool Reporting) {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2DataReporting = Reporting;
-	//m->NeedsUpdating = 1; // looks like some mouse drivers will hang until first update is sent  
 	Ps2MouseSetXY(0, 0);
 }
 

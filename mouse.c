@@ -147,6 +147,12 @@ void MouseSet(uint8_t Button, uint8_t value)
     }
 }
 
+void Ps2MouseSetType(uint8_t Type)
+{
+	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
+	m->Ps2Type = Type;
+}
+
 void Ps2MouseSetXY(uint8_t DeltaX, uint8_t DeltaY)
 {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];

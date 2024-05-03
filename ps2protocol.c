@@ -526,9 +526,13 @@ void HandleReceived(uint8_t port)
 		{
 		case R_IDLE:
 		
-			// maintain command history for intellimouse detection sequence etc.
+			// maintain command history for data bytes, intellimouse support etc.
 			memmove(MouseRecvHistory+1, MouseRecvHistory, sizeof(MouseRecvHistory)-sizeof(MouseRecvHistory[0]));
 			MouseRecvHistory[0] = ports[port].recvout;
+
+			// enable intellimouse support if driver polls for it
+			if (memcmp(MouseIntelliInit, MouseRecvHistory, sizeof(MouseIntelliInit)-sizeof(MouseIntelliInit[0])))
+				Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE);
 
 			switch (ports[port].recvout)
 			{
@@ -562,7 +566,8 @@ void HandleReceived(uint8_t port)
 			// ID
 			case 0xF2:
 				SimonSaysSendMouse1(0xFA); // ACK
-				SimonSaysSendMouse1(0x00); // Standard mouse
+				//SimonSaysSendMouse1(0x00); // Standard mouse
+				SimonSaysSendMouse1(0x03); // Intellimouse
 				break;
 
 			// Enable Reporting
@@ -602,7 +607,7 @@ void HandleReceived(uint8_t port)
 			default:   // argument from command?
 				if (MouseRecvHistory[1] == 0xE8) 
 				{
-					// Previous command was set Resolution, this should be actual resolution
+					// previous command was set Resolution, this should be actual resolution
 					SimonSaysSendMouse1(0xFA); // ACK
 					Ps2MouseSetResolution(MouseRecvHistory[0]);
 				} 

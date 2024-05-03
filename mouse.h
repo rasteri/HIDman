@@ -6,6 +6,9 @@
 #define MOUSE_PORT_SERIAL 1
 #define MOUSE_PORT_QUADRATURE 2 //or whatever
 
+#define MOUSE_PS2_TYPE_NORMAL 0
+#define MOUSE_PS2_TYPE_INTELLIMOUSE 0
+
 #define MOUSE_PS2_MODE_STREAM 0
 #define MOUSE_PS2_MODE_REMOTE 1
 #define MOUSE_PS2_MODE_WRAP 2
@@ -37,6 +40,7 @@ typedef struct MOUSE {
     bool NeedsUpdating;
 
 	// ps2 port registers (not relevant for serial port) 
+	uint8_t Ps2Type;
 	uint8_t Ps2Mode;
 	uint8_t Ps2Rate;
 	uint8_t Ps2Resolution;
@@ -52,6 +56,7 @@ void MouseClick(uint8_t Button);
 void MouseUnclick(uint8_t Button);
 void MouseSet(uint8_t Button, uint8_t value);
 
+void Ps2MouseSetType(uint8_t Type);
 void Ps2MouseSetXY(uint8_t X, uint8_t Y);
 void Ps2MouseSetMode(uint8_t Mode);
 void Ps2MouseSetRate(uint8_t Rate);

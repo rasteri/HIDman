@@ -386,7 +386,7 @@ void main()
 		HandleRepeats();
 
 		int16_t X, Y;
-		uint8_t byte1, byte2, byte3;
+		uint8_t byte1, byte2, byte3, byte4;
 
 		// Send PS/2 Mouse Packet if necessary
 		// make sure there's space in the buffer before we pop any mouse updates
@@ -407,7 +407,10 @@ void main()
 				byte2 = (X & 0xFF);
 				byte3 = (Y & 0xFF);
 
-				SendMouse3(byte1, byte2, byte3);
+				//SendMouse3(byte1, byte2, byte3);
+				
+				byte4 = 0b00000000;
+				SendMouse4(byte1, byte2, byte3, byte4);
 			}
 		}
 

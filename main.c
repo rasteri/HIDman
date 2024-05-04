@@ -385,14 +385,14 @@ void main()
 		ProcessKeyboardLed();
 		HandleRepeats();
 
-		int16_t X, Y;
+		int16_t X, Y, Z;
 		uint8_t byte1, byte2, byte3, byte4;
 
 		// Send PS/2 Mouse Packet if necessary
 		// make sure there's space in the buffer before we pop any mouse updates
 		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
 		{
-			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Buttons))
+			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Z, &Buttons))
 			{
 
 				// ps2 is inverted compared to USB
@@ -407,10 +407,13 @@ void main()
 				byte2 = (X & 0xFF);
 				byte3 = (Y & 0xFF);
 
-				//SendMouse3(byte1, byte2, byte3);
-				
-				byte4 = 0b00000000;
-				SendMouse4(byte1, byte2, byte3, byte4);
+				//if (Ps2MouseGetType() == MOUSE_PS2_TYPE_INTELLIMOUSE)
+				//{
+					byte4 = (Z & 0xFF);
+					SendMouse4(byte1, byte2, byte3, byte4);
+				//}
+				//else
+				//	SendMouse3(byte1, byte2, byte3);
 			}
 		}
 
@@ -430,7 +433,7 @@ void main()
 		// make sure there's space in the fifo before we pop any mouse updates
 		else if (serialMouseMode == SERIAL_MOUSE_MODE_ACTIVE && (/*CH559UART1_FIFO_CNT >= 3 || */ SER1_LSR & bLSR_T_FIFO_EMP))
 		{
-			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Buttons))
+			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Z, &Buttons))
 			{
 				byte1 = 0b11000000 |			  // bit6 always set
 						((Buttons & 0x01) << 5) | // left button

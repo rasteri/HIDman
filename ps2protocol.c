@@ -228,7 +228,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						currSeg->value = (uint8_t)((int8_t)((currSeg->value + 8) >> 4) - 0x08);
 					else*/
 
-					MouseMove((int8_t)currSeg->value, 0);
+					MouseMove((int8_t)currSeg->value, 0, 0);
 
 					break;
 				case MAP_MOUSE_Y:
@@ -236,7 +236,15 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
 					else*/
 
-					MouseMove(0, (int8_t)currSeg->value);
+					MouseMove(0, (int8_t)currSeg->value, 0);
+
+					break;
+				case MAP_MOUSE_WHEEL:
+					/*if (currSeg->InputParam == 2)
+						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
+					else*/
+
+					MouseMove(0, 0, (int8_t)currSeg->value);
 
 					break;
 				}
@@ -566,8 +574,11 @@ void HandleReceived(uint8_t port)
 			// ID
 			case 0xF2:
 				SimonSaysSendMouse1(0xFA); // ACK
-				//SimonSaysSendMouse1(0x00); // Standard mouse
-				SimonSaysSendMouse1(0x03); // Intellimouse
+				//if (Ps2MouseGetType() == MOUSE_PS2_TYPE_INTELLIMOUSE)
+				//{
+					SimonSaysSendMouse1(0x03); // Intellimouse
+				//} else
+				//	SimonSaysSendMouse1(0x00); // Standard mouse
 				break;
 
 			// Enable Reporting

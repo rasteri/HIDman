@@ -30,7 +30,7 @@ void InitMice()
 	Ps2MouseSetDefaults();
 }
 uint8_t updates = 0;
-void MouseMove(int16_t DeltaX, int16_t DeltaY)
+void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ)
 {
     for (int x = 0; x < 2; x++)
     {
@@ -43,11 +43,12 @@ void MouseMove(int16_t DeltaX, int16_t DeltaY)
 		}
         m->DeltaX += DeltaX;
         m->DeltaY += DeltaY;
+        m->DeltaZ += DeltaZ;
         m->NeedsUpdating = 1;
     }
 }
 
-uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, uint8_t *Buttons)
+uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, int16_t *Z, uint8_t *Buttons)
 {
     MOUSE *m = &OutputMice[MouseNo];
 	
@@ -95,6 +96,24 @@ uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, in
         {
             *Y = m->DeltaY;
             m->DeltaY = 0;
+        }
+
+        if (m->DeltaZ < -8)
+        {
+            *Z = -8;
+            m->DeltaZ -= -8;
+            m->NeedsUpdating = 1;
+        }
+        else if (m->DeltaZ > 7)
+        {
+            *Z = 7;
+            m->DeltaZ -= 7;
+            m->NeedsUpdating = 1;
+        }
+        else
+        {
+            *Z = m->DeltaZ;
+            m->DeltaZ = 0;
         }
 
         *Buttons = m->Buttons;
@@ -153,31 +172,39 @@ void Ps2MouseSetType(uint8_t Type)
 	m->Ps2Type = Type;
 }
 
-void Ps2MouseSetXY(uint8_t DeltaX, uint8_t DeltaY)
+uint8_t Ps2MouseGetType()
+{
+	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
+	return m->Ps2Type;
+}
+
+
+void Ps2MouseSetDelta(uint8_t DeltaX, uint8_t DeltaY, uint8_t DeltaZ)
 {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->DeltaX = DeltaX;
 	m->DeltaY = DeltaY;
+	m->DeltaZ = DeltaZ;
 }
 
 void Ps2MouseSetMode(uint8_t Mode) {
 	// TODO: implement (does anything use remote or wrap mode?)
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Mode = Mode;
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetRate(uint8_t Rate) {
 	// TODO: implement
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Rate = Rate;
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetResolution(uint8_t Resolution) {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Resolution = Resolution;
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetScaling(uint8_t Scaling) {
@@ -188,7 +215,7 @@ void Ps2MouseSetScaling(uint8_t Scaling) {
 void Ps2MouseSetReporting(bool Reporting) {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2DataReporting = Reporting;
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetDefaults() {

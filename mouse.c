@@ -49,7 +49,29 @@ void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ)
     }
 }
 
-uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, int16_t *Z, uint8_t *Buttons)
+uint8_t GetMouseAxisUpdate(MOUSE *m, int16_t* Axis, int16_t* Value, int16_t Min, int16_t Max, uint8_t Downscale) 
+{	
+	// assume update value won't exceed min/max limit
+	*Value = *Axis >> Downscale;
+	
+	// but if it does then cap to limit 
+	if (*Value < Min)
+	{
+		*Value = Min;
+		m->NeedsUpdating = 1;
+	}
+	else if (*Value > Max)
+	{
+		*Value = Max;
+		m->NeedsUpdating = 1;
+	}	
+	
+	// decrease delta by update value (delta is zeroed if limits were not exceeded, otherwise we have leftovers)
+	// note that we can do power of two downscaling just by two bit shifts, no floating point maths needed
+	*Axis -= *Value << Downscale;	
+}
+
+uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, int16_t *Z, uint8_t *Buttons, bool Accelerate, uint8_t Downscale)
 {
     MOUSE *m = &OutputMice[MouseNo];
 	
@@ -58,76 +80,26 @@ uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, in
 		// ps2 mouse and data reporting is off - no matter if update is needed or not, we do not give one
 		return 0;
 	}
-    else if (m->NeedsUpdating)
+    
+	if (m->NeedsUpdating)
     {
-        // Assume it doesn't need updating after this
+        // assume it doesn't need updating after this, but can change if deltas exceeds min/max limit
         m->NeedsUpdating = 0;
-
-        if (m->DeltaX < Min)
-        {
-            *X = Min;
-            m->DeltaX -= Min;
-            m->NeedsUpdating = 1;
-        }
-        else if (m->DeltaX > Max)
-        {
-            *X = Max;
-            m->DeltaX -= Max;
-            m->NeedsUpdating = 1;
-        }
-        else
-        {
-            *X = m->DeltaX;
-            m->DeltaX = 0;
-        }
-
-        if (m->DeltaY < Min)
-        {
-            *Y = Min;
-            m->DeltaY -= Min;
-            m->NeedsUpdating = 1;
-        }
-        else if (m->DeltaY > Max)
-        {
-            *Y = Max;
-            m->DeltaY -= Max;
-            m->NeedsUpdating = 1;
-        }
-        else
-        {
-            *Y = m->DeltaY;
-            m->DeltaY = 0;
-        }
-
-		// these limits [-8...7] are for ps2 intellimouse protocol, for serial wheel is not implemented
+		
+		// get deltas for x and y (notice downscaling, this is for ps2 mouse resolution but would work with serial as well)
+		GetMouseAxisUpdate(m, &m->DeltaX, X, Min, Max, Downscale);
+		GetMouseAxisUpdate(m, &m->DeltaY, Y, Min, Max, Downscale);
+		
+		// get delta for z also for ps2 intellimouse 
 		if (MouseNo == MOUSE_PORT_PS2)
-        {
-			if (m->DeltaZ < -8)
-			{
-				*Z = -8;
-				m->DeltaZ -= -8;
-				m->NeedsUpdating = 1;
-			}
-			else if (m->DeltaZ > 7)
-			{
-				*Z = 7;
-				m->DeltaZ -= 7;
-				m->NeedsUpdating = 1;
-			}
-			else
-			{
-				*Z = m->DeltaZ;
-				m->DeltaZ = 0;
-			}
-        }
+			GetMouseAxisUpdate(m, &m->DeltaZ, Z, -8, 7, 0);
 
+		// get buttons
         *Buttons = m->Buttons;
 		
-		if (MouseNo == MOUSE_PORT_PS2 && m->Ps2Scaling == MOUSE_PS2_SCALING_2X)
+		// apply acceleration (this is for ps2 mouse 2:1 scaling support but in theory could be used with serial mouse)
+		if (Accelerate)
 		{
-			// Apply 2:1 scaling for ps2 mouse
-			// Note: scaled values should only be reported on automatic reports, not when 
-			// report has been requested by host by command 0xEB (remote mode or reporting off)
 			*X = (abs(*X) < 6 ? Ps2MouseScalingTable[(*X)+5] : (*X)*2);
 			*Y = (abs(*Y) < 6 ? Ps2MouseScalingTable[(*Y)+5] : (*Y)*2);
 		}

@@ -394,7 +394,7 @@ void main()
 		// make sure there's space in the buffer before we pop any mouse updates
 		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
 		{
-			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Z, &Buttons))
+			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Z, &Buttons, (ps2Mouse->Ps2Scaling==MOUSE_PS2_SCALING_2X), (3-ps2Mouse->Ps2Resolution)))
 			{
 
 				// ps2 is inverted compared to USB
@@ -437,7 +437,7 @@ void main()
 		// make sure there's space in the fifo before we pop any mouse updates
 		else if (serialMouseMode == SERIAL_MOUSE_MODE_ACTIVE && (/*CH559UART1_FIFO_CNT >= 3 || */ SER1_LSR & bLSR_T_FIFO_EMP))
 		{
-			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Z, &Buttons))
+			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Z, &Buttons, false, 0))
 			{
 				byte1 = 0b11000000 |			  // bit6 always set
 						((Buttons & 0x01) << 5) | // left button

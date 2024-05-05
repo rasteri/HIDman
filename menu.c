@@ -17,6 +17,7 @@
 #include "ps2.h"
 #include "data.h"
 #include "ps2protocol.h"
+#include "mouse.h"
 
 __xdata char SendBuffer[255];
 
@@ -157,7 +158,7 @@ void Menu_Task()
     switch (menuState)
     {
     case MENU_STATE_INIT:
-        SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n1. Configure game controller mappings\n2. Log HID Data\n\nESC to exit menu\n\n");
+        SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n1. Configure game controller mappings\n2. Log HID Data\n3. Dump PS2 mouse status\n\nESC to exit menu\n\n");
         menuState = MENU_STATE_MAIN;
         menuKey = 0;
         break;
@@ -175,6 +176,20 @@ void Menu_Task()
                 SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
                 DumpReport = 1;
                 menuState = MENU_STATE_DUMPING;
+                break;
+            case 0x20: // 3
+				SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
+				SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
+				SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
+				SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
+				SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
+				SendKeyboardString("\nCommand buffer\n");
+				for (UINT8 i=0; i<MOUSE_BUFFER_SIZE; i++) {
+					if (!(i & 0x000F))
+						SendKeyboardString("\n");
+					SendKeyboardString("%02X ", MouseBuffer[i]);
+				}
+				SendKeyboardString("\n\n");
                 break;
             case 0x29: // ESC
                 SendKeyboardString("Goodbye\n");

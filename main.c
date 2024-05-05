@@ -370,9 +370,11 @@ void main()
 #endif
 
 	memset(SendBuffer, 0, 255);
+	memset(MouseBuffer, 0, MOUSE_BUFFER_SIZE);
 	//SendKeyboardString("We are go\n");
 	uint8_t Buttons;
 	uint8_t PrevButtons = 0;
+	MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
 
 	while (1)
 	{
@@ -407,13 +409,15 @@ void main()
 				byte2 = (X & 0xFF);
 				byte3 = (Y & 0xFF);
 
-				//if (Ps2MouseGetType() == MOUSE_PS2_TYPE_INTELLIMOUSE)
-				//{
-					byte4 = (Z & 0xFF);
+				if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE)
+				{
+					byte4 = (-Z & 0xFF);
 					SendMouse4(byte1, byte2, byte3, byte4);
-				//}
-				//else
-				//	SendMouse3(byte1, byte2, byte3);
+				}
+				else
+				{
+					SendMouse3(byte1, byte2, byte3);
+				}
 			}
 		}
 

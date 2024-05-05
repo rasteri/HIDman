@@ -27,6 +27,7 @@ MOUSE OutputMice[2];
 void InitMice()
 {
     memset(OutputMice, 0x00, sizeof(OutputMice));
+	Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
 	Ps2MouseSetDefaults();
 }
 uint8_t updates = 0;
@@ -98,22 +99,26 @@ uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, in
             m->DeltaY = 0;
         }
 
-        if (m->DeltaZ < -8)
+		// these limits [-8...7] are for ps2 intellimouse protocol, for serial wheel is not implemented
+		if (MouseNo == MOUSE_PORT_PS2)
         {
-            *Z = -8;
-            m->DeltaZ -= -8;
-            m->NeedsUpdating = 1;
-        }
-        else if (m->DeltaZ > 7)
-        {
-            *Z = 7;
-            m->DeltaZ -= 7;
-            m->NeedsUpdating = 1;
-        }
-        else
-        {
-            *Z = m->DeltaZ;
-            m->DeltaZ = 0;
+			if (m->DeltaZ < -8)
+			{
+				*Z = -8;
+				m->DeltaZ -= -8;
+				m->NeedsUpdating = 1;
+			}
+			else if (m->DeltaZ > 7)
+			{
+				*Z = 7;
+				m->DeltaZ -= 7;
+				m->NeedsUpdating = 1;
+			}
+			else
+			{
+				*Z = m->DeltaZ;
+				m->DeltaZ = 0;
+			}
         }
 
         *Buttons = m->Buttons;
@@ -166,25 +171,18 @@ void MouseSet(uint8_t Button, uint8_t value)
     }
 }
 
-void Ps2MouseSetType(uint8_t Type)
-{
-	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
-	m->Ps2Type = Type;
-}
-
-uint8_t Ps2MouseGetType()
-{
-	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
-	return m->Ps2Type;
-}
-
-
 void Ps2MouseSetDelta(uint8_t DeltaX, uint8_t DeltaY, uint8_t DeltaZ)
 {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->DeltaX = DeltaX;
 	m->DeltaY = DeltaY;
 	m->DeltaZ = DeltaZ;
+}
+
+void Ps2MouseSetType(uint8_t Type)
+{
+	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
+	m->Ps2Type = Type;
 }
 
 void Ps2MouseSetMode(uint8_t Mode) {

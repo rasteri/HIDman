@@ -403,17 +403,19 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 
 										case REPORT_USAGE_Y:
 											// Mouse - value field
-											currSegPnt->OutputControl = MAP_MOUSE_WHEEL;
-											currSegPnt->InputType = MAP_TYPE_SCALE;
-											break;
-										
-										case REPORT_USAGE_WHEEL:
-										case REPORT_USAGE_Z:
-											// TODO: not working...
-											// Mouse - value field
 											currSegPnt->OutputControl = MAP_MOUSE_Y;
 											currSegPnt->InputType = MAP_TYPE_SCALE;
 											break;
+										
+										/*
+										case REPORT_USAGE_WHEEL:
+											// TODO: not working...
+											// Mouse - value field
+											currSegPnt->OutputControl = MAP_MOUSE_WHEEL;
+											currSegPnt->InputType = MAP_TYPE_SCALE;
+											break;
+										*/
+											
 										}
 									}
 								}

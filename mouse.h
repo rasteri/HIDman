@@ -6,7 +6,7 @@
 #define MOUSE_PORT_SERIAL 1
 #define MOUSE_PORT_QUADRATURE 2 //or whatever
 
-#define MOUSE_PS2_TYPE_NORMAL 0
+#define MOUSE_PS2_TYPE_STANDARD 0
 #define MOUSE_PS2_TYPE_INTELLIMOUSE 3
 
 #define MOUSE_PS2_MODE_STREAM 0
@@ -49,6 +49,8 @@ typedef struct MOUSE {
 	
 } MOUSE;
 
+extern MOUSE OutputMice[];
+
 void InitMice();
 void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ);
 uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, int16_t *Z, uint8_t *Buttons);
@@ -56,9 +58,8 @@ void MouseClick(uint8_t Button);
 void MouseUnclick(uint8_t Button);
 void MouseSet(uint8_t Button, uint8_t value);
 
+void Ps2MouseSetDelta(uint8_t DeltaX, uint8_t DeltaY, uint8_t DeltaZ);
 void Ps2MouseSetType(uint8_t Type);
-uint8_t Ps2MouseGetType();
-void Ps2MouseSetXY(uint8_t X, uint8_t Y);
 void Ps2MouseSetMode(uint8_t Mode);
 void Ps2MouseSetRate(uint8_t Rate);
 void Ps2MouseSetResolution(uint8_t Resolution);

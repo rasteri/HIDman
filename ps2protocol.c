@@ -38,8 +38,8 @@ uint8_t LEDDelayMs = 0;
 
 uint8_t StatusMode = MODE_PS2;
 
-uint8_t	MouseIntelliInit[] = {0x50, 0xF3, 0x64, 0xF3, 0xC8, 0xF3};
-uint8_t	MouseRecvHistory[] = {0, 0, 0, 0, 0, 0};
+// Mouse buffer needed for handling multi-byte commands and intellimouse detection 
+__xdata uint8_t MouseBuffer[MOUSE_BUFFER_SIZE];
 
 // runs in interrupt to keep timings
 void RepeatTimer()
@@ -315,7 +315,13 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 		processSeg(currSeg, descReport, report);
 		currSeg = currSeg->next;
 	}
-
+	
+	
+	
+	// TODO: stupid hack, experimenting with wheel
+	if (report[3] > 0) {
+		MouseMove(0, 0, (report[3] > 127 ? -(256-report[3]) : report[3]));
+	}
 	
 
 	if (descReport->keyboardUpdated)
@@ -534,13 +540,9 @@ void HandleReceived(uint8_t port)
 		{
 		case R_IDLE:
 		
-			// maintain command history for data bytes, intellimouse support etc.
-			memmove(MouseRecvHistory+1, MouseRecvHistory, sizeof(MouseRecvHistory)-sizeof(MouseRecvHistory[0]));
-			MouseRecvHistory[0] = ports[port].recvout;
-
-			// enable intellimouse support if driver polls for it
-			if (memcmp(MouseIntelliInit, MouseRecvHistory, sizeof(MouseIntelliInit)-sizeof(MouseIntelliInit[0])))
-				Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE);
+			// push command to buffer
+			memmove(MouseBuffer+1, MouseBuffer, MOUSE_BUFFER_SIZE-1);
+			MouseBuffer[0] = ports[port].recvout;
 
 			switch (ports[port].recvout)
 			{
@@ -574,11 +576,7 @@ void HandleReceived(uint8_t port)
 			// ID
 			case 0xF2:
 				SimonSaysSendMouse1(0xFA); // ACK
-				//if (Ps2MouseGetType() == MOUSE_PS2_TYPE_INTELLIMOUSE)
-				//{
-					SimonSaysSendMouse1(0x03); // Intellimouse
-				//} else
-				//	SimonSaysSendMouse1(0x00); // Standard mouse
+				SimonSaysSendMouse1((&OutputMice[MOUSE_PORT_PS2])->Ps2Type); // Mouse type
 				break;
 
 			// Enable Reporting
@@ -604,6 +602,7 @@ void HandleReceived(uint8_t port)
 				SimonSaysSendMouse1(0xFA); // ACK
 				SimonSaysSendMouse1(0xAA); // POST OK
 				SimonSaysSendMouse1(0x00); // Squeek Squeek I'm a mouse
+				Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
 				Ps2MouseSetDefaults();
 				break;
 
@@ -616,11 +615,11 @@ void HandleReceived(uint8_t port)
 			case 0xF3: // Set Sample Rate
 			case 0xFE: // Resend
 			default:   // argument from command?
-				if (MouseRecvHistory[1] == 0xE8) 
+				if (MouseBuffer[1] == 0xE8) 
 				{
 					// previous command was set Resolution, this should be actual resolution
 					SimonSaysSendMouse1(0xFA); // ACK
-					Ps2MouseSetResolution(MouseRecvHistory[0]);
+					Ps2MouseSetResolution(MouseBuffer[0]);
 				} 
 				else
 				{
@@ -629,6 +628,13 @@ void HandleReceived(uint8_t port)
 				break;
 			}
 		}
+		
+		// enable intellimouse support if driver tried to to detect it
+		if (memcmp(MouseBuffer, "\x50\xF3\x64\xF3\xC8\xF3", 6) == 0)
+		{
+			Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE);
+		}
+		
 		// If we're not expecting more stuff,
 		// unlock the send buffer so main loop can send stuff again
 		if (ports[PORT_MOUSE].recvstate == R_IDLE)

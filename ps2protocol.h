@@ -16,10 +16,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report);
     RepeatState = st;      \
     TR0 = 1;
 
-// Status Modes (PS2, XT, MENU)
-#define MODE_PS2 0
-#define MODE_XT 1
-#define MODE_AMSTRAD 2
+
 
 extern uint16_t StatusMode;
 

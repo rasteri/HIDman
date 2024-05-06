@@ -19,7 +19,6 @@
 #include "menu.h"
 #include "mouse.h"
 
-uint8_t Ps2MouseResolutionTable[] = {8, 4, 2, 1};
 int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
 
 MOUSE OutputMice[2];
@@ -36,12 +35,6 @@ void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ)
     for (int x = 0; x < 2; x++)
     {
         MOUSE *m = &OutputMice[x];
-		if (x == MOUSE_PORT_PS2) {
-			// apply resolution for ps2 mouse
-			// TODO: can we do this on USB driver level?
-			DeltaX /= Ps2MouseResolutionTable[m->Ps2Resolution];
-			DeltaY /= Ps2MouseResolutionTable[m->Ps2Resolution];
-		}
         m->DeltaX += DeltaX;
         m->DeltaY += DeltaY;
         m->DeltaZ += DeltaZ;

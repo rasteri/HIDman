@@ -14,6 +14,7 @@
 #include "xt.h"
 #include "pwm.h"
 #include "keyboardled.h"
+#include "dataflash.h"
 
 #if !defined(BOARD_MICRO)
 	#define OPT_SERIAL_MOUSE
@@ -31,7 +32,8 @@
 	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
 #endif
 
-
+// persistent status mode
+uint16_t *FlashStatusMode = (uint16_t*) 0xF000;
 
 
 // blue LED on by default
@@ -131,8 +133,12 @@ void inputProcess() {
 		if (!butstate) {
 			// cycle through modes on unpress of button
 			StatusMode++;
-			if (StatusMode > 2) 
+			if (StatusMode > 2)
 				StatusMode = 0;
+
+			if(EraseDataFlash(0xF000) == 0){
+				WriteDataFlash(0xF000, &StatusMode, 2);
+			}
 
 			switch (StatusMode){
 				case MODE_PS2:
@@ -177,9 +183,6 @@ void inputProcess() {
 	else if (gpiodebounce < 0) {
 		gpiodebounce++;
 	}
-
-
-
 
 }
 
@@ -373,6 +376,8 @@ void main()
 	//SendKeyboardString("We are go\n");
 	uint8_t Buttons;
 	uint8_t PrevButtons = 0;
+
+	StatusMode = *FlashStatusMode;
 
 	while (1)
 	{

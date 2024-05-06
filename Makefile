@@ -33,6 +33,7 @@ $(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
 $(OBJDIR)/pwm.rel \
 $(OBJDIR)/mouse.rel \
+$(OBJDIR)/dataflash.rel \
 $(OBJDIR)/xt.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)

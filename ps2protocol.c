@@ -36,7 +36,7 @@ __xdata char lastKeyboardHID[8];
 
 uint8_t LEDDelayMs = 0;
 
-uint8_t StatusMode = MODE_PS2;
+uint16_t StatusMode = MODE_PS2;
 
 // runs in interrupt to keep timings
 void RepeatTimer()

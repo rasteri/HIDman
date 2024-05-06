@@ -21,7 +21,7 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report);
 #define MODE_XT 1
 #define MODE_AMSTRAD 2
 
-extern uint8_t StatusMode;
+extern uint16_t StatusMode;
 
 extern uint8_t LEDDelayMs;
 

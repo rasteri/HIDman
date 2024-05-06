@@ -315,14 +315,6 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 		processSeg(currSeg, descReport, report);
 		currSeg = currSeg->next;
 	}
-	
-	
-	
-	// TODO: stupid hack, experimenting with wheel
-	if (report[3] > 0) {
-		MouseMove(0, 0, (report[3] > 127 ? -(256-report[3]) : report[3]));
-	}
-	
 
 	if (descReport->keyboardUpdated)
 	{

@@ -1442,6 +1442,7 @@ __xdata uint8_t StandardMouseDescriptor[] = {
     0x05, 0x01, //     Usage Page (Generic Desktop Ctrls)
     0x09, 0x30, //     Usage (X)
     0x09, 0x31, //     Usage (Y)
+    0x09, 0x38, //     Usage (Wheel)
     0x15, 0x81, //     Logical Minimum (-127)
     0x25, 0x7F, //     Logical Maximum (127)
     0x75, 0x08, //     Report Size (8)

@@ -189,7 +189,7 @@ void Menu_Task()
 						SendKeyboardString("\n");
 					SendKeyboardString("%02X ", MouseBuffer[i]);
 				}
-				SendKeyboardString("\n\n");
+                menuState = MENU_STATE_INIT;
                 break;
             case 0x29: // ESC
                 SendKeyboardString("Goodbye\n");

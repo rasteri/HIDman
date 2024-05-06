@@ -4,6 +4,7 @@
     Keeps track of a particular mouse output channel
 */
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -18,26 +19,52 @@
 #include "menu.h"
 #include "mouse.h"
 
+int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
+
 MOUSE OutputMice[2];
 
 void InitMice()
 {
     memset(OutputMice, 0x00, sizeof(OutputMice));
+	Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
 	Ps2MouseSetDefaults();
 }
 uint8_t updates = 0;
-void MouseMove(int16_t DeltaX, int16_t DeltaY)
+void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ)
 {
     for (int x = 0; x < 2; x++)
     {
         MOUSE *m = &OutputMice[x];
         m->DeltaX += DeltaX;
         m->DeltaY += DeltaY;
+        m->DeltaZ += DeltaZ;
         m->NeedsUpdating = 1;
     }
 }
 
-uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, uint8_t *Buttons)
+uint8_t GetMouseAxisUpdate(MOUSE *m, int16_t* Axis, int16_t* Value, int16_t Min, int16_t Max, uint8_t Downscale) 
+{	
+	// assume update value won't exceed min/max limit
+	*Value = *Axis >> Downscale;
+	
+	// but if it does then cap to limit 
+	if (*Value < Min)
+	{
+		*Value = Min;
+		m->NeedsUpdating = 1;
+	}
+	else if (*Value > Max)
+	{
+		*Value = Max;
+		m->NeedsUpdating = 1;
+	}	
+	
+	// decrease delta by update value (delta is zeroed if limits were not exceeded, otherwise we have leftovers)
+	// note that we can do power of two downscaling just by two bit shifts, no floating point maths needed
+	*Axis -= *Value << Downscale;	
+}
+
+uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, int16_t *Z, uint8_t *Buttons, bool Accelerate, uint8_t Downscale)
 {
     MOUSE *m = &OutputMice[MouseNo];
 	
@@ -46,48 +73,30 @@ uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, in
 		// ps2 mouse and data reporting is off - no matter if update is needed or not, we do not give one
 		return 0;
 	}
-    else if (m->NeedsUpdating)
+    
+	if (m->NeedsUpdating)
     {
-        // Assume it doesn't need updating after this
+        // assume it doesn't need updating after this, but can change if deltas exceeds min/max limit
         m->NeedsUpdating = 0;
+		
+		// get deltas for x and y (notice downscaling, this is for ps2 mouse resolution but would work with serial as well)
+		GetMouseAxisUpdate(m, &m->DeltaX, X, Min, Max, Downscale);
+		GetMouseAxisUpdate(m, &m->DeltaY, Y, Min, Max, Downscale);
+		
+		// get delta for z also for ps2 intellimouse 
+		if (MouseNo == MOUSE_PORT_PS2)
+			GetMouseAxisUpdate(m, &m->DeltaZ, Z, -8, 7, 0);
 
-        if (m->DeltaX < Min)
-        {
-            *X = Min;
-            m->DeltaX -= Min;
-            m->NeedsUpdating = 1;
-        }
-        else if (m->DeltaX > Max)
-        {
-            *X = Max;
-            m->DeltaX -= Max;
-            m->NeedsUpdating = 1;
-        }
-        else
-        {
-            *X = m->DeltaX;
-            m->DeltaX = 0;
-        }
-
-        if (m->DeltaY < Min)
-        {
-            *Y = Min;
-            m->DeltaY -= Min;
-            m->NeedsUpdating = 1;
-        }
-        else if (m->DeltaY > Max)
-        {
-            *Y = Max;
-            m->DeltaY -= Max;
-            m->NeedsUpdating = 1;
-        }
-        else
-        {
-            *Y = m->DeltaY;
-            m->DeltaY = 0;
-        }
-
+		// get buttons
         *Buttons = m->Buttons;
+		
+		// apply acceleration (this is for ps2 mouse 2:1 scaling support but in theory could be used with serial mouse)
+		if (Accelerate)
+		{
+			*X = (abs(*X) < 6 ? Ps2MouseScalingTable[(*X)+5] : (*X)*2);
+			*Y = (abs(*Y) < 6 ? Ps2MouseScalingTable[(*Y)+5] : (*Y)*2);
+		}
+		
         return 1;
     }
     else
@@ -127,36 +136,41 @@ void MouseSet(uint8_t Button, uint8_t value)
     }
 }
 
-void Ps2MouseSetXY(uint8_t DeltaX, uint8_t DeltaY)
+void Ps2MouseSetDelta(uint8_t DeltaX, uint8_t DeltaY, uint8_t DeltaZ)
 {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->DeltaX = DeltaX;
 	m->DeltaY = DeltaY;
+	m->DeltaZ = DeltaZ;
+}
+
+void Ps2MouseSetType(uint8_t Type)
+{
+	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
+	m->Ps2Type = Type;
 }
 
 void Ps2MouseSetMode(uint8_t Mode) {
 	// TODO: implement (does anything use remote or wrap mode?)
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Mode = Mode;
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetRate(uint8_t Rate) {
 	// TODO: implement
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Rate = Rate;
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetResolution(uint8_t Resolution) {
-	// TODO: implement
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Resolution = Resolution;
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetScaling(uint8_t Scaling) {
-	// TODO: implement
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2Scaling = Scaling;
 }
@@ -164,8 +178,7 @@ void Ps2MouseSetScaling(uint8_t Scaling) {
 void Ps2MouseSetReporting(bool Reporting) {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
 	m->Ps2DataReporting = Reporting;
-	//m->NeedsUpdating = 1; // looks like some mouse drivers will hang until first update is sent  
-	Ps2MouseSetXY(0, 0);
+	Ps2MouseSetDelta(0, 0, 0);
 }
 
 void Ps2MouseSetDefaults() {

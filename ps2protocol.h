@@ -22,4 +22,9 @@ extern uint16_t StatusMode;
 
 extern uint8_t LEDDelayMs;
 
+// Mouse buffer size must be at least 6 for intellimouse detection, more for debugging
+#define MOUSE_BUFFER_SIZE 32
+
+extern __xdata uint8_t MouseBuffer[];
+
 #endif //__PROTOCOL_H__

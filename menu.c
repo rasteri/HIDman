@@ -17,6 +17,7 @@
 #include "ps2.h"
 #include "data.h"
 #include "ps2protocol.h"
+#include "mouse.h"
 #include "settings.h"
 #include "usbhidkeys.h"
 
@@ -210,6 +211,20 @@ void Menu_Task()
                 break;
 
             case KEY_ESC: // ESC
+            case 0x20: // 3
+				SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
+				SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
+				SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
+				SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
+				SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
+				SendKeyboardString("\nCommand buffer\n");
+				for (UINT8 i=0; i<MOUSE_BUFFER_SIZE; i++) {
+					if (!(i & 0x000F))
+						SendKeyboardString("\n");
+					SendKeyboardString("%02X ", MouseBuffer[i]);
+				}
+                menuState = MENU_STATE_INIT;
+                break;
                 SendKeyboardString("Goodbye\n");
                 menuState = MENU_STATE_INIT;
                 MenuActive = 0;

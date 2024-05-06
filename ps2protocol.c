@@ -37,6 +37,9 @@ __xdata char lastKeyboardHID[8];
 
 uint8_t LEDDelayMs = 0;
 
+// Mouse buffer needed for handling multi-byte commands and intellimouse detection 
+__xdata uint8_t MouseBuffer[MOUSE_BUFFER_SIZE];
+
 // runs in interrupt to keep timings
 void RepeatTimer()
 {
@@ -152,6 +155,12 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				case MAP_MOUSE_BUTTON3:
 					MouseSet(2, pressed);
 					break;
+				case MAP_MOUSE_BUTTON4:
+					MouseSet(3, pressed);
+					break;
+				case MAP_MOUSE_BUTTON5:
+					MouseSet(4, pressed);
+					break;
 				}
 			}
 
@@ -208,6 +217,12 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				case MAP_MOUSE_BUTTON3:
 					MouseSet(2, pressed);
 					break;
+				case MAP_MOUSE_BUTTON4:
+					MouseSet(3, pressed);
+					break;
+				case MAP_MOUSE_BUTTON5:
+					MouseSet(4, pressed);
+					break;
 				}
 			}
 		}
@@ -224,7 +239,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						currSeg->value = (uint8_t)((int8_t)((currSeg->value + 8) >> 4) - 0x08);
 					else*/
 
-					MouseMove((int8_t)currSeg->value, 0);
+					MouseMove((int8_t)currSeg->value, 0, 0);
 
 					break;
 				case MAP_MOUSE_Y:
@@ -232,7 +247,15 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
 					else*/
 
-					MouseMove(0, (int8_t)currSeg->value);
+					MouseMove(0, (int8_t)currSeg->value, 0);
+
+					break;
+				case MAP_MOUSE_WHEEL:
+					/*if (currSeg->InputParam == 2)
+						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
+					else*/
+
+					MouseMove(0, 0, (int8_t)currSeg->value);
 
 					break;
 				}
@@ -303,8 +326,6 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 		processSeg(currSeg, descReport, report);
 		currSeg = currSeg->next;
 	}
-
-	
 
 	if (descReport->keyboardUpdated)
 	{
@@ -377,135 +398,137 @@ void HandleReceived(uint8_t port)
 		switch (ports[PORT_KEY].recvout)
 		{
 
-		// set LEDs
-		case 0xED:
-			SimonSaysSendKeyboard(KEY_ACK);
-			ports[PORT_KEY].recvstate = R_LEDS;
-			break;
-
-		// Echo
-		case 0xEE:
-			SimonSaysSendKeyboard(KEY_ECHO);
-			ports[PORT_KEY].recvstate = R_IDLE;
-			break;
-
-		// Set/Get scancode set
-		case 0xF0:
-			SimonSaysSendKeyboard(KEY_ACK);
-			ports[PORT_KEY].recvstate = R_SCANCODESET;
-			break;
-
-		// ID
-		case 0xF2:
-			SimonSaysSendKeyboard(KEY_ACK);
-			SimonSaysSendKeyboard(KEY_ID);
-			ports[PORT_KEY].recvstate = R_IDLE;
-			break;
-
-		// set repeat
-		case 0xF3:
-			SimonSaysSendKeyboard(KEY_ACK);
-			ports[PORT_KEY].recvstate = R_REPEAT;
-			break;
-
-		// Enable (TODO : actually do this)
-		case 0xF4:
-			SimonSaysSendKeyboard(KEY_ACK);
-			ports[PORT_KEY].recvstate = R_IDLE;
-			break;
-
-		// Disable (TODO : actually do this)
-		case 0xF5:
-			SimonSaysSendKeyboard(KEY_ACK);
-			TypematicDefaults();
-			ports[PORT_KEY].recvstate = R_IDLE;
-			break;
-
-		// Set Default
-		case 0xF6:
-			SimonSaysSendKeyboard(KEY_ACK);
-			TypematicDefaults();
-			ports[PORT_KEY].recvstate = R_IDLE;
-			break;
-
-		// Set All Keys whatever (TODO : Actually do this)
-		case 0xF7:
-		case 0xF8:
-		case 0xF9:
-		case 0xFA:
-			SimonSaysSendKeyboard(KEY_ACK);
-			ports[PORT_KEY].recvstate = R_IDLE;
-			break;
-
-		// Set specific Keys whatever (TODO : Actually do this)
-		case 0xFB:
-		case 0xFC:
-		case 0xFD:
-			SimonSaysSendKeyboard(KEY_ACK);
-			ports[PORT_KEY].recvstate = R_KEYLIST;
-			break;
-
-		// resend - TODO figure out how to deal with this
-		case 0xFE:
-			SimonSaysSendKeyboard(KEY_ACK);
-			break;
-
-		// reset
-		case 0xFF:
-			SimonSaysSendKeyboard(KEY_ACK);
-			TypematicDefaults();
-			SimonSaysSendKeyboard(KEY_BATCOMPLETE);
-			ports[PORT_KEY].recvstate = R_IDLE;
-			break;
-
-		// not a command byte - this is fine if we're in another sstate, otherwise we send an error
-		default:
-			switch (ports[PORT_KEY].recvstate)
-			{
-
-			case R_LEDS:
-				// TODO blinkenlights
+			// set LEDs
+			case 0xED:
 				SimonSaysSendKeyboard(KEY_ACK);
-				SetKeyboardLedStatusFromPS2(ports[PORT_KEY].recvout);
+				ports[PORT_KEY].recvstate = R_LEDS;
+				break;
+
+			// Echo
+			case 0xEE:
+				SimonSaysSendKeyboard(KEY_ECHO);
 				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 
-			case R_REPEAT:
+			// Set/Get scancode set
+			case 0xF0:
 				SimonSaysSendKeyboard(KEY_ACK);
-				// Bottom 5 bits are repeate rate
-				RepeatRate = RateConv[ports[PORT_KEY].recvout & 0x1F];
+				ports[PORT_KEY].recvstate = R_SCANCODESET;
+				break;
 
-				// top 3 bits are delay time
-				RepeatDelay = DelayConv[(ports[PORT_KEY].recvout >> 5) & 0x03];
-
+			// ID
+			case 0xF2:
+				SimonSaysSendKeyboard(KEY_ACK);
+				SimonSaysSendKeyboard(KEY_ID);
 				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 
-			case R_SCANCODESET:
+			// set repeat
+			case 0xF3:
 				SimonSaysSendKeyboard(KEY_ACK);
+				ports[PORT_KEY].recvstate = R_REPEAT;
+				break;
 
-				// if request is zero then PC is expecting us to send current scan code set number#
-				// TODO : allow changing scancode set and reporting correctly
-				if (ports[PORT_KEY].recvout == 0)
-					SimonSaysSendKeyboard(KEY_SCANCODE_2);
-
+			// Enable (TODO : actually do this)
+			case 0xF4:
+				SimonSaysSendKeyboard(KEY_ACK);
 				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 
-			case R_KEYLIST:
-				// Keep sending ACKs until we get a valid command scancode (which will be dealt with by the previous section)
-				// TODO : actually log these keys and apply their settings appropriately
-				// (not that I've ever seen any programs actually require this)
+			// Disable (TODO : actually do this)
+			case 0xF5:
+				SimonSaysSendKeyboard(KEY_ACK);
+				TypematicDefaults();
+				ports[PORT_KEY].recvstate = R_IDLE;
+				break;
+
+			// Set Default
+			case 0xF6:
+				SimonSaysSendKeyboard(KEY_ACK);
+				TypematicDefaults();
+				ports[PORT_KEY].recvstate = R_IDLE;
+				break;
+
+			// Set All Keys whatever (TODO : Actually do this)
+			case 0xF7:
+			case 0xF8:
+			case 0xF9:
+			case 0xFA:
+				SimonSaysSendKeyboard(KEY_ACK);
+				ports[PORT_KEY].recvstate = R_IDLE;
+				break;
+
+			// Set specific Keys whatever (TODO : Actually do this)
+			case 0xFB:
+			case 0xFC:
+			case 0xFD:
+				SimonSaysSendKeyboard(KEY_ACK);
+				ports[PORT_KEY].recvstate = R_KEYLIST;
+				break;
+
+			// resend - TODO figure out how to deal with this
+			case 0xFE:
 				SimonSaysSendKeyboard(KEY_ACK);
 				break;
 
-			case R_IDLE:
+			// reset
+			case 0xFF:
+				SimonSaysSendKeyboard(KEY_ACK);
+				TypematicDefaults();
+				SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+				ports[PORT_KEY].recvstate = R_IDLE;
+				break;
+
+			// not a command byte - this is fine if we're in another sstate, otherwise we send an error
 			default:
-				// this means we receieved a non-command byte when we are expecting one, send error
-				SimonSaysSendKeyboard(KEY_ERROR);
-				ports[PORT_KEY].recvstate = R_IDLE;
+				switch (ports[PORT_KEY].recvstate)
+				{
+
+					case R_LEDS:
+						// TODO blinkenlights
+						SimonSaysSendKeyboard(KEY_ACK);
+						SetKeyboardLedStatusFromPS2(ports[PORT_KEY].recvout);
+						ports[PORT_KEY].recvstate = R_IDLE;
+						break;
+
+					case R_REPEAT:
+						SimonSaysSendKeyboard(KEY_ACK);
+						// Bottom 5 bits are repeate rate
+						RepeatRate = RateConv[ports[PORT_KEY].recvout & 0x1F];
+
+						// top 3 bits are delay time
+						RepeatDelay = DelayConv[(ports[PORT_KEY].recvout >> 5) & 0x03];
+
+						ports[PORT_KEY].recvstate = R_IDLE;
+						break;
+
+					case R_SCANCODESET:
+						SimonSaysSendKeyboard(KEY_ACK);
+
+						// if request is zero then PC is expecting us to send current scan code set number#
+						// TODO : allow changing scancode set and reporting correctly
+						if (ports[PORT_KEY].recvout == 0)
+							SimonSaysSendKeyboard(KEY_SCANCODE_2);
+
+						ports[PORT_KEY].recvstate = R_IDLE;
+						break;
+
+					case R_KEYLIST:
+						// Keep sending ACKs until we get a valid command scancode (which will be dealt with by the previous section)
+						// TODO : actually log these keys and apply their settings appropriately
+						// (not that I've ever seen any programs actually require this)
+						SimonSaysSendKeyboard(KEY_ACK);
+						break;
+
+					case R_IDLE:
+					default:
+						// this means we receieved a non-command byte when we are expecting one, send error
+						SimonSaysSendKeyboard(KEY_ERROR);
+						ports[PORT_KEY].recvstate = R_IDLE;
+						break;
+				}
+
 				break;
-			}
 		}
 
 		// If we're not expecting more stuff,
@@ -521,11 +544,34 @@ void HandleReceived(uint8_t port)
 		switch (ports[PORT_KEY].recvstate)
 		{
 		case R_IDLE:
+		
+			// push command to buffer
+			memmove(MouseBuffer+1, MouseBuffer, MOUSE_BUFFER_SIZE-1);
+			MouseBuffer[0] = ports[port].recvout;
 
 			switch (ports[port].recvout)
 			{
-			case 0xE9:							// Status Request
-				// TODO: construct bytes 2 and 3 from real state
+				
+			// Set Scaling 1:1
+			case 0xE6:
+				SimonSaysSendMouse1(0xFA); // ACK
+				Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);
+				break;
+				
+			// Set Scaling 2:1
+			case 0xE7: 
+				SimonSaysSendMouse1(0xFA); // ACK
+				Ps2MouseSetScaling(MOUSE_PS2_SCALING_2X);
+				break;
+				
+			// Set Resolution (need 1 additional data byte)
+			case 0xE8: 
+				SimonSaysSendMouse1(0xFA); // ACK
+				break;
+			
+			// Status Request
+			case 0xE9:							
+				// TODO: construct bytes from real state
 				SimonSaysSendMouse1(0xFA);		// ACK
 				SimonSaysSendMouse3(0b00100000, // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
 									0x02,		// Resolution 4 counts/mm
@@ -535,7 +581,7 @@ void HandleReceived(uint8_t port)
 			// ID
 			case 0xF2:
 				SimonSaysSendMouse1(0xFA); // ACK
-				SimonSaysSendMouse1(0x00); // Standard mouse
+				SimonSaysSendMouse1((&OutputMice[MOUSE_PORT_PS2])->Ps2Type); // Mouse type
 				break;
 
 			// Enable Reporting
@@ -561,14 +607,11 @@ void HandleReceived(uint8_t port)
 				SimonSaysSendMouse1(0xFA); // ACK
 				SimonSaysSendMouse1(0xAA); // POST OK
 				SimonSaysSendMouse1(0x00); // Squeek Squeek I'm a mouse
+				Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
 				Ps2MouseSetDefaults();
 				break;
 
 			// unimplemented command
-			// TODO: implement, we already have some functions in mouse.c
-			case 0xE6: // Set Scaling 1:1
-			case 0xE7: // Set Scaling 2:1
-			case 0xE8: // Set Resolution
 			case 0xEA: // Set Stream Mode
 			case 0xEB: // Read Data
 			case 0xEC: // Reset Wrap Mode
@@ -577,11 +620,32 @@ void HandleReceived(uint8_t port)
 			case 0xF3: // Set Sample Rate
 			case 0xFE: // Resend
 			default:   // argument from command?
-
-				SimonSaysSendMouse1(0xFA); // Just smile and nod
+				if (MouseBuffer[1] == 0xE8) 
+				{
+					// previous command was set Resolution, this should be actual resolution
+					SimonSaysSendMouse1(0xFA); // ACK
+					Ps2MouseSetResolution(MouseBuffer[0]);
+				} 
+				else
+				{
+					SimonSaysSendMouse1(0xFA); // Just smile and nod
+				}
 				break;
 			}
 		}
+		
+		if (HMSettings.Intellimouse){
+			// enable intellimouse support if driver tried to to detect it
+			if (memcmp(MouseBuffer, "\x50\xF3\x64\xF3\xC8\xF3", 6) == 0)
+			{
+				Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE_3_BUTTON);
+			}
+			else if (memcmp(MouseBuffer, "\x50\xF3\xC8\xF3\xC8\xF3", 6) == 0)
+			{
+				Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE_5_BUTTON);
+			}
+		}
+		
 		// If we're not expecting more stuff,
 		// unlock the send buffer so main loop can send stuff again
 		if (ports[PORT_MOUSE].recvstate == R_IDLE)

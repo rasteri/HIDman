@@ -190,6 +190,8 @@ typedef struct _HID_LOCAL
 #define MAP_MOUSE_BUTTON1 1
 #define MAP_MOUSE_BUTTON2 2
 #define MAP_MOUSE_BUTTON3 3
+#define MAP_MOUSE_BUTTON4 4
+#define MAP_MOUSE_BUTTON5 5
 #define MAP_MOUSE_X 4
 #define MAP_MOUSE_Y 5
 #define MAP_MOUSE_WHEEL 6

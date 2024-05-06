@@ -156,6 +156,12 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				case MAP_MOUSE_BUTTON3:
 					MouseSet(2, pressed);
 					break;
+				case MAP_MOUSE_BUTTON4:
+					MouseSet(3, pressed);
+					break;
+				case MAP_MOUSE_BUTTON5:
+					MouseSet(4, pressed);
+					break;
 				}
 			}
 
@@ -211,6 +217,12 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 					break;
 				case MAP_MOUSE_BUTTON3:
 					MouseSet(2, pressed);
+					break;
+				case MAP_MOUSE_BUTTON4:
+					MouseSet(3, pressed);
+					break;
+				case MAP_MOUSE_BUTTON5:
+					MouseSet(4, pressed);
 					break;
 				}
 			}
@@ -624,7 +636,11 @@ void HandleReceived(uint8_t port)
 		// enable intellimouse support if driver tried to to detect it
 		if (memcmp(MouseBuffer, "\x50\xF3\x64\xF3\xC8\xF3", 6) == 0)
 		{
-			Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE);
+			Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE_3_BUTTON);
+		}
+		else if (memcmp(MouseBuffer, "\x50\xF3\xC8\xF3\xC8\xF3", 6) == 0)
+		{
+			Ps2MouseSetType(MOUSE_PS2_TYPE_INTELLIMOUSE_5_BUTTON);
 		}
 		
 		// If we're not expecting more stuff,

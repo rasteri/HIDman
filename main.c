@@ -409,9 +409,15 @@ void main()
 				byte2 = (X & 0xFF);
 				byte3 = (Y & 0xFF);
 
-				if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE)
+				if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE_3_BUTTON)
 				{
 					byte4 = (-Z & 0xFF);
+					SendMouse4(byte1, byte2, byte3, byte4);
+				}
+				else if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE_5_BUTTON)
+				{
+					byte4 = (-Z & 0b00001111) |    // wheel 
+					((Buttons << 1) & 0b00110000); // buttons 4 and 5					
 					SendMouse4(byte1, byte2, byte3, byte4);
 				}
 				else

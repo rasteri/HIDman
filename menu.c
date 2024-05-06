@@ -17,6 +17,8 @@
 #include "ps2.h"
 #include "data.h"
 #include "ps2protocol.h"
+#include "settings.h"
+#include "usbhidkeys.h"
 
 __xdata char SendBuffer[255];
 
@@ -119,20 +121,22 @@ void SendKeyboardBuffer()
             return;
 
         if (currchar >= 0x41 && currchar <= 0x5A)
-            while (!SendKeyboard(StatusMode == MODE_PS2 ? KEY_LSHIFT_MAKE : XT_KEY_LSHIFT_MAKE))
+            while (!SendKeyboard(
+                (FlashSettings->KeyboardMode == MODE_PS2) ? KEY_LSHIFT_MAKE : XT_KEY_LSHIFT_MAKE
+                ))
                 delay(10);
 
         while (!SendKeyboard(
-            StatusMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]
+            FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]
             ))
             delay(10);
         while (!SendKeyboard(
-             StatusMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]
+            FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]
             ))
             delay(10);
         if (currchar >= 0x41 && currchar <= 0x5A)
         {
-            while (!SendKeyboard(StatusMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK))
+            while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK))
                 delay(10);
         }
         BufferIndex++;
@@ -157,7 +161,17 @@ void Menu_Task()
     switch (menuState)
     {
     case MENU_STATE_INIT:
-        SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n1. Configure game controller mappings\n2. Log HID Data\n\nESC to exit menu\n\n");
+        SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n");
+        SendKeyboardString("1. Configure game controller mappings\n");
+        SendKeyboardString("2. Log HID Data\n");
+        SendKeyboardString("4. Advanced USB Keyboard - ");
+        if (FlashSettings->KeyboardReportMode){ SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
+        SendKeyboardString("5. Advanced USB Mouse - ");
+        if (FlashSettings->MouseReportMode) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
+        SendKeyboardString("6. Intellimouse Support - ");
+        if (FlashSettings->Intellimouse) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
+        SendKeyboardString("ESC to exit menu\n\n");
+        
         menuState = MENU_STATE_MAIN;
         menuKey = 0;
         break;
@@ -166,17 +180,36 @@ void Menu_Task()
         {
             switch (menuKey)
             {
-            case 0x1e: // 1
+            case KEY_1:
                 SendKeyboardString("Not Implemented\n");
                 menuState = MENU_STATE_INIT;
                 break;
 
-            case 0x1f: // 2
+            case KEY_2:
                 SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
                 DumpReport = 1;
                 menuState = MENU_STATE_DUMPING;
                 break;
-            case 0x29: // ESC
+
+            case KEY_4:
+                HMSettings.KeyboardReportMode ^= 1;
+                SyncSettings();
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_5:
+                HMSettings.MouseReportMode ^= 1;
+                SyncSettings();
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_6:
+                HMSettings.Intellimouse ^= 1;
+                SyncSettings();
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_ESC: // ESC
                 SendKeyboardString("Goodbye\n");
                 menuState = MENU_STATE_INIT;
                 MenuActive = 0;

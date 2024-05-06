@@ -17,19 +17,6 @@
 
 #define bit bool
 
-/* Check of Flash Operation */ 
-#define DEF_FLASH_OP_CHECK1     0xAA
-#define DEF_FLASH_OP_CHECK2     0x55  
-
-/*
- * @Note
- * The following Flash Operation Flags need to be assigned specific values before 
- * erasing or programming Flash, and to be cleared after the operations are done, 
- * which can prevent misoperation of Flash.
- */
-UINT8 Flash_Op_Check_Byte1 = 0x00;
-UINT8 Flash_Op_Check_Byte2 = 0x00;
-
 /*******************************************************************************
 * Function Name  : Flash_Op_Unlock
 * Description    : Flash��������
@@ -40,13 +27,6 @@ UINT8 Flash_Op_Check_Byte2 = 0x00;
 UINT8 Flash_Op_Unlock( UINT8 flash_type )
 {
     bit ea_sts;
-    
-    /* Check the Flash operation flags to prevent Flash misoperation. */
-    if( ( Flash_Op_Check_Byte1 != DEF_FLASH_OP_CHECK1 ) ||
-        ( Flash_Op_Check_Byte2 != DEF_FLASH_OP_CHECK2 ) )
-    {
-        return 0xFF;                                                           /* Flash Operation Flags Error */
-    }
     
     /* Disable all INTs to prevent writing GLOBAL_CFG from failing in safe mode. */
     ea_sts = EA;                                
@@ -99,11 +79,15 @@ void Flash_Op_Lock( UINT8 flash_type )
 UINT8	EraseBlock( UINT16 Addr )
 {
 	ROM_ADDR = Addr;
+
+    while (!(ROM_STATUS & bROM_ADDR_OK));
+
 	if ( ROM_STATUS & bROM_ADDR_OK ) {                                          // 操作地址有效
 		ROM_CTRL = ROM_CMD_ERASE;
 		return( ( ROM_STATUS ^ bROM_ADDR_OK ) & 0x7F );                           // 返回状态,0x00=success, 0x01=time out(bROM_CMD_TOUT), 0x02=unknown command(bROM_CMD_ERR)
 	}
-	else return( 0x40 );
+	else{ 
+        return( 0x40 );}
 }
 
 /*******************************************************************************
@@ -118,6 +102,9 @@ UINT8	ProgWord( UINT16 Addr, UINT16 Data )
 {
 	ROM_ADDR = Addr;
 	ROM_DATA = Data;
+
+    while (!(ROM_STATUS & bROM_ADDR_OK));
+
 	if ( ROM_STATUS & bROM_ADDR_OK ) {                                           // 操作地址有效
 		ROM_CTRL = ROM_CMD_PROG;
 		return( ( ROM_STATUS ^ bROM_ADDR_OK ) & 0x7F );                            // 返回状态,0x00=success, 0x01=time out(bROM_CMD_TOUT), 0x02=unknown command(bROM_CMD_ERR)
@@ -142,7 +129,7 @@ UINT8 EraseDataFlash(UINT16 Addr)
     }
     status = EraseBlock(Addr);
     Flash_Op_Lock( bDATA_WE );
-    
+
     return status;
 }
 

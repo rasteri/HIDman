@@ -15,6 +15,7 @@
 #include "pwm.h"
 #include "keyboardled.h"
 #include "dataflash.h"
+#include "settings.h"
 
 #if !defined(BOARD_MICRO)
 	#define OPT_SERIAL_MOUSE
@@ -32,8 +33,7 @@
 	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
 #endif
 
-// persistent status mode
-uint16_t *FlashStatusMode = (uint16_t*) 0xF000;
+
 
 
 // blue LED on by default
@@ -47,7 +47,7 @@ void mTimer0Interrupt(void) __interrupt(1)
 {
 	// Reload to 60KHz
 
-	switch (StatusMode) {
+	switch (FlashSettings->KeyboardMode) {
 		case (MODE_PS2):
 			PS2ProcessPort(PORT_KEY);
 			break;
@@ -131,27 +131,14 @@ void inputProcess() {
 	else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME) {
 		// check to see if unpressed
 		if (!butstate) {
+
 			// cycle through modes on unpress of button
-			StatusMode++;
-			if (StatusMode > 2)
-				StatusMode = 0;
+			HMSettings.KeyboardMode++;
+			if (HMSettings.KeyboardMode > 2)
+				HMSettings.KeyboardMode = 0;
+			SyncSettings();
 
-			if(EraseDataFlash(0xF000) == 0){
-				WriteDataFlash(0xF000, &StatusMode, 2);
-			}
 
-			switch (StatusMode){
-				case MODE_PS2:
-					LEDStatus = 0x04;
-				break;
-				case MODE_XT:
-					LEDStatus = 0x02;
-				break;
-				case MODE_AMSTRAD:
-					LEDStatus = 0x01;
-				break;
-
-			}
 
 			// start the counter
 			gpiodebounce = -DEBOUNCETIME;
@@ -182,6 +169,19 @@ void inputProcess() {
 	// Debouncing negative edge, increment value - will reset when zero is reached
 	else if (gpiodebounce < 0) {
 		gpiodebounce++;
+	}
+
+	switch (FlashSettings->KeyboardMode){
+		case MODE_PS2:
+			LEDStatus = 0x04;
+		break;
+		case MODE_XT:
+			LEDStatus = 0x02;
+		break;
+		case MODE_AMSTRAD:
+			LEDStatus = 0x01;
+		break;
+
 	}
 
 }
@@ -377,7 +377,7 @@ void main()
 	uint8_t Buttons;
 	uint8_t PrevButtons = 0;
 
-	StatusMode = *FlashStatusMode;
+	InitSettings();
 
 	while (1)
 	{

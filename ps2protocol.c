@@ -21,6 +21,7 @@
 #include "pwm.h"
 #include "keyboardled.h"
 #include "xt.h"
+#include "settings.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
@@ -35,8 +36,6 @@ __xdata int16_t RepeatRate = -1000;
 __xdata char lastKeyboardHID[8];
 
 uint8_t LEDDelayMs = 0;
-
-uint16_t StatusMode = MODE_PS2;
 
 // runs in interrupt to keep timings
 void RepeatTimer()
@@ -96,7 +95,7 @@ void HandleRepeats()
 	}
 	else if (RepeatState < RepeatRate)
 	{
-		SendKeyboard( StatusMode == MODE_PS2 ? HIDtoPS2_Make[RepeatKey] : HIDtoXT_Make[RepeatKey]);
+		SendKeyboard( FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[RepeatKey] : HIDtoXT_Make[RepeatKey]);
 		SetRepeatState(-1);
 	}
 }
@@ -321,13 +320,13 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 					// Make
 					if (c <= 0x67)
 					{
-						SendKeyboard(StatusMode == MODE_PS2 ? HIDtoPS2_Make[c] : HIDtoXT_Make[c]);
+						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[c] : HIDtoXT_Make[c]);
 						RepeatKey = c;
 						SetRepeatState(1);
 					}
 					else if (c >= 0xE0 && c <= 0xE7)
 					{
-						SendKeyboard(StatusMode == MODE_PS2 ? ModtoPS2_MAKE[c - 0xE0] : ModtoXT_MAKE[c - 0xE0]);
+						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? ModtoPS2_MAKE[c - 0xE0] : ModtoXT_MAKE[c - 0xE0]);
 					}
 				}
 			}
@@ -349,11 +348,11 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 						if (c == 0x48)
 							continue;
 
-						SendKeyboard(StatusMode == MODE_PS2 ? HIDtoPS2_Break[c] : HIDtoXT_Break[c]);
+						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[c] : HIDtoXT_Break[c]);
 					}
 					else if (c >= 0xE0 && c <= 0xE7)
 					{
-						SendKeyboard(StatusMode == MODE_PS2 ? ModtoPS2_BREAK[c - 0xE0] : ModtoXT_BREAK[c - 0xE0]);
+						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? ModtoPS2_BREAK[c - 0xE0] : ModtoXT_BREAK[c - 0xE0]);
 					}
 				}
 			}

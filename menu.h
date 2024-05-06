@@ -10,7 +10,6 @@
 void Menu_Press_Key(uint8_t key);
 extern __xdata bool MenuActive;
 extern bool DumpReport;
-extern uint8_t menuState;
 
 extern __xdata char SendBuffer[];
 

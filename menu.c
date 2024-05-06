@@ -165,6 +165,7 @@ void Menu_Task()
         SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n");
         SendKeyboardString("1. Configure game controller mappings\n");
         SendKeyboardString("2. Log HID Data\n");
+        SendKeyboardString("3. Dump PS2 mouse status\n");
         SendKeyboardString("4. Advanced USB Keyboard - ");
         if (FlashSettings->KeyboardReportMode){ SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
         SendKeyboardString("5. Advanced USB Mouse - ");
@@ -192,6 +193,21 @@ void Menu_Task()
                 menuState = MENU_STATE_DUMPING;
                 break;
 
+            case KEY_3:
+				SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
+				SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
+				SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
+				SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
+				SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
+				SendKeyboardString("\nCommand buffer\n");
+				for (UINT8 i=0; i<MOUSE_BUFFER_SIZE; i++) {
+					if (!(i & 0x000F))
+						SendKeyboardString("\n");
+					SendKeyboardString("%02X ", MouseBuffer[i]);
+				}
+                menuState = MENU_STATE_INIT;
+                break;
+
             case KEY_4:
                 HMSettings.KeyboardReportMode ^= 1;
                 SyncSettings();
@@ -211,20 +227,6 @@ void Menu_Task()
                 break;
 
             case KEY_ESC: // ESC
-            case 0x20: // 3
-				SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
-				SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
-				SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
-				SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
-				SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
-				SendKeyboardString("\nCommand buffer\n");
-				for (UINT8 i=0; i<MOUSE_BUFFER_SIZE; i++) {
-					if (!(i & 0x000F))
-						SendKeyboardString("\n");
-					SendKeyboardString("%02X ", MouseBuffer[i]);
-				}
-                menuState = MENU_STATE_INIT;
-                break;
                 SendKeyboardString("Goodbye\n");
                 menuState = MENU_STATE_INIT;
                 MenuActive = 0;

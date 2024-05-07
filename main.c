@@ -17,7 +17,7 @@
 #include "dataflash.h"
 #include "settings.h"
 
-#if !defined(BOARD_MICRO)
+#if defined(BOARD_AXP)
 	#define OPT_SERIAL_MOUSE
 #endif
 
@@ -223,6 +223,14 @@ void EveryMillisecond() {
 	} else {
 #if defined(BOARD_MICRO)
 		P2 |= 0b00100000;
+#elif defined (BOARD_PS2)
+		P0 |= 0b01110000;
+		if (LEDStatus & 0x01)
+			P0 &= ~0b00010000;
+		if (LEDStatus & 0x02)
+			P0 &= ~0b00100000;
+		if (LEDStatus & 0x04)
+			P0 &= ~0b01000000;
 #else
 			SetPWM1Dat(0x00);
 			SetPWM2Dat(0x00);
@@ -326,6 +334,33 @@ void main()
 	PORT_CFG |= bP2_OC;	  // open collector
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00100000;	  // LED off by default (i.e. high)
+
+#elif defined(BOARD_PS2) // Pinouts for old PS2 version
+
+	//port0 setup
+	P0_DIR = 0b01110000; // 456 are red-green-blue LEDs
+	PORT_CFG = bP0_OC;	 // Push-pull
+	P0_PU = 0x00;		 // no pullups
+	P0 = 0b01110000;	 // default pin states
+
+	//port2 setup
+	P2_DIR = 0b00000011; // 2.0/2.1 are PS2 outputs
+	PORT_CFG |= bP2_OC;	 // open collector
+	P2_PU = 0x00;		 // no pullups
+	P3 = 0b00000011;	 // default pin states
+
+	//port3 setup
+	P3_DIR = 0b11111100; // 234567 are PS2 outputs, 1 is UART0 TXD
+	PORT_CFG |= bP3_OC;	 // open collector
+	P3_PU = 0b00000001; // pullup on 1 for TXD
+	P3 = 0b11111100;	 // default pin states
+
+	//port4 setup
+	P4_DIR = 0b00000000; // 4.6 is SWITCH
+	P4_PU = 0b01000000;	 // pullup on switch
+	P4_OUT = 0b00000000;
+
+
 #else					  // Default pinouts (HIDman-AXD, HIDman-mini)
 	//port0 setup
 	P0_DIR = 0b11101010; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host), 0.1 is RTS (i.e. CTS on host)
@@ -342,7 +377,7 @@ void main()
 	//port3 setup
 	P3_DIR = 0b11100010; // 5,6,7 are PS2 outputs, 1 is UART0 TXD
 	PORT_CFG |= bP3_OC;	 // open collector
-	P3_PU = 0x00;		 // no pullups
+	P3_PU = 0b00000001; // pullup on 1 for TXD
 	P3 = 0b11100010;	 // default pin states
 
 	//port4 setup
@@ -359,7 +394,7 @@ void main()
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
 
-#if !defined(BOARD_MICRO)
+#if defined(BOARD_AXP)
 	testintsizes();
 	printf("Ready\n");
 

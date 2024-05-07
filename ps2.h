@@ -16,18 +16,19 @@
 		SBIT(MOUSE_CLOCK, 0x90, 6);
 	#endif
 	SBIT(MOUSE_DATA, 0x90, 5);
-#elsif defined(BOARD_PS2)
+#elif defined(BOARD_PS2)
 	SBIT(KEY_CLOCK, 0xB0, 4);
 	SBIT(KEY_DATA, 0xB0, 5);
 
-	SBIT(KEYAUX_CLOCK, 0xB0, 8);
-	SBIT(KEYAUX_DATA, 0xB0, 2);
+	SBIT(KEYAUX_CLOCK, 0xB0, 6);
+	SBIT(KEYAUX_DATA, 0xB0, 7);
 
 	SBIT(MOUSE_CLOCK, 0xA0, 0);
 	SBIT(MOUSE_DATA, 0xA0, 1);
 
-	SBIT(MOUSEAUX_CLOCK, 0xB0, 6);
-	SBIT(MOUSEAUX_DATA, 0xB0, 7);
+	SBIT(MOUSEAUX_CLOCK, 0xB0, 2);
+	SBIT(MOUSEAUX_DATA, 0xB0, 3);
+
 #else // Default pinouts (HIDman-AXD, HIDman-mini)
 	SBIT(KEY_CLOCK, 0x80, 5);
 	SBIT(KEY_DATA, 0x80, 3);
@@ -158,15 +159,10 @@ void PS2ProcessPort(uint8_t port);
 			MOUSEAUX_CLOCK = val; \
 	}\
 
-#if defined(BOARD_MICRO)
 
-#define WritePS2Data(port, val)     \
-	if (port == PORT_KEY)        \
-			KEY_DATA = val;          \
-	else if (port == PORT_MOUSE) \
-			MOUSE_DATA = val;
-#else
 
+
+#if defined(BOARD_AXP)
 //P4 dir should be 1 (output) when low, 0 (input) when high
 #define WritePS2Data(port, val)     \
 	if (port == PORT_KEY){        \
@@ -183,7 +179,18 @@ void PS2ProcessPort(uint8_t port);
 		}							\
 		MOUSEAUX_DATA = val;\
 	}
+#else
+#define WritePS2Data(port, val)     \
+	if (port == PORT_KEY){        \
+			KEY_DATA = val;          \
+			KEYAUX_DATA = val;}		\
+	else if (port == PORT_MOUSE){ \
+			MOUSE_DATA = val;\
+			MOUSEAUX_DATA = val; }
+
 #endif
+
+
 
 #define S_INIT 0
 #define S_IDLE 1

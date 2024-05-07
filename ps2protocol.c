@@ -287,9 +287,11 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 
 	uint32_t tmp;
 
-	// Light RED LED for a while
+	// Turn off LEDs for a while
 #if defined(BOARD_MICRO)
 	P2 &= ~0b00100000;
+#elif defined(BOARD_PS2)
+	P0 |= 0b01110000;
 #else
 	SetPWM1Dat(0x00);
 	SetPWM2Dat(0x00);

@@ -1,13 +1,24 @@
 # HIDman
-## USB HID to PS/2 converter
+## USB HID to XT / AT / PS/2 / Serial converter
 
-This is a project to develop a device to adapt USB HID devices (keyboards, mice, joysticks) to work on PCs that support PS/2 devices.
+HIDman is an open source device to allow the use of modern USB keyboards and mice on legacy PCs.
 
-Currently only PS/2 computers are supported but plans are underway to support computers that require serial mice and XT keyboards.
+Peripherals that support legacy PCs are becoming hard to find, especially for the very first PCs. This project aims to provide a simple cheap solution that will cover everything from the original IBM 5150 PC all the way up to modern computers that have PS/2 ports.
 
-As a bonus, it allows you to connect a USB game controller and have it emulate a PS/2 keyboard and mouse - this allows you to use a gamepad to play games that never had joystick support.
+
+## Features
+
+* (should) Support the majority of standard USB keyboards and mice, including ones that use wireless dongles.
+* Also supports (some) USB Game controllers - buttons/axes are mapped to keypresses or mouse actions
+* Can emulate the following devices :
+* * OG IBM PC / XT Keyboard
+  * AT / PS/2 Keyboard
+  * Serial Mouse (with optional Logitech-style 3rd button)
+  * PS/2 Mouse (with optional Intellipoint-style scroll wheel and up to 5 buttons)
+* Driverless configuration menu - change settings just by opening a text editor
 
 ## Technical description
+
 
 The HIDman is based around the CH559 from WCH, a remarkably flexible chip with **two** USB HOST ports. This makes it ideal for our purposes.
 

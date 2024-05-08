@@ -24,15 +24,16 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="2.9540685"
-     inkscape:cx="307.03418"
-     inkscape:cy="495.5877"
+     inkscape:zoom="2.0888419"
+     inkscape:cx="229.55304"
+     inkscape:cy="521.34153"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer1"
+     showguides="true" />
   <defs
      id="defs2">
     <rect
@@ -71,109 +72,102 @@
        width="180.00405"
        height="53.857596"
        id="rect3131" />
+    <rect
+       x="218.00443"
+       y="505.06616"
+       width="194.30831"
+       height="135.745"
+       id="rect9075-1" />
   </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#000000;stroke:none;stroke-width:0.0363669;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+       style="fill:#000000;stroke:none;stroke-width:0.0317499;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
        id="rect184"
-       width="55"
-       height="40"
-       x="54.71249"
-       y="108.92514"
-       ry="5.4309737e-14" />
+       width="46"
+       height="36.453377"
+       x="54.45916"
+       y="109.81179"
+       ry="4.9494334e-14" />
     <text
        xml:space="preserve"
-       transform="scale(0.26458333)"
-       id="text3129"
-       style="line-height:1.25;font-family:Arial;font-size:15.11810017px;letter-spacing:0px;word-spacing:0px;-inkscape-font-specification:'Arial, Bold';font-weight:bold;white-space:pre;shape-inside:url(#rect3131);fill:#ffffff" />
-    <text
-       xml:space="preserve"
-       transform="matrix(0.26458333,0,0,0.26458333,-4.1648474,-2.2799716)"
-       id="text3965"
-       style="font-weight:bold;font-size:15.1181px;line-height:0.8;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect3967)"><tspan
-         x="229.79297"
-         y="435.57159"
-         id="tspan9119"><tspan
-           style="fill:#ffffff"
-           id="tspan9115">Keyboard Modes :</tspan><tspan
-           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
-           id="tspan9117"> </tspan></tspan></text>
-    <g
-       id="g9071"
-       transform="translate(0.3134801,-0.26869723)">
-      <circle
-         style="fill:#00a5ff;fill-opacity:1;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
-         id="path4747"
-         cx="58.383266"
-         cy="119.77496"
-         r="1.7633772" />
-      <circle
-         style="fill:#00ff00;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
-         id="path4747-3"
-         cx="58.383266"
-         cy="124.61794"
-         r="1.7633772" />
-      <circle
-         style="fill:#ff0000;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
-         id="path4747-3-3"
-         cx="58.383266"
-         cy="129.46091"
-         r="1.7633772" />
-      <text
-         xml:space="preserve"
-         transform="matrix(0.26458333,0,0,0.26458333,-0.44332781,1.0133207)"
-         id="text7051"
-         style="font-weight:bold;font-size:15.1181px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect7053)"><tspan
-           x="235.53711"
-           y="453.57473"
-           id="tspan9123"><tspan
-             style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
-             id="tspan9121">PS/2 &amp; AT
-</tspan></tspan><tspan
-           x="235.53711"
-           y="472.47234"
-           id="tspan9127"><tspan
-             style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
-             id="tspan9125">XT
-</tspan></tspan><tspan
-           x="235.53711"
-           y="491.36995"
-           id="tspan9131"><tspan
-             style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
-             id="tspan9129">Other</tspan></tspan></text>
-    </g>
-    <text
-       xml:space="preserve"
-       transform="matrix(0.26458333,0,0,0.26458333,-6.7407347,13.247368)"
-       id="text9008"
-       style="font-weight:bold;font-size:9.44882px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect9010)"><tspan
-         x="240.08594"
-         y="387.90755"
-         id="tspan9135"><tspan
-           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
-           id="tspan9133">(Press button to change)</tspan></tspan></text>
-    <text
-       xml:space="preserve"
-       transform="matrix(0.26458333,0,0,0.26458333,-0.35826297,-0.26869723)"
-       id="text9073"
-       style="font-weight:bold;font-size:9.44882px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect9075)"><tspan
+       transform="matrix(0.26458333,0,0,0.26458333,-1.6085952,-22.770871)"
+       id="text9073-1"
+       style="font-weight:bold;font-size:9.44882px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect9075-1);display:inline"><tspan
          x="218.00391"
          y="518.6841"
-         id="tspan9143"><tspan
-           style="font-size:15.1181px;-inkscape-font-specification:'Arial Bold'"
-           id="tspan9137">To enter menu:</tspan><tspan
+         id="tspan698"><tspan
            style="font-size:15.1181px"
-           id="tspan9139"> </tspan><tspan
-           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
-           id="tspan9141">
+           id="tspan694">Keyboard Modes :</tspan><tspan
+           style="fill:#ffffff"
+           id="tspan696">
 </tspan></tspan><tspan
          x="218.00391"
          y="532.47512"
-         id="tspan9147"><tspan
-           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
-           id="tspan9145">Start a text editor and hold button for 3sec</tspan></tspan></text>
+         id="tspan702"><tspan
+           style="font-weight:normal;-inkscape-font-specification:Arial"
+           id="tspan700">(Press button to change)
+</tspan></tspan><tspan
+         x="218.00391"
+         y="549.39278"
+         id="tspan706"><tspan
+           style="font-size:15.1181px"
+           id="tspan704">•    PS/2 &amp; AT
+</tspan></tspan><tspan
+         x="218.00391"
+         y="568.29043"
+         id="tspan710"><tspan
+           style="font-size:15.1181px"
+           id="tspan708">•    XT
+</tspan></tspan><tspan
+         x="218.00391"
+         y="587.18807"
+         id="tspan714"><tspan
+           style="font-size:15.1181px"
+           id="tspan712">•    Other
+</tspan></tspan><tspan
+         x="218.00391"
+         y="606.08571"
+         id="tspan718">To enter menu : <tspan
+   style="font-size:15.1181px"
+   id="tspan716">
+</tspan></tspan><tspan
+         x="218.00391"
+         y="619.87673"
+         id="tspan720">Start a text editor (eg Notepad/edit/cat)
+</tspan><tspan
+         x="218.00391"
+         y="631.68776"
+         id="tspan724">Hold button for 3sec<tspan
+   style="font-weight:normal;-inkscape-font-specification:Arial"
+   id="tspan722">
+</tspan></tspan></text>
+    <g
+       id="g9071"
+       transform="translate(-0.49261157,1.1643546)">
+      <circle
+         style="fill:#00a5ff;fill-opacity:1;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+         id="path4747"
+         cx="63.829983"
+         cy="119.57904"
+         r="1.7633772"
+         transform="translate(-5.2875614,0.41709462)" />
+      <circle
+         style="fill:#00ff00;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+         id="path4747-3"
+         cx="63.845699"
+         cy="124.61002"
+         r="1.7633772"
+         transform="translate(-5.2875614,0.41709462)" />
+      <circle
+         style="fill:#ff0000;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+         id="path4747-3-3"
+         cx="63.835583"
+         cy="129.64005"
+         r="1.7633772"
+         transform="translate(-5.2875614,0.41709462)" />
+    </g>
   </g>
 </svg>

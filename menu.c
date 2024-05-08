@@ -109,6 +109,18 @@ uint8_t sendBufferState = SEND_STATE_IDLE;
     } while (reEnter);
 }*/
 
+void PressKey(uint8_t currchar) {
+    while (!SendKeyboard(
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]
+        ));
+}
+
+void ReleaseKey(uint8_t currchar) {
+    while (!SendKeyboard(
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]
+        ));
+}
+
 void SendKeyboardBuffer()
 {
     uint8_t currchar;
@@ -118,27 +130,26 @@ void SendKeyboardBuffer()
     {
         currchar = SendBuffer[BufferIndex];
 
-        if (!currchar)
+        if (!currchar){
             return;
+        }
 
+        // capitals, hold shift first
         if (currchar >= 0x41 && currchar <= 0x5A)
             while (!SendKeyboard(
                 (FlashSettings->KeyboardMode == MODE_PS2) ? KEY_LSHIFT_MAKE : XT_KEY_LSHIFT_MAKE
-                ))
-                delay(10);
+                ));
 
-        while (!SendKeyboard(
-            FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]
-            ))
-            delay(10);
-        while (!SendKeyboard(
-            FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]
-            ))
-            delay(10);
+        // press the key
+        PressKey(currchar);
+
+        // release the key
+        ReleaseKey(currchar);
+
+        // release shift
         if (currchar >= 0x41 && currchar <= 0x5A)
         {
-            while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK))
-                delay(10);
+            while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK));
         }
         BufferIndex++;
     }
@@ -157,22 +168,32 @@ void Menu_Press_Key(uint8_t key)
     menuKey = key;
 }
 
+void YesNo(bool x){
+    if (x) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
+}
+
 void Menu_Task()
 {
     switch (menuState)
     {
     case MENU_STATE_INIT:
         SendKeyboardString("\n\nHIDMAN v0.1 Main Menu\n\n");
-        SendKeyboardString("1. Configure game controller mappings\n");
-        SendKeyboardString("2. Log HID Data\n");
-        SendKeyboardString("3. Dump PS2 mouse status\n");
-        SendKeyboardString("4. Advanced USB Keyboard - ");
-        if (FlashSettings->KeyboardReportMode){ SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
-        SendKeyboardString("5. Advanced USB Mouse - ");
-        if (FlashSettings->MouseReportMode) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
-        SendKeyboardString("6. Intellimouse Support - ");
-        if (FlashSettings->Intellimouse) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
+        SendKeyboardString("1. Adv.Keyboard - ");
+        YesNo(FlashSettings->KeyboardReportMode);
+
+        SendKeyboardString("2. Adv.Mouse - ");
+        YesNo(FlashSettings->MouseReportMode);
+
+        SendKeyboardString("3. Intellimouse - ");
+        YesNo(FlashSettings->Intellimouse);
+
+        SendKeyboardString("\n8. Log HID Data\n");
+        SendKeyboardString("9. Dump PS2 mouse status\n");
+
         SendKeyboardString("ESC to exit menu\n\n");
+
+        //SendKeyboardString("abababababababababababababababab"); // 32
+        //SendKeyboardString("abababababababababababababababababababababababababababababababab"); // 64
         
         menuState = MENU_STATE_MAIN;
         menuKey = 0;
@@ -182,18 +203,32 @@ void Menu_Task()
         {
             switch (menuKey)
             {
+
             case KEY_1:
-                SendKeyboardString("Not Implemented\n");
+                HMSettings.KeyboardReportMode ^= 1;
+                SyncSettings();
                 menuState = MENU_STATE_INIT;
                 break;
 
             case KEY_2:
+                HMSettings.MouseReportMode ^= 1;
+                SyncSettings();
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_3:
+                HMSettings.Intellimouse ^= 1;
+                SyncSettings();
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_8:
                 SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
                 DumpReport = 1;
                 menuState = MENU_STATE_DUMPING;
                 break;
 
-            case KEY_3:
+            case KEY_9:
 				SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
 				SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
 				SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
@@ -208,23 +243,6 @@ void Menu_Task()
                 menuState = MENU_STATE_INIT;
                 break;
 
-            case KEY_4:
-                HMSettings.KeyboardReportMode ^= 1;
-                SyncSettings();
-                menuState = MENU_STATE_INIT;
-                break;
-
-            case KEY_5:
-                HMSettings.MouseReportMode ^= 1;
-                SyncSettings();
-                menuState = MENU_STATE_INIT;
-                break;
-
-            case KEY_6:
-                HMSettings.Intellimouse ^= 1;
-                SyncSettings();
-                menuState = MENU_STATE_INIT;
-                break;
 
             case KEY_ESC: // ESC
                 SendKeyboardString("Goodbye\n");

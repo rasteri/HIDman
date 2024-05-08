@@ -12,6 +12,7 @@
 #include "defs.h"
 #include "xt.h"
 
+uint16_t ratelimit = 0;
 
 uint8_t oldstate = 0;
 void XTProcessPort()
@@ -44,9 +45,14 @@ void XTProcessPort()
 			// if host is not inhibiting (i.e. not pulling clock low)
 			if (ReadPS2Clock(PORT_KEY))
 			{
-				//if buffer not empty
-				if (ports[PORT_KEY].sendBuffEnd != ports[PORT_KEY].sendBuffStart)
+				if (ports[PORT_KEY].rateLimit > 0) ports[PORT_KEY].rateLimit--;
+
+				//if ratelimiter is ok and buffer not empty
+				if (ports[PORT_KEY].rateLimit == 0 && ports[PORT_KEY].sendBuffEnd != ports[PORT_KEY].sendBuffStart)
 				{
+
+					ports[PORT_KEY].rateLimit = XT_RATE_LIMIT;
+
 					chunk = ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffStart];
 					ports[PORT_KEY].data = chunk[ports[PORT_KEY].bytenum + 1];
 					//DEBUG_OUT("Consuming %x %x %x %x\n", ports[PORT_KEY].sendBuffStart, ports[PORT_KEY].sendBuffEnd, chunk[0], ports[PORT_KEY].data);

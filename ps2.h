@@ -6,6 +6,11 @@
 #define PORT_KEY 0
 #define PORT_MOUSE 1
 
+// increase to reduce maximum rate bytes can be sent
+// units are in 60khz
+#define PS2_RATE_LIMIT 0
+#define XT_RATE_LIMIT 1000
+
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
 	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
@@ -71,6 +76,8 @@ typedef struct ps2port
 	uint8_t sendDisabled;
 
 	uint8_t lastByte;
+
+	uint16_t rateLimit;
 
 	// ring buffer (pointers to chunks)
 	uint8_t sendBuffStart;

@@ -16,7 +16,7 @@
 #include "ps2.h"
 #include "data.h"
 #include "ps2protocol.h"
-
+#include "settings.h"
 
 
 __xdata ps2port ports[] = {
@@ -35,6 +35,8 @@ __xdata ps2port ports[] = {
 		0, //sendDisabled
 
 		0, // lastByte
+
+		0, // rateLimit
 
 		0, //sendBuffStart
 		0  //sendBuffEnd
@@ -56,6 +58,8 @@ __xdata ps2port ports[] = {
 		0, //sendDisabled
 
 		0, // lastByte
+
+		0, // rateLimit
 
 		0, //sendBuffStart
 		0  //sendBuffEnd
@@ -103,7 +107,6 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 
 bool SendKeyboard(const uint8_t *chunk)
 {
-
 	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 
 	if (!ports[PORT_KEY].sendDisabled &&										 // send disabled by timer task, better not step on its toes
@@ -155,10 +158,14 @@ void PS2ProcessPort(uint8_t port)
 			}
 			else
 			{
+				if (ports[port].rateLimit) ports[port].rateLimit--;
 
+				//if rateLimit is ok and buffer not empty
 				//if buffer not empty
 				if (ports[port].sendBuffEnd != ports[port].sendBuffStart)
 				{
+					ports[port].rateLimit = PS2_RATE_LIMIT;
+
 					if (port == PORT_KEY)
 					{
 						chunk = ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffStart];

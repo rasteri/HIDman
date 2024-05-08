@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   sodipodi:docname="label.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="2.9540685"
+     inkscape:cx="307.03418"
+     inkscape:cy="495.5877"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="218.00443"
+       y="505.06616"
+       width="190.58462"
+       height="42.314524"
+       id="rect9075" />
+    <rect
+       x="240.08519"
+       y="379.39684"
+       width="221.89329"
+       height="25.851646"
+       id="rect9010" />
+    <rect
+       x="235.53722"
+       y="439.95672"
+       width="130.2157"
+       height="99.576712"
+       id="rect7053" />
+    <rect
+       x="216.65036"
+       y="498.29583"
+       width="185.50687"
+       height="57.209236"
+       id="rect5525" />
+    <rect
+       x="229.79241"
+       y="425.35533"
+       width="191.49367"
+       height="142.90216"
+       id="rect3967" />
+    <rect
+       x="220.21773"
+       y="452.88254"
+       width="180.00405"
+       height="53.857596"
+       id="rect3131" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#000000;stroke:none;stroke-width:0.0363669;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+       id="rect184"
+       width="55"
+       height="40"
+       x="54.71249"
+       y="108.92514"
+       ry="5.4309737e-14" />
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text3129"
+       style="line-height:1.25;font-family:Arial;font-size:15.11810017px;letter-spacing:0px;word-spacing:0px;-inkscape-font-specification:'Arial, Bold';font-weight:bold;white-space:pre;shape-inside:url(#rect3131);fill:#ffffff" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,-4.1648474,-2.2799716)"
+       id="text3965"
+       style="font-weight:bold;font-size:15.1181px;line-height:0.8;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect3967)"><tspan
+         x="229.79297"
+         y="435.57159"
+         id="tspan9119"><tspan
+           style="fill:#ffffff"
+           id="tspan9115">Keyboard Modes :</tspan><tspan
+           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+           id="tspan9117"> </tspan></tspan></text>
+    <g
+       id="g9071"
+       transform="translate(0.3134801,-0.26869723)">
+      <circle
+         style="fill:#00a5ff;fill-opacity:1;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+         id="path4747"
+         cx="58.383266"
+         cy="119.77496"
+         r="1.7633772" />
+      <circle
+         style="fill:#00ff00;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+         id="path4747-3"
+         cx="58.383266"
+         cy="124.61794"
+         r="1.7633772" />
+      <circle
+         style="fill:#ff0000;stroke:none;stroke-width:0.0415569;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+         id="path4747-3-3"
+         cx="58.383266"
+         cy="129.46091"
+         r="1.7633772" />
+      <text
+         xml:space="preserve"
+         transform="matrix(0.26458333,0,0,0.26458333,-0.44332781,1.0133207)"
+         id="text7051"
+         style="font-weight:bold;font-size:15.1181px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect7053)"><tspan
+           x="235.53711"
+           y="453.57473"
+           id="tspan9123"><tspan
+             style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+             id="tspan9121">PS/2 &amp; AT
+</tspan></tspan><tspan
+           x="235.53711"
+           y="472.47234"
+           id="tspan9127"><tspan
+             style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+             id="tspan9125">XT
+</tspan></tspan><tspan
+           x="235.53711"
+           y="491.36995"
+           id="tspan9131"><tspan
+             style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+             id="tspan9129">Other</tspan></tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,-6.7407347,13.247368)"
+       id="text9008"
+       style="font-weight:bold;font-size:9.44882px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect9010)"><tspan
+         x="240.08594"
+         y="387.90755"
+         id="tspan9135"><tspan
+           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+           id="tspan9133">(Press button to change)</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,-0.35826297,-0.26869723)"
+       id="text9073"
+       style="font-weight:bold;font-size:9.44882px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect9075)"><tspan
+         x="218.00391"
+         y="518.6841"
+         id="tspan9143"><tspan
+           style="font-size:15.1181px;-inkscape-font-specification:'Arial Bold'"
+           id="tspan9137">To enter menu:</tspan><tspan
+           style="font-size:15.1181px"
+           id="tspan9139"> </tspan><tspan
+           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+           id="tspan9141">
+</tspan></tspan><tspan
+         x="218.00391"
+         y="532.47512"
+         id="tspan9147"><tspan
+           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+           id="tspan9145">Start a text editor and hold button for 3sec</tspan></tspan></text>
+  </g>
+</svg>

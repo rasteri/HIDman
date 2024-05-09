@@ -33,17 +33,19 @@
 	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
 #endif
 
+/*void WDogInterrupt(void) __interrupt (INT_NO_WDOG) __using (1) {
 
+}*/
 
 
 // blue LED on by default
 uint8_t LEDStatus = 0x04;
 
-void mTimer2Interrupt(void) __interrupt(5);
+void mTimer2Interrupt(void) __interrupt(INT_NO_TMR2);
 
 // timer should run at 48MHz divided by (0xFFFF - (TH0TL0))
 // i.e. 60khz
-void mTimer0Interrupt(void) __interrupt(1)
+void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 {
 	// Reload to 60KHz
 
@@ -304,8 +306,16 @@ void testintsizes(){
 
 void main()
 {
+	bool WatchdogReset = 0;
+
+	// Watchdog happened, go to "safe mode"
+	if (!(PCON & bRST_FLAG0 && (PCON & bRST_FLAG1))){
+		WatchdogReset = 1;
+	}
 
 	InitSystem();
+
+	WDOG_COUNT = 0x00;
 
 	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
 	InitPWM1(1);   //PWM1 initialization, active low
@@ -414,11 +424,15 @@ void main()
 	uint8_t PrevButtons = 0;
 	MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
 
-	InitSettings();
+	if (WatchdogReset) DEBUG_OUT("Watchdog reset detected, entering safemode\n");
+
+	InitSettings(WatchdogReset);
 
 	while (1)
 	{
-
+		// reset watchdog
+		WDOG_COUNT = 0x00;
+		
 		if (MenuActive)
 			Menu_Task();
 

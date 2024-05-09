@@ -18,6 +18,8 @@
 #include "task.h"
 
 #include "trace.h"
+#include "defs.h"
+#include "util.h"
 
 static UINT8 volatile s_5MsCounter = 0;
 
@@ -103,7 +105,6 @@ void ProcessUsbHostPort()
 		
 		InterruptProcessRootHubPort(0);
 	}
-
 	if (s_CheckUsbPort1)
 	{
 		s_CheckUsbPort1 = FALSE;

@@ -30,5 +30,7 @@ typedef struct Settings {
 
 extern __xdata Settings HMSettings;
 
+void InitSettings(bool SafeMode);
+
 #endif
 

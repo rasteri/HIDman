@@ -28,6 +28,8 @@ void CfgFsys()
 
 	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
 
+	GLOBAL_CFG |= bWDOG_EN;
+
 #if 1
 	//����ϵͳʱ��48MHz
 	CLOCK_CFG |= 6; 															  
@@ -136,10 +138,15 @@ void mDelayuS( UINT16 n )  // ��uSΪ��λ��ʱ
 *******************************************************************************/
 void	mDelaymS( UINT16 n )                                                  // ��mSΪ��λ��ʱ
 {
+	// reset watchdog, as this function is only used by USB routines that sometimes take a while to return
+	WDOG_COUNT = 0x00;
+	
 	while ( n ) 
 	{
 		mDelayuS( 1000 );
 		-- n;
 	}
+
+	WDOG_COUNT = 0x00;
 }
 

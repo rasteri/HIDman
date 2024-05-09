@@ -1431,14 +1431,16 @@ void DealUsbPort(void) //main function should use it at least 500ms
 	if (s == ERR_USB_CONNECT)
 	{
 		UINT8 i;
-
+		DEBUG_OUT("\n2\n")
 		mDelaymS(150);
 		TR0 = 0;
 		andyclearmem();
 		sInterfacePoolPos = 0;
 		for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 		{
+			DEBUG_OUT("3\n")
 			EnumerateRootHubPort(i);
+			DEBUG_OUT("4\n")
 			RegrabDeviceReports(i);
 		}
 		TR0 = 1;

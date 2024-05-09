@@ -107,6 +107,9 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 
 bool SendKeyboard(const uint8_t *chunk)
 {
+	// reset watchdog timer, this routine blocks. It shouldn't really
+	WDOG_COUNT = 0x00;
+
 	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 
 	if (!ports[PORT_KEY].sendDisabled &&										 // send disabled by timer task, better not step on its toes

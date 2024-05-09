@@ -27,20 +27,20 @@ uint8_t SyncSettings() {
     return 1;
 }
 
-void InitSettings(){
-    // magic value not present, initialize flash data
-    if (FlashSettings->Magic != 0x54178008){
+void InitSettings(bool SafeMode){
+
+    // magic value not present (or we're in safe mode), initialize flash data
+    if (SafeMode || FlashSettings->Magic != 0x54178008) {
 
         DEBUG_OUT("Magic Missing\n");
 
         memset(&HMSettings, 0x00, sizeof(Settings));
         HMSettings.Magic = 0x54178008;
 
-        HMSettings.Intellimouse = 1;
+        if (!SafeMode) HMSettings.Intellimouse = 1;
         
-        if (SyncSettings()){
+        if (SyncSettings()) {
             DEBUG_OUT("Writin failed\n");
-
         }
     }
     memcpy(&HMSettings, FlashSettings, sizeof(Settings));

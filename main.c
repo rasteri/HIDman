@@ -309,7 +309,7 @@ void main()
 	bool WatchdogReset = 0;
 
 	// Watchdog happened, go to "safe mode"
-	if (!(PCON & bRST_FLAG0 && (PCON & bRST_FLAG1))){
+	if (!(PCON & bRST_FLAG0) && (PCON & bRST_FLAG1)){
 		WatchdogReset = 1;
 	}
 
@@ -424,7 +424,7 @@ void main()
 	uint8_t PrevButtons = 0;
 	MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
 
-	if (WatchdogReset) DEBUG_OUT("Watchdog reset detected, entering safemode\n");
+	if (WatchdogReset) DEBUG_OUT("Watchdog reset detected (%x), entering safemode\n", PCON);
 
 	InitSettings(WatchdogReset);
 
@@ -432,7 +432,7 @@ void main()
 	{
 		// reset watchdog
 		WDOG_COUNT = 0x00;
-		
+
 		if (MenuActive)
 			Menu_Task();
 

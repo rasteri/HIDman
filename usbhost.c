@@ -1313,11 +1313,6 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				DEBUG_OUT("Interface %x:\n", i);
 				DEBUG_OUT("InterfaceProtocol: %x\r\n", pInterface->InterfaceProtocol);
 
-				if (pInterface->InterfaceSubClass == 0x01)
-				{
-					SetBootProtocol(pUsbDevice, i);
-				}
-
 				TRACE1("Report Size:%d\r\n", pInterface->ReportSize);
 				s = GetReportDescriptor(pUsbDevice, i, ReceiveDataBuffer, pInterface->ReportSize <= sizeof(ReceiveDataBuffer) ? pInterface->ReportSize : sizeof(ReceiveDataBuffer), &len);
 
@@ -1357,10 +1352,15 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				// use default boot mode descriptors if a keyboard or mouse is detected and the option is enabled in menu
 				// Mouse first
 				if (!HMSettings.MouseReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE && pInterface->InterfaceSubClass == 0x01)
+				{
+					SetBootProtocol(pUsbDevice, i);
 					ParseReportDescriptor(StandardMouseDescriptor, 50, &pInterface->HidSegStruct, 0);
+				}
 				// keyboard next
-				else if (!HMSettings.KeyboardReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD && pInterface->InterfaceSubClass == 0x01)
+				else if (!HMSettings.KeyboardReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD && pInterface->InterfaceSubClass == 0x01){
+					SetBootProtocol(pUsbDevice, i);
 					ParseReportDescriptor(StandardKeyboardDescriptor, 63, &pInterface->HidSegStruct, 0);
+				}
 				else
 					ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct, 0);
 

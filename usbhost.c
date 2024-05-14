@@ -1013,9 +1013,13 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 
 		TRACE("EnumerateHubPort success\r\n");
 
+		
+
 		//SelectHubPort(port, EXHUB_PORT_NONE);
 		if (RootHubPort[port].UsbDevice.DeviceClass == USB_DEV_CLASS_HUB)
 		{
+			if (DumpReport) SendKeyboardString("\nFound hub\n");
+
 			//hub
 			USB_HUB_DESCR *pHubDescr;
 
@@ -1030,7 +1034,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 				DisableRootHubPort(port);
 
 				RootHubPort[port].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
+				if (DumpReport) SendKeyboardString("hub desc err\n");
 				return (FALSE);
 			}
 
@@ -1041,6 +1045,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 			hubPortNum = pHubDescr->bNbrPorts;
 
 			TRACE1("hubPortNum=%bd\r\n", hubPortNum);
+			if (DumpReport) SendKeyboardString("%d port hub\n", hubPortNum);
 
 			if (hubPortNum > MAX_EXHUB_PORT_NUM)
 			{
@@ -1064,6 +1069,8 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 
 				TRACE("SetHubPortFeature OK\r\n");
 			}
+
+			
 
 			/*
 			for (i = 0; i < hubPortNum; i++)
@@ -1095,6 +1102,8 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 					return FALSE;
 				}
 
+				if (DumpReport) SendKeyboardString("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
+
 				TRACE2("hubPortStatus:0x%02X,hubPortChange:0x%02X\r\n", hubPortStatus, hubPortChange);
 
 				if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
@@ -1103,6 +1112,8 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 					TRACE1("hubPort=%d\r\n", (UINT16)i);
 
 					TRACE("device attached\r\n");
+
+					if (DumpReport) SendKeyboardString("port %d attached\n", i);
 
 					s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_CONNECTION);
 					if (s != ERR_SUCCESS)
@@ -1114,6 +1125,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 					}
 
 					TRACE("ClearHubPortFeature OK\r\n");
+
 
 					s = SetHubPortFeature(pUsbDevice, i + 1, HUB_PORT_RESET); //reset the port device
 					if (s != ERR_SUCCESS)
@@ -1149,14 +1161,14 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 						{
 							//speed low
 							SubHubPort[port][i].UsbDevice.DeviceSpeed = LOW_SPEED;
-
+							if (DumpReport) SendKeyboardString("lowspeed\n");
 							TRACE("low speed device\r\n");
 						}
 						else
 						{
 							//full speed device
 							SubHubPort[port][i].UsbDevice.DeviceSpeed = FULL_SPEED;
-
+							if (DumpReport) SendKeyboardString("fullspeed\n");
 							TRACE("full speed device\r\n");
 						}
 
@@ -1188,11 +1200,13 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 						addr = AssignUniqueAddress(port, i);
 						if (EnumerateHubPort(&SubHubPort[port][i], addr))
 						{
+							if (DumpReport) SendKeyboardString("enum.OK\n");
 							TRACE("EnumerateHubPort success\r\n");
 							SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
 						}
 						else
 						{
+							if (DumpReport) SendKeyboardString("enum.fail\n");
 							TRACE("EnumerateHubPort failed\r\n");
 							SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
 						}

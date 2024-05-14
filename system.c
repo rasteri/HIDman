@@ -28,7 +28,7 @@ void CfgFsys()
 
 	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
 
-	GLOBAL_CFG |= bWDOG_EN;
+	//GLOBAL_CFG |= bWDOG_EN;
 
 #if 1
 	//����ϵͳʱ��48MHz

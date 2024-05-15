@@ -849,20 +849,24 @@ static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	if (s != ERR_SUCCESS)
 	{
 		TRACE1("GetDeviceDescr failed,s:0x%02X\r\n", (UINT16)s);
-
+		if (DumpReport) SendKeyboardString("gdd.fail\n");
 		return (FALSE);
 	}
 	TRACE("GetDeviceDescr OK\r\n");
 	TRACE1("len=%d\r\n", len);
 
+	if (DumpReport) SendKeyboardString("gdd ok %d\n", len);
+
 	ParseDeviceDescriptor((USB_DEV_DESCR *)ReceiveDataBuffer, len, pUsbDevice);
 
 	TRACE1("MaxPacketSize0=%bd\r\n", pUsbDevice->MaxPacketSize0);
+	if (DumpReport) SendKeyboardString("mps %d\n", pUsbDevice->MaxPacketSize0);
 
 	//set device address
 	s = SetUsbAddress(pUsbDevice, addr);
 	if (s != ERR_SUCCESS)
 	{
+		if (DumpReport) SendKeyboardString("addr fail\n");
 		return (FALSE);
 	}
 
@@ -870,11 +874,14 @@ static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	TRACE("SetUsbAddress OK\r\n");
 	TRACE1("address=%bd\r\n", pUsbDevice->DeviceAddress);
 
+	if (DumpReport) SendKeyboardString("addr ok %d\n", pUsbDevice->DeviceAddress);
+
 	//get full bytes of device descriptor
 	s = GetDeviceDescr(pUsbDevice, ReceiveDataBuffer, sizeof(USB_DEV_DESCR), &len);
 
 	if (s != ERR_SUCCESS)
 	{
+		if (DumpReport) SendKeyboardString("gddfull fail\n");
 		TRACE("GetDeviceDescr failed\r\n");
 
 		return (FALSE);
@@ -883,8 +890,12 @@ static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	TRACE("GetDeviceDescr OK\r\n");
 	TRACE1("len=%d\r\n", len);
 
+	if (DumpReport) SendKeyboardString("gddfull ok %d\n", len);
+
 	ParseDeviceDescriptor((USB_DEV_DESCR *)ReceiveDataBuffer, len, pUsbDevice);
 	TRACE3("VendorID=0x%04X,ProductID=0x%04X,bcdDevice=0x%04X\r\n", pUsbDevice->VendorID, pUsbDevice->ProductID, pUsbDevice->bcdDevice);
+
+	if (DumpReport) SendKeyboardString("0x%04X 0x%04X 0x%04X\n", pUsbDevice->VendorID, pUsbDevice->ProductID, pUsbDevice->bcdDevice);
 
 	//get configure descriptor for the first time
 	cfgDescLen = sizeof(USB_CFG_DESCR);
@@ -893,7 +904,7 @@ static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	if (s != ERR_SUCCESS)
 	{
 		TRACE("GetConfigDescr 1 failed\r\n");
-
+		if (DumpReport) SendKeyboardString("gcd1 fail\n");
 		return (FALSE);
 	}
 
@@ -910,7 +921,7 @@ static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	if (s != ERR_SUCCESS)
 	{
 		TRACE("GetConfigDescr 2 failed\r\n");
-
+		if (DumpReport) SendKeyboardString("gcd 2 fail\n");
 		return (FALSE);
 	}
 
@@ -920,10 +931,13 @@ static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	TRACE("GetConfigDescr OK\r\n");
 	TRACE1("len=%d\r\n", len);
 
+	if (DumpReport) SendKeyboardString("gcd ok %d\n", len);
+
 	//set config
 	s = SetUsbConfig(pUsbDevice, ((USB_CFG_DESCR *)ReceiveDataBuffer)->bConfigurationValue);
 	if (s != ERR_SUCCESS)
 	{
+		if (DumpReport) SendKeyboardString("suc fail\n");
 		return (FALSE);
 	}
 

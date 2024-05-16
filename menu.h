@@ -17,6 +17,8 @@ extern uint8_t menuKey;
 
 void SendKeyboardBuffer();
 
+extern uint8_t menuState;
+
 #define SendKeyboardString(...) {sprintf(SendBuffer, __VA_ARGS__); SendKeyboardBuffer();}
 
 #endif

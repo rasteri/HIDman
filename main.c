@@ -77,6 +77,8 @@ void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 	}
 }
 
+uint8_t reenumerate = 0;
+
 int16_t gpiodebounce = 0;
 
 // How long to wait in ms before input event can be triggered again
@@ -134,12 +136,16 @@ void inputProcess() {
 		// check to see if unpressed
 		if (!butstate) {
 
-			// cycle through modes on unpress of button
-			HMSettings.KeyboardMode++;
-			if (HMSettings.KeyboardMode > 2)
-				HMSettings.KeyboardMode = 0;
-			SyncSettings();
-
+			if (menuState == MENU_STATE_DUMPING){
+				reenumerate = 1;
+			}
+			else {
+				// cycle through modes on unpress of button
+				HMSettings.KeyboardMode++;
+				if (HMSettings.KeyboardMode > 2)
+					HMSettings.KeyboardMode = 0;
+				SyncSettings();
+			}
 
 
 			// start the counter
@@ -430,6 +436,13 @@ void main()
 
 	while (1)
 	{
+
+		if (reenumerate)
+		{ 
+			ReenumerateAllPorts();
+			reenumerate = 0;
+		}
+
 		// reset watchdog
 		WDOG_COUNT = 0x00;
 

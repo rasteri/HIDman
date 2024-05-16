@@ -973,14 +973,19 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 
 	UINT8 addr;
 
-	if (RootHubPort[port].HubPortStatus != PORT_DEVICE_INSERT)
+	/*if (RootHubPort[port].HubPortStatus != PORT_DEVICE_INSERT)
 	{
 		return FALSE;
-	}
+	}*/
 
 	TRACE1("enumerate port:%bd\r\n", port);
 
+//	DisableRootHubPort(port);
+
+//	mDelaymS(500);
+
 	ResetRootHubPort(port);
+//	mDelaymS(500);
 
 #if 1
 	for (i = 0, s = 0; i < 10; i++) // �ȴ�USB�豸��λ����������,100mS��ʱ
@@ -1016,7 +1021,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 	}
 #endif
 
-	mDelaymS(100);
+	mDelaymS(500);
 
 	SelectHubPort(port, EXHUB_PORT_NONE);
 
@@ -1452,26 +1457,29 @@ void RegrabDeviceReports(UINT8 port)
 	}
 }
 
+void ReenumerateAllPorts(void){
+	UINT8 i;
+	if (DumpReport) SendKeyboardString("reenumerating all ports\n");
+	mDelaymS(150);
+	TR0 = 0;
+	andyclearmem();
+	sInterfacePoolPos = 0;
+	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
+	{
+		if (DumpReport) SendKeyboardString("port %d\n", i);
+		EnumerateRootHubPort(i);
+		RegrabDeviceReports(i);
+	}
+	TR0 = 1;
+}
+
 //----------------------------------------------------------------------------------
 void DealUsbPort(void) //main function should use it at least 500ms
 {
 	UINT8 s = QueryHubPortAttach();
 	if (s == ERR_USB_CONNECT)
 	{
-		UINT8 i;
-		DEBUG_OUT("\n2\n")
-		mDelaymS(150);
-		TR0 = 0;
-		andyclearmem();
-		sInterfacePoolPos = 0;
-		for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
-		{
-			DEBUG_OUT("3\n")
-			EnumerateRootHubPort(i);
-			DEBUG_OUT("4\n")
-			RegrabDeviceReports(i);
-		}
-		TR0 = 1;
+		ReenumerateAllPorts();
 	}
 }
 

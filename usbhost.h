@@ -190,6 +190,6 @@ extern void DealUsbPort(void);
 extern void InterruptProcessRootHubPort(UINT8 port_index);
 extern void UpdateUsbKeyboardLed(UINT8 led);
 extern INTERFACE* AllocInterface(UINT8 count);
-
+void ReenumerateAllPorts(void);
 #endif
 

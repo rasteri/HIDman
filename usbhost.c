@@ -374,7 +374,7 @@ static UINT8 USBHostTransact(UINT8 endp_pid, UINT8 tog, UINT16 timeout)
 			USB_INT_FG = 0xFF; //���жϱ�־
 		}
 		mDelayuS(25);
-	} while (++TransRetry < 60);
+	} while (++TransRetry < 250);
 
 	TRACE1("quit at line %d\r\n", (UINT16)__LINE__);
 
@@ -752,12 +752,12 @@ void InitUsbData(void)
 	}
 }
 
-static UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen)
+static UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen, UINT16 timeout)
 {
 	UINT8 s;
 	UINT8 len;
 
-	s = USBHostTransact(USB_PID_IN << 4 | (pEndPoint->EndpointAddr & 0x7F), pEndPoint->TOG ? bUH_R_TOG | bUH_T_TOG : 0, 0); // CH559��������,��ȡ����,NAK������
+	s = USBHostTransact(USB_PID_IN << 4 | (pEndPoint->EndpointAddr & 0x7F), pEndPoint->TOG ? bUH_R_TOG | bUH_T_TOG : 0, timeout); // CH559��������,��ȡ����,NAK������
 	if (s == ERR_SUCCESS)
 	{
 		UINT8 i;
@@ -800,7 +800,7 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 				ENDPOINT *pEndPoint = &pInterface->Endpoint[j];
 				if (pEndPoint->EndpointDir == ENDPOINT_IN)
 				{
-					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len);
+					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 0);
 					if (s == ERR_SUCCESS)
 					{
 						//TRACE1("interface %d data:", (UINT16)i);
@@ -1109,23 +1109,24 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 
 			ENDPOINT *pEndPoint = &pInterface->Endpoint[0];
 
-			printf("Doing new thing - %x", pInterface->Endpoint[0].EndpointAddr);
-
-			s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len);
+			printf("Doing new thing - %x\n", pInterface->Endpoint[0].EndpointAddr);
 
 
+			s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 20000);
 
 			if (s != ERR_SUCCESS){
-				DEBUG_OUT("Cant do new thing\n");
+				if (DumpReport) SendKeyboardString("new enum. failed\n");
+				return FALSE;
 			}
 
-			DEBUG_OUT("Got new thing %x - %x\n", len, ReceiveDataBuffer[0]);
+			uint8_t changebitmap = ReceiveDataBuffer[0];
 
-
+			if (DumpReport) SendKeyboardString("new enum. %x\n", changebitmap);
 
 			for (i = 0; i < hubPortNum; i++)
 			{
-				if (ReceiveDataBuffer[0] & (1 << (i+1))) {
+				if (changebitmap & (1 << (i+1))) {
+					if (DumpReport) SendKeyboardString("checkn port %d\n", i);
 					mDelaymS(50);
 
 					SelectHubPort(port, EXHUB_PORT_NONE); //�л���hub��ַ

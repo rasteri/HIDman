@@ -1176,7 +1176,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 							return FALSE;
 						}
 
-						mDelaymS(100);
+						mDelaymS(500);
 						do
 						{
 							s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);
@@ -1211,7 +1211,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 								TRACE("full speed device\r\n");
 							}
 
-							s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_PORT_RESET);
+							s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_RESET);
 							if (s != ERR_SUCCESS)
 							{
 								TRACE("ClearHubPortFeature failed\r\n");

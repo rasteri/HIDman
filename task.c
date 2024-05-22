@@ -71,6 +71,8 @@ void InitSystem(void)
 	CfgFsys();      //CH559ʱ��ѡ������   
     mDelaymS(500);   
 
+
+
     CH559GPIODrivCap(3, 1);
 
 #ifdef DEBUG
@@ -91,6 +93,8 @@ void InitSystem(void)
 	InitUsbHost();
 
 	HAL_ENABLE_INTERRUPTS();
+
+
 	
 	TRACE("system init\r\n");
 }

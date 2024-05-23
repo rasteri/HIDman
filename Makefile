@@ -6,10 +6,10 @@ BOARD_TYPE = BOARD_AXP
 BOARD_OPTIONS = OPT_DEFAULT
 #BOARD_OPTIONS = OPT_SWAP_KBD_MSC
 
-CC = C:/sdcc/bin/sdcc
-OBJCOPY = C:/sdcc/bin/sdobjcopy
-PACK_HEX = C:/sdcc/bin/packihx
-WCHISP = C:/sdcc/bin/wchisptool
+CC = sdcc
+OBJCOPY = sdobjcopy
+PACK_HEX = packihx
+WCHISP = wchisptool
 OBJDIR = ./build
 
 TARGET = hidman

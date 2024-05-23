@@ -269,11 +269,11 @@ static UINT8 USBHostTransact(UINT8 endp_pid, UINT8 tog, UINT16 timeout)
 	UH_RX_CTRL = UH_TX_CTRL = tog;
 	TransRetry = 0;
 
-	// wait for next start of frame
-	while (!(USB_MIS_ST & bUMS_SOF_ACT));
-
 	do
 	{
+		// wait for next start of frame
+		while (!(USB_MIS_ST & bUMS_SOF_ACT));
+
 		UH_EP_PID = endp_pid; // ָ������PID��Ŀ�Ķ˵��
 		UIF_TRANSFER = 0;	  // ��������
 		for (i = WAIT_USB_TOUT_200US; i != 0 && UIF_TRANSFER == 0; i--)

@@ -94,7 +94,7 @@ void inputProcess() {
 
 	static uint16_t ResetCounter = 0;
 
-	if (!(P4_IN & (1 << 6))){
+	/*if (!(P4_IN & (1 << 6))){
 
 		butstate = 1;
 
@@ -106,7 +106,7 @@ void inputProcess() {
 	}
 
 	else 
-		ResetCounter = 0;
+		ResetCounter = 0;*/
 
 	// gpiodebounce = 0 when button not pressed
 	// > 0 and < DEBOUNCETIME when debouncing positive edge
@@ -402,6 +402,8 @@ void main()
 	P4_OUT = 0b00000100; //LEDs off (i.e. HIGH), MOUSE DATA low (since it's switched by toggling input on and off, i.e. faking open drain)
 #endif
 
+
+
 	// timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
 	TH0 = 0xBD;					 // 60khz
@@ -409,6 +411,8 @@ void main()
 	TR0 = 1; // start timer0
 	ET0 = 1; //enable timer0 interrupt;
 	EA = 1;	 // enable all interrupts
+
+
 
 #if defined(BOARD_AXP)
 	testintsizes();
@@ -433,6 +437,8 @@ void main()
 	if (WatchdogReset) DEBUG_OUT("Watchdog reset detected (%x), entering safemode\n", PCON);
 
 	InitSettings(WatchdogReset);
+
+
 
 	while (1)
 	{

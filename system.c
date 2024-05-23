@@ -17,8 +17,12 @@ void CfgFsys()
 {
 	SAFE_MOD = 0x55;														   //������ȫģʽ
 	SAFE_MOD = 0xAA;												 
+
+#if defined(OSC_EXTERNAL)
 	CLOCK_CFG |= bOSC_EN_XT;												   //ʹ���ⲿ����										  
 	CLOCK_CFG &= ~bOSC_EN_INT;												
+#endif
+
 //	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
 //	CLOCK_CFG |= 6; 														   //����ϵͳʱ��48MHz
 //	CLOCK_CFG |= 8; 														   //����ϵͳʱ��36MHz

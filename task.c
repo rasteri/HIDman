@@ -4,14 +4,11 @@
 
 #include "mcu.h"
 #include "system.h"
-#include "gpio.h"
 #include "uart.h"
-#include "timer2.h"
 
 #include "usbhost.h"
 #include "keyboardled.h"
 
-#include "recvbuffer.h"
 #include "ps2protocol.h"
 
 
@@ -35,7 +32,7 @@ void mTimer2Interrupt(void) __interrupt(5)
         TF2 = 0; 
 		
 		//uart receive timeout
-		RecvBufferTimerout();
+		//RecvBufferTimerout();
 
 		if (s_5MsCounter == 0)
 		{
@@ -54,6 +51,29 @@ void mTimer2Interrupt(void) __interrupt(5)
 
 	}
 }
+void mTimer2Setup(UINT8 T2Out)
+{
+    RCLK = 0;
+    TCLK = 0;
+    CP_RL2 = 0;                                                                //�����Զ����ض�ʱ������
+    if(T2Out)
+    {
+	      T2MOD |= T2OE;                                                        //�Ƿ�����T2���ʱ��,�������ʱ��=1/2��ʱ��2�����
+    }
+    else
+    {
+	      T2MOD &= ~T2OE;
+    }
+}
+
+void mTimer2Init(UINT16 Tim)
+{
+    UINT16 tmp;
+    tmp = 65536 - Tim;
+    RCAP2L = TL2 = tmp & 0xff;
+    RCAP2H = TH2 = (tmp >> 8) & 0xff;
+}
+
 
 static void InitTimer2(void)
 {
@@ -72,16 +92,7 @@ void InitSystem(void)
     mDelaymS(500);   
 
 
-
-    CH559GPIODrivCap(3, 1);
-
-#ifdef DEBUG
-    //CH559GPIOModeSelt(PORT_PIN_TEST_LED, 2, OFFSET_PIN_TEST_LED);
-
-    //SET_GPIO_BIT(PIN_TEST_LED);
-#endif
-
-	InitRecvBuffer();
+	//InitRecvBuffer();
 	
 	InitTimer2();
 

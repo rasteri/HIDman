@@ -93,8 +93,11 @@ void inputProcess() {
 	uint8_t butstate = 0;
 
 	static uint16_t ResetCounter = 0;
-
-	/*if (!(P4_IN & (1 << 6))){
+#if defined(OSC_EXTERNAL)
+	if (!(P3 & (1 << 4))){
+#else
+	if (!(P4_IN & (1 << 6))){
+#endif
 
 		butstate = 1;
 
@@ -106,7 +109,7 @@ void inputProcess() {
 	}
 
 	else 
-		ResetCounter = 0;*/
+		ResetCounter = 0;
 
 	// gpiodebounce = 0 when button not pressed
 	// > 0 and < DEBOUNCETIME when debouncing positive edge
@@ -319,25 +322,6 @@ void main()
 		WatchdogReset = 1;
 	}
 
-	InitSystem();
-
-	WDOG_COUNT = 0x00;
-
-	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
-	InitPWM1(1);   //PWM1 initialization, active low
-	InitPWM2(1);   //PWM2 initialization, active high
-	InitPWM3(1);
-	SetPWMCycle(0xff);
-	SetPWM1Dat(0x00);
-	SetPWM2Dat(0x00);
-
-	T3_CK_SE_L = 0x20;
-	T3_CK_SE_H = 0;
-	T3_END_H = 0;
-	T3_END_L = 255;
-	T3_FIFO_L = 0;
-	T3_FIFO_H = 0;
-
 #if defined(BOARD_MICRO) // Pinouts for HIDman-micro
 	//port1 setup
 	P1_DIR = 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
@@ -377,7 +361,7 @@ void main()
 	P4_OUT = 0b00000000;
 
 
-#else					  // Default pinouts (HIDman-AXD, HIDman-mini)
+#else					  // Default pinouts (HIDman-AXP, HIDman-mini)
 	//port0 setup
 	P0_DIR = 0b11101010; // 0.3, 0.5, 0.6, 0.7 are all keyboard outputs, 0.4 is CTS (i.e. RTS on host), 0.1 is RTS (i.e. CTS on host)
 	PORT_CFG |= bP0_OC;	 // open collector
@@ -391,16 +375,41 @@ void main()
 	P2 = 0b00110000;	 // LEDs off by default (i.e. high)
 
 	//port3 setup
-	P3_DIR = 0b11100010; // 5,6,7 are PS2 outputs, 1 is UART0 TXD
+	P3_DIR = 0b11100010; // 4 is switch, 5,6,7 are PS2 outputs, 1 is UART0 TXD
 	PORT_CFG |= bP3_OC;	 // open collector
-	P3_PU = 0b00000001; // pullup on 1 for TXD
-	P3 = 0b11100010;	 // default pin states
+	P3_PU = 0b00010001; // pullup on 1 for TXD, 4 for switch
+	P3 = 0b11110010;	 // default pin states
 
 	//port4 setup
 	P4_DIR = 0b00010100; //4.0 is RXD, 4.2 is Blue LED, 4.3 is MOUSE DATA (actually input, since we're faking open drain), 4.4 is TXD, 4.6 is SWITCH
 	P4_PU = 0b01000000;	 // pullup on switch
 	P4_OUT = 0b00000100; //LEDs off (i.e. HIGH), MOUSE DATA low (since it's switched by toggling input on and off, i.e. faking open drain)
 #endif
+
+for (char ik=0; ik < 255; ik++);
+
+#if defined(OSC_EXTERNAL)
+	if (!(P3 & (1 << 4))) runBootloader();
+#endif
+
+	InitSystem();
+
+	WDOG_COUNT = 0x00;
+
+	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
+	InitPWM1(1);   //PWM1 initialization, active low
+	InitPWM2(1);   //PWM2 initialization, active high
+	InitPWM3(1);
+	SetPWMCycle(0xff);
+	SetPWM1Dat(0x00);
+	SetPWM2Dat(0x00);
+
+	T3_CK_SE_L = 0x20;
+	T3_CK_SE_H = 0;
+	T3_END_H = 0;
+	T3_END_L = 255;
+	T3_FIFO_L = 0;
+	T3_FIFO_H = 0;
 
 
 

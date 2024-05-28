@@ -18,15 +18,12 @@ OBJDIR = ./build
 TARGET = hidman
 
 OBJECTS = \
-$(OBJDIR)/gpio.rel \
 $(OBJDIR)/keyboardled.rel \
 $(OBJDIR)/main.rel \
 $(OBJDIR)/parsedescriptor.rel \
 $(OBJDIR)/system.rel \
 $(OBJDIR)/task.rel \
-$(OBJDIR)/timer2.rel \
 $(OBJDIR)/usbhost.rel \
-$(OBJDIR)/recvbuffer.rel \
 $(OBJDIR)/data.rel \
 $(OBJDIR)/menu.rel \
 $(OBJDIR)/ps2protocol.rel \

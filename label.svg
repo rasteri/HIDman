@@ -24,9 +24,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="2.0888419"
-     inkscape:cx="229.55304"
-     inkscape:cy="521.34153"
+     inkscape:zoom="4.1776838"
+     inkscape:cx="289.39481"
+     inkscape:cy="503.86772"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
@@ -84,66 +84,13 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#000000;stroke:none;stroke-width:0.0317499;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
+       style="fill:#000000;stroke:none;stroke-width:0.0309082;stroke-linecap:round;paint-order:stroke fill markers;stop-color:#000000"
        id="rect184"
-       width="46"
+       width="43.593365"
        height="36.453377"
        x="54.45916"
        y="109.81179"
        ry="4.9494334e-14" />
-    <text
-       xml:space="preserve"
-       transform="matrix(0.26458333,0,0,0.26458333,-1.6085952,-22.770871)"
-       id="text9073-1"
-       style="font-weight:bold;font-size:9.44882px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect9075-1);display:inline"><tspan
-         x="218.00391"
-         y="518.6841"
-         id="tspan753"><tspan
-           style="font-size:15.1181px"
-           id="tspan749">Keyboard Modes :</tspan><tspan
-           style="fill:#ffffff"
-           id="tspan751">
-</tspan></tspan><tspan
-         x="218.00391"
-         y="532.47512"
-         id="tspan757"><tspan
-           style="font-weight:normal;-inkscape-font-specification:Arial"
-           id="tspan755">(Press button to change)
-</tspan></tspan><tspan
-         x="218.00391"
-         y="549.39278"
-         id="tspan761"><tspan
-           style="font-size:15.1181px"
-           id="tspan759">•    PS/2 &amp; AT
-</tspan></tspan><tspan
-         x="218.00391"
-         y="568.29043"
-         id="tspan765"><tspan
-           style="font-size:15.1181px"
-           id="tspan763">•    XT
-</tspan></tspan><tspan
-         x="218.00391"
-         y="587.18807"
-         id="tspan769"><tspan
-           style="font-size:15.1181px"
-           id="tspan767">•    Other
-</tspan></tspan><tspan
-         x="218.00391"
-         y="606.08571"
-         id="tspan773">To enter menu : <tspan
-   style="font-size:15.1181px"
-   id="tspan771">
-</tspan></tspan><tspan
-         x="218.00391"
-         y="619.87673"
-         id="tspan775">Start a text editor (eg Notepad/edit/cat)
-</tspan><tspan
-         x="218.00391"
-         y="631.68776"
-         id="tspan779">then hold button for 3sec<tspan
-   style="font-weight:normal;-inkscape-font-specification:Arial"
-   id="tspan777">
-</tspan></tspan></text>
     <g
        id="g9071"
        transform="translate(-0.49261157,1.1643546)">
@@ -169,5 +116,66 @@
          r="1.7633772"
          transform="translate(-5.2875614,0.41709462)" />
     </g>
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,-1.6085952,-22.770871)"
+       id="text9073-1"
+       style="font-weight:bold;font-size:9.44882px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Bold';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect9075-1);display:inline"><tspan
+         x="218.00391"
+         y="518.6841"
+         id="tspan23593"><tspan
+           style="font-size:15.1181px;fill:#ffffff"
+           id="tspan23589">Keyboard Modes :</tspan><tspan
+           style="font-size:3.77953px;fill:#ffffff"
+           id="tspan23591">
+</tspan></tspan><tspan
+         x="218.00391"
+         y="532.47512"
+         id="tspan23597"><tspan
+           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+           id="tspan23595">(Press button to change)
+</tspan></tspan><tspan
+         x="218.00391"
+         y="549.39278"
+         id="tspan23603"><tspan
+           style="font-size:15.1181px;fill:#ffffff"
+           id="tspan23599">     </tspan><tspan
+           style="font-size:15.1181px;fill:#ffffff"
+           id="tspan23601">PS/2 &amp; AT
+</tspan></tspan><tspan
+         x="218.00391"
+         y="568.29043"
+         id="tspan23607"><tspan
+           style="font-size:15.1181px;fill:#ffffff"
+           id="tspan23605">     XT
+</tspan></tspan><tspan
+         x="218.00391"
+         y="587.18807"
+         id="tspan23611"><tspan
+           style="font-size:15.1181px;fill:#ffffff"
+           id="tspan23609">     Other
+</tspan></tspan><tspan
+         x="218.00391"
+         y="606.08571"
+         id="tspan23617"><tspan
+           style="font-size:11.3386px;fill:#ffffff"
+           id="tspan23613">To enter menu : </tspan><tspan
+           style="font-size:15.1181px;fill:#ffffff"
+           id="tspan23615">
+</tspan></tspan><tspan
+         x="218.00391"
+         y="619.87673"
+         id="tspan23621"><tspan
+           style="fill:#ffffff"
+           id="tspan23619">Start a text editor (notepad/edit/vi)
+</tspan></tspan><tspan
+         x="218.00391"
+         y="631.68776"
+         id="tspan23627"><tspan
+           style="fill:#ffffff"
+           id="tspan23623">then hold button for 3sec</tspan><tspan
+           style="font-weight:normal;-inkscape-font-specification:Arial;fill:#ffffff"
+           id="tspan23625">
+</tspan></tspan></text>
   </g>
 </svg>

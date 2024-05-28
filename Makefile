@@ -15,7 +15,6 @@ OBJDIR = ./build
 TARGET = hidman
 
 OBJECTS = \
-$(OBJDIR)/ch559.rel \
 $(OBJDIR)/gpio.rel \
 $(OBJDIR)/keyboardled.rel \
 $(OBJDIR)/main.rel \

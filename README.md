@@ -5,6 +5,9 @@ HIDman is an open source device to allow the use of modern USB keyboards and mic
 
 Peripherals that support legacy PCs are becoming hard to find, especially for the very first PCs. This project aims to provide a simple cheap solution that will cover everything from the original IBM 5150 PC all the way up to modern computers that have PS/2 ports.
 
+![Hidman Front](/images/hidmanfront.jpg)
+![Hidman Front](/images/hidmanrear.jpg)
+
 
 ## Features
 

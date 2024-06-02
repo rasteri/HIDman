@@ -487,7 +487,6 @@ void HandleReceived(uint8_t port)
 				{
 
 					case R_LEDS:
-						// TODO blinkenlights
 						SimonSaysSendKeyboard(KEY_ACK);
 						SetKeyboardLedStatusFromPS2(ports[PORT_KEY].recvout);
 						ports[PORT_KEY].recvstate = R_IDLE;

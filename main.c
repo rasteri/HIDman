@@ -52,6 +52,7 @@ void EveryMillisecond(void) {
 		s_CheckUsbPort0 = TRUE;
 	else if (UsbUpdateCounter == 8){
 		s_CheckUsbPort1 = TRUE;
+		UsbUpdateCounter = 0;
 	}
 
 	UsbUpdateCounter++;

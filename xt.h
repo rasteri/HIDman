@@ -1,8 +1,6 @@
 #ifndef _XT_H_
 #define _XT_H_
 
-
-
-void XTProcessPort();
+void XTProcessPort(void);
 
 #endif

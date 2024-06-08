@@ -13,13 +13,13 @@
 #include <stdio.h>
 #include <string.h>
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"
 #include "data.h"
 #include "ps2protocol.h"
 #include "menu.h"
+#include "system.h"
 
 #define CH559UART1_FIFO_EN 1 //Enable CH559 serial port 1 receiving FIFO (receive and send 8 bytes each)
 
@@ -37,7 +37,7 @@ UINT8 Str[] = {"hello world!"};
 * Output: None
 * Return: None
 ************************************************** *****************************/
-void UART1RegCfgValue()
+void UART1RegCfgValue(void)
 {
     DEBUG_OUT("SER1_IER %02X\n",(UINT16)SER1_IER); //0x27/0x17/0x37 are all possible
     DEBUG_OUT("SER1_IIR %02X\n",(UINT16)SER1_IIR); //0xc1/0xC2 no interrupt or empty interrupt, "C" means FIFO is on
@@ -54,7 +54,7 @@ void UART1RegCfgValue()
 * Output: None
 * Return: None
 ************************************************** *****************************/
-void ResetUART1()
+void ResetUART1(void)
 {
     SER1_IER |= bIER_RESET; //This bit can be automatically cleared to reset the serial port register
 }
@@ -131,7 +131,7 @@ SER1_MCR |= bMCR_HALF; //485 mode can only use half-duplex mode
 * Output: None
 * Return: correct: UINT8 Rcvdat; receive data
 ************************************************** *****************************/
-UINT8 CH559UART1RcvByte()
+UINT8 CH559UART1RcvByte(void)
 {
     while((SER1_LSR & bLSR_DATA_RDY) == 0); //Wait for the data to be ready
     return SER1_RBR;

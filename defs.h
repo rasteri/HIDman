@@ -228,6 +228,7 @@ typedef struct JoyPreset
 	uint16_t InputParam;
 } JoyPreset;
 
+
 // defines a mapping between a HID segment and a PS/2 event
 typedef struct HID_SEG
 {
@@ -257,25 +258,6 @@ typedef struct HID_SEG
 } HID_SEG;
 
 #define MAX_USAGE_NUM 10
-
-/*typedef struct HID_SEG
-{
-
-	uint8_t usage;
-	uint8_t usageMin;
-	uint8_t usageMax;
-	HID_GLOBAL *global;
-
-	uint8_t oldValue;
-	uint8_t value;
-
-	uint8_t inputField;
-
-	// for joysticks, which control this is mapped to
-	JoyMap *map;
-
-	struct HID_SEG *next;
-} HID_SEG;*/
 
 typedef struct _HID_REPORT
 {

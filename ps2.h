@@ -96,7 +96,7 @@ bool SendKeyboard(const uint8_t *chunk);
 //void SendMouse();
 
 void SimonSaysSendKeyboard(const uint8_t *chunk);
-void SimonSaysSendMouse();
+void SimonSaysSendMouse(void);
 
 void PS2ProcessPort(uint8_t port);
 

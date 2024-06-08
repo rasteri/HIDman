@@ -9,13 +9,10 @@
 #include "usbhost.h"
 #include "menu.h"
 #include "data.h"
-#include "util.h"
 #include "settings.h"
-
+#include "andyalloc.h"
 #include "keyboardled.h"
 #include "parsedescriptor.h"
-
-#include "trace.h"
 
 #define WAIT_USB_TOUT_200US 800 // �ȴ�USB�жϳ�ʱʱ��200uS
 
@@ -235,7 +232,7 @@ static void SelectHubPort(UINT8 RootHubIndex, UINT8 HubPortIndex)
 	}
 }
 
-void InitUsbHost()
+void InitUsbHost(void)
 {
 	UINT8 i;
 	IE_USB = 0;
@@ -708,7 +705,7 @@ static UINT8 GetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
 
 	FillSetupReq(&SetupReq, 0b10100001, HID_GET_PROTOCOL, 0, interface, 1);
 
-	s = HostCtrlTransfer(&SetupReq, pUsbDevice->MaxPacketSize0, &ret, 1);
+	s = HostCtrlTransfer(&SetupReq, pUsbDevice->MaxPacketSize0, &ret, (PUINT16)1);
 
 	return ret;
 }
@@ -785,7 +782,7 @@ static UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen,
 //-------------------------------------------------------------------------------------------
 static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 {
-	UINT8 s, p;
+	UINT8 s = 0, p;
 	int i, j;
 	int interfaceNum;
 	int endpointNum;
@@ -837,7 +834,7 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 //enum device
 static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 {
-	UINT8 i, s;
+	UINT8 s;
 	UINT16 len;
 	UINT16 cfgDescLen;
 
@@ -1411,15 +1408,15 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				if (!HMSettings.MouseReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE && pInterface->InterfaceSubClass == 0x01)
 				{
 					SetBootProtocol(pUsbDevice, i);
-					ParseReportDescriptor(StandardMouseDescriptor, 50, &pInterface->HidSegStruct, 0);
+					ParseReportDescriptor(StandardMouseDescriptor, 50, &pInterface->HidSegStruct);
 				}
 				// keyboard next
 				else if (!HMSettings.KeyboardReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD && pInterface->InterfaceSubClass == 0x01){
 					SetBootProtocol(pUsbDevice, i);
-					ParseReportDescriptor(StandardKeyboardDescriptor, 63, &pInterface->HidSegStruct, 0);
+					ParseReportDescriptor(StandardKeyboardDescriptor, 63, &pInterface->HidSegStruct);
 				}
 				else
-					ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct, 0);
+					ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct);
 
 				HID_REPORT_DESC *bleh = &pInterface->HidSegStruct;
 				HID_SEG *tmpseg;
@@ -1590,6 +1587,27 @@ void UpdateUsbKeyboardLed(UINT8 led)
 				}
 			}
 		}
+	}
+}
+
+BOOL volatile s_CheckUsbPort0 = FALSE;
+BOOL volatile s_CheckUsbPort1 = FALSE;
+
+void ProcessUsbHostPort(void)
+{	
+
+	DealUsbPort();
+	if (s_CheckUsbPort0)
+	{
+		s_CheckUsbPort0 = FALSE;
+		
+		InterruptProcessRootHubPort(0);
+	}
+	if (s_CheckUsbPort1)
+	{
+		s_CheckUsbPort1 = FALSE;
+
+		InterruptProcessRootHubPort(1);
 	}
 }
 

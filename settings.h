@@ -32,5 +32,7 @@ extern __xdata Settings HMSettings;
 
 void InitSettings(bool SafeMode);
 
+uint8_t SyncSettings(void);
+
 #endif
 

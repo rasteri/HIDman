@@ -11,7 +11,6 @@
 #include <string.h>
 #include "menu.h"
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"
@@ -20,6 +19,7 @@
 #include "mouse.h"
 #include "settings.h"
 #include "usbhidkeys.h"
+#include "system.h"
 
 __xdata char SendBuffer[255];
 
@@ -121,7 +121,7 @@ void ReleaseKey(uint8_t currchar) {
         ));
 }
 
-void SendKeyboardBuffer()
+void SendKeyboardBuffer(void)
 {
     uint8_t currchar;
     uint8_t BufferIndex = 0;
@@ -172,7 +172,7 @@ void YesNo(bool x){
     if (x) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
 }
 
-void Menu_Task()
+void Menu_Task(void)
 {
     switch (menuState)
     {
@@ -263,4 +263,125 @@ void Menu_Task()
         }
         break;
     }
+}
+
+// blue LED on by default
+uint8_t LEDStatus = 0x04;
+
+int16_t gpiodebounce = 0;
+
+// How long to wait in ms before input event can be triggered again
+#define DEBOUNCETIME 25
+
+// How long in ms a button has to be pressed before it's considered held
+#define HOLDTIME 2000
+
+//should be run every 1ms
+void inputProcess(void) {
+
+	uint8_t butstate = 0;
+
+	static uint16_t ResetCounter = 0;
+#if defined(OSC_EXTERNAL)
+	if (!(P3 & (1 << 4))){
+#else
+	if (!(P4_IN & (1 << 6))){
+#endif
+
+		butstate = 1;
+
+		// go into bootloader if user holds button for more than 5 seconds regardless of what else is going on
+		ResetCounter++;
+		if (ResetCounter > 5000) {
+			runBootloader();
+		}
+	}
+
+	else 
+		ResetCounter = 0;
+
+	// gpiodebounce = 0 when button not pressed
+	// > 0 and < DEBOUNCETIME when debouncing positive edge
+	// >= DEBOUNCETIME and < HOLDTIME when waiting for release or hold action
+	// = HOLDTIME when we register it as a hold action
+	// > HOLDTIME when waiting for release
+	// > -DEBOUNCETIME and < 0 when debouncing negative edge
+
+	// Button not pressed, check for button
+	if (gpiodebounce == 0) {
+		if (butstate) {
+			// button pressed
+
+
+			// start the counter
+			gpiodebounce++;
+		}
+	}
+
+	// Debouncing positive edge, increment value
+	else if (gpiodebounce > 0 && gpiodebounce < DEBOUNCETIME) {
+		gpiodebounce++;
+	}
+
+	// debounce finished, keep incrementing until hold reached
+	else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME) {
+		// check to see if unpressed
+		if (!butstate) {
+
+			if (menuState == MENU_STATE_DUMPING){
+				//reenumerate = 1;
+			}
+			else {
+				// cycle through modes on unpress of button
+				HMSettings.KeyboardMode++;
+				if (HMSettings.KeyboardMode > 2)
+					HMSettings.KeyboardMode = 0;
+				SyncSettings();
+			}
+
+
+			// start the counter
+			gpiodebounce = -DEBOUNCETIME;
+		}
+
+		else
+			gpiodebounce++;
+	}
+	// Button has been held for a while
+	else if (gpiodebounce == HOLDTIME) {
+		MenuActive = 1;
+		gpiodebounce++;
+	}
+
+	// Button still holding, check for release
+	else if (gpiodebounce > HOLDTIME) {
+		// Still pressing, do action repeatedly
+		if (butstate) {
+		}
+		// not still pressing, debounce release
+		else {
+			//IOevent(i, IOEVENT_HOLDRELEASE);
+			// start the counter
+			gpiodebounce = -DEBOUNCETIME;
+		}
+	}
+
+	// Debouncing negative edge, increment value - will reset when zero is reached
+	else if (gpiodebounce < 0) {
+		gpiodebounce++;
+	}
+
+	switch (FlashSettings->KeyboardMode){
+		case MODE_PS2:
+			LEDStatus = 0x04;
+		break;
+		case MODE_XT:
+			LEDStatus = 0x02;
+		break;
+		case MODE_AMSTRAD:
+			LEDStatus = 0x01;
+		break;
+
+	}
+
 }

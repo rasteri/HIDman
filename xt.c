@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"
@@ -15,7 +14,7 @@
 uint16_t ratelimit = 0;
 
 uint8_t oldstate = 0;
-void XTProcessPort()
+void XTProcessPort(void)
 {
 	const uint8_t *chunk;
 	static __data uint8_t sb;

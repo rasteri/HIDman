@@ -3,50 +3,9 @@
 #include "ch559.h"
 #include "system.h"
 
-/*******************************************************************************
-* Function Name  : CfgFsys( )
-* Description    : CH559ʱ��ѡ������ú���,Ĭ��ʹ���ڲ�����12MHz�����������FREQ_SYS����
-                   ����PLL_CFG��CLOCK_CFG���õõ�����ʽ���£�
-                   Fsys = (Fosc * ( PLL_CFG & MASK_PLL_MULT ))/(CLOCK_CFG & MASK_SYS_CK_DIV);
-                   ����ʱ����Ҫ�Լ�����
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/ 
-void CfgFsys()	
-{
-	SAFE_MOD = 0x55;														   //������ȫģʽ
-	SAFE_MOD = 0xAA;												 
 
-#if defined(OSC_EXTERNAL)
-	CLOCK_CFG |= bOSC_EN_XT;												   //ʹ���ⲿ����										  
-	CLOCK_CFG &= ~bOSC_EN_INT;												
-#endif
 
-//	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
-//	CLOCK_CFG |= 6; 														   //����ϵͳʱ��48MHz
-//	CLOCK_CFG |= 8; 														   //����ϵͳʱ��36MHz
-//	CLOCK_CFG |= 10;														   //����ϵͳʱ��28.8MHz
-//	CLOCK_CFG |= 12;														   //����ϵͳʱ��24MHz
-//	CLOCK_CFG |= 16;														   //����ϵͳʱ��18MHz	
-
-	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
-
-	//GLOBAL_CFG |= bWDOG_EN;
-
-#if 1
-	//����ϵͳʱ��48MHz
-	CLOCK_CFG |= 6; 															  
-	PLL_CFG = (24 << 0) | (6 << 5);
-#else
-	//����ϵͳʱ��56MHz
-	CLOCK_CFG |= 6; 															  
-	PLL_CFG = (28 << 0) | (7 << 5);
-#endif	
-	
-	SAFE_MOD = 0xFF;														   //�رհ�ȫģʽ  
-//	����޸���Ƶ��Ҫͬʱ�޸�FREQ_SYS������������ʱ������׼
-}
+FunctionReference runBootloader = (FunctionReference)0xF400;
 
 
 /*******************************************************************************

@@ -4,7 +4,6 @@
 #include <string.h>
 #include "menu.h"
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"
@@ -12,12 +11,14 @@
 #include "ps2protocol.h"
 #include "mouse.h"
 #include "dataflash.h"
-
+#include "system.h"
 #include "settings.h"
 
 __xdata Settings HMSettings;
+
 uint8_t* arse = ((uint8_t *)FlashSettings);
-uint8_t SyncSettings() {
+
+uint8_t SyncSettings(void) {
     
     if(EraseDataFlash(0xF000) == 0){
         if (WriteDataFlash(0xF000, (uint8_t *)&HMSettings, sizeof(Settings)) == 0)

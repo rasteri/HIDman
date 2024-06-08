@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"
@@ -23,7 +22,7 @@ int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
 
 MOUSE OutputMice[2];
 
-void InitMice()
+void InitMice(void)
 {
     memset(OutputMice, 0x00, sizeof(OutputMice));
 	Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
@@ -42,7 +41,7 @@ void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ)
     }
 }
 
-uint8_t GetMouseAxisUpdate(MOUSE *m, int16_t* Axis, int16_t* Value, int16_t Min, int16_t Max, uint8_t Downscale) 
+void GetMouseAxisUpdate(MOUSE *m, int16_t* Axis, int16_t* Value, int16_t Min, int16_t Max, uint8_t Downscale) 
 {	
 	// assume update value won't exceed min/max limit
 	*Value = *Axis >> Downscale;
@@ -181,7 +180,7 @@ void Ps2MouseSetReporting(bool Reporting) {
 	Ps2MouseSetDelta(0, 0, 0);
 }
 
-void Ps2MouseSetDefaults() {
+void Ps2MouseSetDefaults(void) {
 	Ps2MouseSetRate(100);
 	Ps2MouseSetResolution(MOUSE_PS2_RESOLUTION_4CMM);
 	Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);

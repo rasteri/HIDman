@@ -22,13 +22,11 @@ $(OBJDIR)/keyboardled.rel \
 $(OBJDIR)/main.rel \
 $(OBJDIR)/parsedescriptor.rel \
 $(OBJDIR)/system.rel \
-$(OBJDIR)/task.rel \
 $(OBJDIR)/usbhost.rel \
 $(OBJDIR)/data.rel \
 $(OBJDIR)/menu.rel \
 $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/ps2.rel \
-$(OBJDIR)/util.rel \
 $(OBJDIR)/andyalloc.rel \
 $(OBJDIR)/pwm.rel \
 $(OBJDIR)/mouse.rel \
@@ -37,7 +35,7 @@ $(OBJDIR)/settings.rel \
 $(OBJDIR)/xt.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)
-  OBJECTS += $(OBJDIR)/uart.rel
+	OBJECTS += $(OBJDIR)/uart.rel
 	OBJECTS += $(OBJDIR)/uart1.rel
 endif
 

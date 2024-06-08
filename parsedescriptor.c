@@ -1,3 +1,11 @@
+/*
+	parsedescriptor.c
+
+	Handles the parsing of the various USB descriptors
+	The HID report descriptor being the tough one
+
+*/
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,9 +19,9 @@
 #include "ps2protocol.h"
 #include "data.h"
 #include "ps2.h"
-#include "util.h"
 #include "parsedescriptor.h"
 #include "andyalloc.h"
+#include "system.h"
 
 uint8_t JoyNum = 0;
 
@@ -43,7 +51,7 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_DEVICE *pUs
 
 	UINT8 *pDescr;
 	DESCR_HEADER *pDescrHeader;
-	USB_ITF_DESCR *pItfDescr;
+	USB_ITF_DESCR *pItfDescr = NULL;
 	USB_HID_DESCR *pHidDescr;
 	USB_ENDP_DESCR *pEdpDescr;
 
@@ -155,7 +163,7 @@ static UINT32 GetUnaligned32(UINT8 *start)
 #if LITTLE_EADIAN
 	return *(UINT32 *)start;
 #else
-	UINT32 dat = (*start) | (*(start + 1) << 8) | (*(start + 2) << 16) | (*(start + 3) << 24);
+	UINT32 dat = (UINT32)(*start) | ((UINT32)(*(start + 1)) << 8) | ((UINT32)(*(start + 2)) << 16) | ((UINT32)(*(start + 3)) << 24);
 
 	return dat;
 #endif
@@ -267,7 +275,6 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 		return start;
 	}
 
-	return NULL;
 }
 
 #define CreateSeg()                                                                                              \
@@ -312,7 +319,7 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 		tempSB += hidGlobalPnt->reportSize;                                    \
 	}
 
-BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct, uint8_t port)
+BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pHidSegStruct)
 {
 	static __xdata uint8_t i, k, collectionDepth, usagePtr, arrUsage[MAX_USAGE_NUM];
 	static __xdata uint16_t startBit, tempSB, appUsage, appUsagePage;
@@ -323,7 +330,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, HID_REPORT_DESC *pH
 	static __xdata HID_GLOBAL *hidGlobalPnt = &hidGlobal;
 	static __xdata HID_LOCAL hidLocal;
 	static __xdata HID_ITEM item;
-	HID_SEG *currSegPnt;
+	HID_SEG *currSegPnt = 0;
 
 	startBit = 0;
 	tempSB = 0;

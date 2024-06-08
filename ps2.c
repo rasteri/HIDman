@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"

@@ -1,9 +1,10 @@
+#include "ch559.h"
 #include "type.h"
-#include "mcu.h"
 #include "usbhost.h"
 #include "keyboardled.h"
 #include "usbhidkeys.h"
 #include "ps2.h"
+#include "system.h"
 
 static UINT8 keyboardLed = 0x00;
 static UINT8 oldLed = 0x00;

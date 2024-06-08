@@ -10,7 +10,7 @@
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void CH559UART0Alter()
+void CH559UART0Alter(void)
 {
     PORT_CFG |= bP0_OC;
     P0_DIR |= bTXD_;
@@ -26,7 +26,7 @@ void CH559UART0Alter()
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void InitUART0()
+void InitUART0(void)
 {
     UINT32 x;
     UINT8 x2; 
@@ -70,7 +70,7 @@ void InitUART0()
 * Output         : None
 * Return         : SBUF
 *******************************************************************************/
-UINT8  CH559UART0RcvByte( )
+UINT8  CH559UART0RcvByte(void)
 {
     while(RI == 0);                                                            //��ѯ���գ��жϷ�ʽ�ɲ���
     RI = 0;
@@ -121,7 +121,7 @@ int putchar(int c)
     return c;
 }
 
-int getchar() 
+int getchar(void) 
 {
     while(!RI);
     RI = 0;

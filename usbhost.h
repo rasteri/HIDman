@@ -191,5 +191,27 @@ extern void InterruptProcessRootHubPort(UINT8 port_index);
 extern void UpdateUsbKeyboardLed(UINT8 led);
 extern INTERFACE* AllocInterface(UINT8 count);
 void ReenumerateAllPorts(void);
+
+void ProcessUsbHostPort(void);
+
+extern BOOL volatile s_CheckUsbPort0;
+extern BOOL volatile s_CheckUsbPort1;
+
+// USB specific traces
+
+#if 0
+#include <stdio.h>
+#define TRACE(x)  printf(x)
+#define TRACE1(fmt, x)  printf(fmt, x)
+#define TRACE2(fmt, x1, x2) printf(fmt, x1, x2)
+#define TRACE3(fmt, x1, x2, x3) printf(fmt, x1, x2, x3)
+
+#else
+#define TRACE(x)  
+#define TRACE1(fmt, x)  
+#define TRACE2(fmt, x1, x2)
+#define TRACE3(fmt, x1, x2, x3)
+#endif
+
 #endif
 

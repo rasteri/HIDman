@@ -26,7 +26,7 @@ void __xdata *andyalloc(size_t size)
     return tmp;
 }
 
-void andyclearmem()
+void andyclearmem(void)
 {
     MemPoolPtr = MemPool;
 }

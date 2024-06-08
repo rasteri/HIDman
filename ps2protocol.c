@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2.h"
@@ -22,6 +21,7 @@
 #include "keyboardled.h"
 #include "xt.h"
 #include "settings.h"
+#include "system.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
@@ -41,7 +41,7 @@ uint8_t LEDDelayMs = 0;
 __xdata uint8_t MouseBuffer[MOUSE_BUFFER_SIZE];
 
 // runs in interrupt to keep timings
-void RepeatTimer()
+void RepeatTimer(void)
 {
 	if (RepeatState > 0)
 		RepeatState++;
@@ -90,7 +90,7 @@ __code int16_t RateConv[] = {
 	-7500};
 
 // Runs in main loop
-void HandleRepeats()
+void HandleRepeats(void)
 {
 	if (RepeatState > RepeatDelay)
 	{
@@ -114,7 +114,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 	uint8_t tmp = 0;
 	uint16_t cnt, endbit;
 	uint8_t *currByte;
-	uint8_t pressed;
+	uint8_t pressed = 0;
 	uint8_t ButSet = 0, ButReset = 0;
 
 	if (currSeg->InputType == MAP_TYPE_BITFIELD)
@@ -285,8 +285,6 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	HID_REPORT *descReport;
 	HID_SEG *currSeg;
 
-	uint32_t tmp;
-
 	// Turn off LEDs for a while
 #if defined(BOARD_MICRO)
 	P2 &= ~0b00100000;
@@ -311,11 +309,11 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 	}
 
 	// sanity check length - bypass because some reports ARE larger
-	/*if (descReport->length != len)
+	if (descReport->length < len)
 	{
 		DEBUG_OUT("Bad length - %u -> %lu\n", descReport->length, len);
 		return 0;
-	}*/
+	}
 
 	currSeg = descReport->firstHidSeg;
 
@@ -384,9 +382,11 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 32);
 		descReport->keyboardUpdated = 0;
 	}
+
+	return 1;
 }
 
-void TypematicDefaults()
+void TypematicDefaults(void)
 {
 	RepeatDelay = DelayConv[0x01]; // 500ms
 	RepeatRate = RateConv[0x0B];   // 10.9cps

@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2protocol.h"
@@ -16,6 +15,9 @@
 #include "keyboardled.h"
 #include "dataflash.h"
 #include "settings.h"
+#include "system.h"
+
+
 
 #if defined(BOARD_AXP)
 	#define OPT_SERIAL_MOUSE
@@ -38,167 +40,22 @@
 }*/
 
 
-// blue LED on by default
-uint8_t LEDStatus = 0x04;
 
-void mTimer2Interrupt(void) __interrupt(INT_NO_TMR2);
 
-// timer should run at 48MHz divided by (0xFFFF - (TH0TL0))
-// i.e. 60khz
-void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
-{
-	// Reload to 60KHz
 
-	switch (FlashSettings->KeyboardMode) {
-		case (MODE_PS2):
-			PS2ProcessPort(PORT_KEY);
-			break;
+uint8_t UsbUpdateCounter = 0;
 
-		case (MODE_XT):
-			XTProcessPort();
-			break;
+void EveryMillisecond(void) {
+
+	// every 4 milliseconds (125hz), check one or the other USB port
+	if (UsbUpdateCounter == 4)
+		s_CheckUsbPort0 = TRUE;
+	else if (UsbUpdateCounter == 8){
+		s_CheckUsbPort1 = TRUE;
 	}
 
-	// May as well do this even in XT mode, can't hurt
-	PS2ProcessPort(PORT_MOUSE);
-
-	// Handle keyboard typematic repeat timers
-	// (divide timer down to 15KHz to make maths easier)
-	static uint8_t repeatDiv = 0;
-	if (++repeatDiv == 4) {
-		repeatDiv = 0;
-		RepeatTimer();
-	}
-
-	static uint8_t msDiv = 0;
-	if (++msDiv == 60) {
-		msDiv = 0;
-		EveryMillisecond();
-	}
-}
-
-uint8_t reenumerate = 0;
-
-int16_t gpiodebounce = 0;
-
-// How long to wait in ms before input event can be triggered again
-#define DEBOUNCETIME 25
-
-// How long in ms a button has to be pressed before it's considered held
-#define HOLDTIME 2000
-
-//should be run every 1ms
-void inputProcess() {
-
-	uint8_t butstate = 0;
-
-	static uint16_t ResetCounter = 0;
-#if defined(OSC_EXTERNAL)
-	if (!(P3 & (1 << 4))){
-#else
-	if (!(P4_IN & (1 << 6))){
-#endif
-
-		butstate = 1;
-
-		// go into bootloader if user holds button for more than 5 seconds regardless of what else is going on
-		ResetCounter++;
-		if (ResetCounter > 5000) {
-			runBootloader();
-		}
-	}
-
-	else 
-		ResetCounter = 0;
-
-	// gpiodebounce = 0 when button not pressed
-	// > 0 and < DEBOUNCETIME when debouncing positive edge
-	// >= DEBOUNCETIME and < HOLDTIME when waiting for release or hold action
-	// = HOLDTIME when we register it as a hold action
-	// > HOLDTIME when waiting for release
-	// > -DEBOUNCETIME and < 0 when debouncing negative edge
-
-	// Button not pressed, check for button
-	if (gpiodebounce == 0) {
-		if (butstate) {
-			// button pressed
-
-
-			// start the counter
-			gpiodebounce++;
-		}
-	}
-
-	// Debouncing positive edge, increment value
-	else if (gpiodebounce > 0 && gpiodebounce < DEBOUNCETIME) {
-		gpiodebounce++;
-	}
-
-	// debounce finished, keep incrementing until hold reached
-	else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME) {
-		// check to see if unpressed
-		if (!butstate) {
-
-			if (menuState == MENU_STATE_DUMPING){
-				reenumerate = 1;
-			}
-			else {
-				// cycle through modes on unpress of button
-				HMSettings.KeyboardMode++;
-				if (HMSettings.KeyboardMode > 2)
-					HMSettings.KeyboardMode = 0;
-				SyncSettings();
-			}
-
-
-			// start the counter
-			gpiodebounce = -DEBOUNCETIME;
-		}
-
-		else
-			gpiodebounce++;
-	}
-	// Button has been held for a while
-	else if (gpiodebounce == HOLDTIME) {
-		MenuActive = 1;
-		gpiodebounce++;
-	}
-
-	// Button still holding, check for release
-	else if (gpiodebounce > HOLDTIME) {
-		// Still pressing, do action repeatedly
-		if (butstate) {
-		}
-		// not still pressing, debounce release
-		else {
-			//IOevent(i, IOEVENT_HOLDRELEASE);
-			// start the counter
-			gpiodebounce = -DEBOUNCETIME;
-		}
-	}
-
-	// Debouncing negative edge, increment value - will reset when zero is reached
-	else if (gpiodebounce < 0) {
-		gpiodebounce++;
-	}
-
-	switch (FlashSettings->KeyboardMode){
-		case MODE_PS2:
-			LEDStatus = 0x04;
-		break;
-		case MODE_XT:
-			LEDStatus = 0x02;
-		break;
-		case MODE_AMSTRAD:
-			LEDStatus = 0x01;
-		break;
-
-	}
-
-}
-
-void EveryMillisecond() {
-
+	UsbUpdateCounter++;
+	
 
 	// handle serial mouse
 	#if defined(OPT_SERIAL_MOUSE)
@@ -226,6 +83,7 @@ void EveryMillisecond() {
 		}
 	#endif
 
+	// check the button
 	inputProcess();
 
 	// Turn current LED on if we haven't seen any activity in a while
@@ -261,6 +119,41 @@ void EveryMillisecond() {
 	}
 }
 
+// timer should run at 48MHz divided by (0xFFFF - (TH0TL0))
+// i.e. 60khz
+void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
+{
+	// Reload to 60KHz
+
+	switch (FlashSettings->KeyboardMode) {
+		case (MODE_PS2):
+			PS2ProcessPort(PORT_KEY);
+			break;
+
+		case (MODE_XT):
+			XTProcessPort();
+			break;
+	}
+
+	// May as well do this even in XT mode, can't hurt
+	PS2ProcessPort(PORT_MOUSE);
+
+	// Handle keyboard typematic repeat timers
+	// (divide timer down to 15KHz to make maths easier)
+	static uint8_t repeatDiv = 0;
+	if (++repeatDiv == 4) {
+		repeatDiv = 0;
+		RepeatTimer();
+	}
+
+	static uint8_t msDiv = 0;
+	if (++msDiv == 60) {
+		msDiv = 0;
+		EveryMillisecond();
+	}
+}
+
+
 uint8_t DetectCountdown = 0;
 uint8_t PrevRTSState = 0;
 uint8_t PrevButtons = 0;
@@ -273,7 +166,7 @@ uint8_t PrevButtons = 0;
 	Func to test the sizes of various types
 	Mainly just to remind me how big all the various weird pointers are
 */
-void testintsizes(){
+/*void testintsizes(){
 
 	// trad C - note ints and shorts are both 2 bytes
 	testintsize(char, 1); testintsize(unsigned char, 1);
@@ -311,17 +204,10 @@ void testintsizes(){
 
 	// pdata pointers should be 8bit (they are paged 256-byte segments of xdata), page is selected by P2 (or an SFR? depends on 8051 variant)
 	testintsize(__pdata uint8_t *, 1); testintsize(__pdata uint32_t *, 1);
-}
+}*/
 
-void main()
-{
-	bool WatchdogReset = 0;
-
-	// Watchdog happened, go to "safe mode"
-	if (!(PCON & bRST_FLAG0) && (PCON & bRST_FLAG1)){
-		WatchdogReset = 1;
-	}
-
+void GPIOInit(){
+	
 #if defined(BOARD_MICRO) // Pinouts for HIDman-micro
 	//port1 setup
 	P1_DIR = 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
@@ -386,31 +272,50 @@ void main()
 	P4_OUT = 0b00000100; //LEDs off (i.e. HIGH), MOUSE DATA low (since it's switched by toggling input on and off, i.e. faking open drain)
 #endif
 
-for (char ik=0; ik < 255; ik++);
+}
 
-#if defined(OSC_EXTERNAL)
+void ClockInit(void){
+	#if defined(OSC_EXTERNAL)
 	if (!(P3 & (1 << 4))) runBootloader();
 #endif
 
-	InitSystem();
+	SAFE_MOD = 0x55;
+	SAFE_MOD = 0xAA;												 
 
-	WDOG_COUNT = 0x00;
+#if defined(OSC_EXTERNAL)
+	CLOCK_CFG |= bOSC_EN_XT;								  
+	CLOCK_CFG &= ~bOSC_EN_INT;												
+#endif
 
-	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
-	InitPWM1(1);   //PWM1 initialization, active low
-	InitPWM2(1);   //PWM2 initialization, active high
-	InitPWM3(1);
-	SetPWMCycle(0xff);
-	SetPWM1Dat(0x00);
-	SetPWM2Dat(0x00);
+	CLOCK_CFG &= ~MASK_SYS_CK_DIV;
 
-	T3_CK_SE_L = 0x20;
-	T3_CK_SE_H = 0;
-	T3_END_H = 0;
-	T3_END_L = 255;
-	T3_FIFO_L = 0;
-	T3_FIFO_H = 0;
+	CLOCK_CFG |= 6; 															  
+	PLL_CFG = (24 << 0) | (6 << 5);
+}
 
+void main(void)
+{
+	bool WatchdogReset = 0;
+
+	// Watchdog happened, go to "safe mode"
+	if (!(PCON & bRST_FLAG0) && (PCON & bRST_FLAG1)){
+		WatchdogReset = 1;
+	}
+
+	GPIOInit();
+	mDelaymS(10);
+
+	ClockInit();
+    mDelaymS(500);   
+	
+#if !defined(BOARD_MICRO)
+	InitUART0();
+#endif
+
+	InitUsbData();
+	InitUsbHost();
+
+	InitPWM();
 
 
 	// timer0 setup
@@ -419,17 +324,13 @@ for (char ik=0; ik < 255; ik++);
 
 	TR0 = 1; // start timer0
 	ET0 = 1; //enable timer0 interrupt;
+
+	// enable watchdog
+	WDOG_COUNT = 0x00;
+	//GLOBAL_CFG |= bWDOG_EN;
+	
 	EA = 1;	 // enable all interrupts
 
-
-
-#if defined(BOARD_AXP)
-	testintsizes();
-	printf("Ready\n");
-
-	// GREEN LED ON
-	P2 &= ~0b00100000;
-#endif
 
 #if defined(OPT_SERIAL_MOUSE)
 	uint32_t serialMouseBps = 1200; // can do 19200 with custom mouse driver
@@ -438,7 +339,8 @@ for (char ik=0; ik < 255; ik++);
 
 	memset(SendBuffer, 0, 255);
 	memset(MouseBuffer, 0, MOUSE_BUFFER_SIZE);
-	//SendKeyboardString("We are go\n");
+
+
 	uint8_t Buttons;
 	uint8_t PrevButtons = 0;
 	MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
@@ -451,12 +353,6 @@ for (char ik=0; ik < 255; ik++);
 
 	while (1)
 	{
-
-		if (reenumerate)
-		{ 
-			ReenumerateAllPorts();
-			reenumerate = 0;
-		}
 
 		// reset watchdog
 		WDOG_COUNT = 0x00;
@@ -512,11 +408,11 @@ for (char ik=0; ik < 255; ik++);
 #if defined(OPT_SERIAL_MOUSE)
 		if (serialMouseMode == SERIAL_MOUSE_MODE_INIT) {
 			// Delay a bit and send 'M' to identify as a mouse
-			delay(5);
+			mDelaymS(5);
 			CH559UART1SendByte('M');
 			if (serialMouseType != 'M') {
 				// Delay a bit longer and send '2' or '3' to further identify # of buttons
-				delay(10);
+				mDelaymS(10);
 				CH559UART1SendByte(serialMouseType);
 			}
 			serialMouseMode = SERIAL_MOUSE_MODE_ACTIVE;

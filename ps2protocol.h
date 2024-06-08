@@ -5,9 +5,9 @@
 #include "defs.h"
 #include "type.h"
 
-void HandleRepeats();
+void HandleRepeats(void);
 void HandleReceived(uint8_t port);
-void RepeatTimer();
+void RepeatTimer(void);
 
 bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report);
 

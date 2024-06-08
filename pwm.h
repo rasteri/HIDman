@@ -13,6 +13,7 @@ void InitPWM3(UINT8 polar);
 		P4_DIR |= bPWM2_ | bPWM1_; \
 		PIN_FUNC |= bPWM1_PIN_X;   \
 	} //Set PWM pin mapping
-
+	
+void InitPWM(void);
 
 #endif

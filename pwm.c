@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "ch559.h"
-#include "util.h"
 #include "usbhost.h"
 #include "uart.h"
 #include "ps2protocol.h"
@@ -87,4 +86,22 @@ void InitPWM3(UINT8 polar)
 	T3_CTRL |= bT3_OUT_EN | bT3_CNT_EN | bT3_PWM_POLAR;
 
 	PIN_FUNC |= bTMR3_PIN_X;
+}
+
+void InitPWM(void) {
+	//setup PWMs
+	SetPWMClk(12); //Set the clock division factor of PWM1&2 to 12
+	InitPWM1(1);
+	InitPWM2(1);
+	InitPWM3(1);
+	SetPWMCycle(0xff);
+	SetPWM1Dat(0x00);
+	SetPWM2Dat(0x00);
+
+	T3_CK_SE_L = 0x20;
+	T3_CK_SE_H = 0;
+	T3_END_H = 0;
+	T3_END_L = 255;
+	T3_FIFO_L = 0;
+	T3_FIFO_H = 0;
 }

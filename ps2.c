@@ -16,7 +16,7 @@
 #include "data.h"
 #include "ps2protocol.h"
 #include "settings.h"
-
+#include "system.h"
 
 __xdata ps2port ports[] = {
 	// keyboard
@@ -107,7 +107,7 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 bool SendKeyboard(const uint8_t *chunk)
 {
 	// reset watchdog timer, this routine blocks. It shouldn't really
-	WDOG_COUNT = 0x00;
+	SoftWatchdog = 0;
 
 	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 

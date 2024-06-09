@@ -17,6 +17,7 @@
 #include "ps2protocol.h"
 #include "menu.h"
 #include "mouse.h"
+#include "defs.h"
 
 int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
 
@@ -187,3 +188,95 @@ void Ps2MouseSetDefaults(void) {
 	Ps2MouseSetReporting(MOUSE_PS2_REPORTING_OFF);
 	Ps2MouseSetMode(MOUSE_PS2_MODE_STREAM);
 } 
+
+uint8_t PrevButtons = 0;
+
+MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
+
+void HandleMouse(void) {
+	
+		int16_t X, Y, Z;
+		uint8_t byte1, byte2, byte3, byte4;
+		uint8_t Buttons;
+
+		// Send PS/2 Mouse Packet if necessary
+		// make sure there's space in the buffer before we pop any mouse updates
+		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
+		{
+			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Z, &Buttons, (ps2Mouse->Ps2Scaling==MOUSE_PS2_SCALING_2X), (3-ps2Mouse->Ps2Resolution)))
+			{
+
+				// ps2 is inverted compared to USB
+				Y = -Y;
+
+				// TODO: construct bytes from real state
+				byte1 = 0b00001000 |			   //bit3 always set
+						((Y >> 10) & 0b00100000) | // Y sign bit
+						((X >> 11) & 0b00010000) | // X sign bit
+						(Buttons & 0x07);
+
+				byte2 = (X & 0xFF);
+				byte3 = (Y & 0xFF);
+
+				if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE_3_BUTTON)
+				{
+					byte4 = (-Z & 0xFF);
+					SendMouse4(byte1, byte2, byte3, byte4);
+				}
+				else if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE_5_BUTTON)
+				{
+					byte4 = (-Z & 0b00001111) |    // wheel 
+					((Buttons << 1) & 0b00110000); // buttons 4 and 5					
+					SendMouse4(byte1, byte2, byte3, byte4);
+				}
+				else
+				{
+					SendMouse3(byte1, byte2, byte3);
+				}
+			}
+		}
+
+#if defined(OPT_SERIAL_MOUSE)
+		if (serialMouseMode == SERIAL_MOUSE_MODE_INIT) {
+			// Delay a bit and send 'M' to identify as a mouse
+			mDelaymS(5);
+			CH559UART1SendByte('M');
+			if (serialMouseType != 'M') {
+				// Delay a bit longer and send '2' or '3' to further identify # of buttons
+				mDelaymS(10);
+				CH559UART1SendByte(serialMouseType);
+			}
+			serialMouseMode = SERIAL_MOUSE_MODE_ACTIVE;
+		}
+		// Send Serial Mouse Packet if necessary
+		// make sure there's space in the fifo before we pop any mouse updates
+		else if (serialMouseMode == SERIAL_MOUSE_MODE_ACTIVE && (/*CH559UART1_FIFO_CNT >= 3 || */ SER1_LSR & bLSR_T_FIFO_EMP))
+		{
+			if (GetMouseUpdate(1, -127, 127, &X, &Y, &Z, &Buttons, false, 0))
+			{
+				byte1 = 0b11000000 |			  // bit6 always set
+						((Buttons & 0x01) << 5) | // left button
+						((Buttons & 0x02) << 3) | // right button
+						((Y >> 4) & 0b00001100) | // top two bits of Y
+						((X >> 6) & 0b00000011);  // top two bits of X
+
+				byte2 = 0b10000000 | (X & 0x3F); // rest of X
+				byte3 = 0b10000000 | (Y & 0x3F); // rest of Y
+
+				CH559UART1SendByte(byte1);
+				CH559UART1SendByte(byte2);
+				CH559UART1SendByte(byte3);
+
+				if (serialMouseType == '3')
+				{
+					if (Buttons & 0x04)
+						CH559UART1SendByte(0b10100000);
+					else if (PrevButtons & 0x04)
+						CH559UART1SendByte(0b10000000);
+
+					PrevButtons = Buttons;
+				}
+			}
+		}
+#endif
+}

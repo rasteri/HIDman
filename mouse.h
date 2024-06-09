@@ -68,4 +68,6 @@ void Ps2MouseSetScaling(uint8_t Scaling);
 void Ps2MouseSetReporting(bool Reporting);
 void Ps2MouseSetDefaults(void); 
 
+void HandleMouse(void);
+
 #endif

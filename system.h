@@ -62,5 +62,10 @@ typedef unsigned char halIntState_t;
 typedef void(* __data FunctionReference)(void);
 extern FunctionReference runBootloader;
 
+void GPIOInit(void);
+void ClockInit(void);
+
+extern volatile uint16_t SoftWatchdog;
+
 #endif
 

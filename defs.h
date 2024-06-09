@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include "type.h"
 
+#if defined(BOARD_AXP)
+	#define OPT_SERIAL_MOUSE
+#endif
 
 //packet id
 #define ID_USB_KEYBOARD   0xA0

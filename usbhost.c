@@ -1482,7 +1482,7 @@ void ReenumerateAllPorts(void){
 	UINT8 i;
 	if (DumpReport) SendKeyboardString("reenumerating all ports\n");
 	mDelaymS(150);
-	TR0 = 0;
+	//TR0 = 0;
 	andyclearmem();
 	sInterfacePoolPos = 0;
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
@@ -1491,7 +1491,7 @@ void ReenumerateAllPorts(void){
 		EnumerateRootHubPort(i);
 		RegrabDeviceReports(i);
 	}
-	TR0 = 1;
+	//TR0 = 1;
 }
 
 //----------------------------------------------------------------------------------

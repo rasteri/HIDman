@@ -172,6 +172,8 @@ void YesNo(bool x){
     if (x) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
 }
 
+bool DebugMenu = 0;
+
 void Menu_Task(void)
 {
     switch (menuState)
@@ -187,8 +189,13 @@ void Menu_Task(void)
         SendKeyboardString("3. Intellimouse - ");
         YesNo(FlashSettings->Intellimouse);
 
-        SendKeyboardString("\n8. Log HID Data\n");
-        SendKeyboardString("9. Dump PS2 mouse status\n");
+        if (DebugMenu){
+            SendKeyboardString("\n6. Simulate Hardlock\n");
+            SendKeyboardString("7. Simulate Softlock\n");
+            SendKeyboardString("8. Log HID Data\n");
+            SendKeyboardString("9. Dump PS2 mouse status\n");
+        }
+        else SendKeyboardString("\n5. Debug\n");
 
         SendKeyboardString("ESC to exit menu\n\n");
 
@@ -220,6 +227,25 @@ void Menu_Task(void)
                 HMSettings.Intellimouse ^= 1;
                 SyncSettings();
                 menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_4:
+                HMSettings.Intellimouse ^= 1;
+                SyncSettings();
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_5:
+                DebugMenu = 1;
+                menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_6:
+                // stop timer0 resetting watchdog
+                ET0 = 0;
+            case KEY_7:
+                // trigger a watchdog reset by hanging around
+                while(1);
                 break;
 
             case KEY_8:

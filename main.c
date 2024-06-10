@@ -17,17 +17,6 @@
 #include "settings.h"
 #include "system.h"
 
-#if defined(OPT_SERIAL_MOUSE)
-	#define SERIAL_MOUSE_MODE_OFF    0
-	#define SERIAL_MOUSE_MODE_RESET  1
-	#define SERIAL_MOUSE_MODE_INIT   2
-	#define SERIAL_MOUSE_MODE_ACTIVE 3
-
-	uint8_t serialMouseMode = SERIAL_MOUSE_MODE_OFF;
-	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
-#endif
-
-
 uint8_t UsbUpdateCounter = 0;
 
 volatile uint16_t SoftWatchdog = 0;
@@ -121,7 +110,6 @@ void EveryMillisecond(void) {
 // i.e. 60khz
 void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 {
-	// Reload to 60KHz
 
 	switch (FlashSettings->KeyboardMode) {
 		case (MODE_PS2):
@@ -163,6 +151,10 @@ void main(void)
 	GPIOInit();
 	mDelaymS(10);
 
+#if defined(OSC_EXTERNAL)
+	if (!(P3 & (1 << 4))) runBootloader();
+#endif
+
 	ClockInit();
     mDelaymS(500);   
 	
@@ -183,12 +175,7 @@ void main(void)
 	TR0 = 1; // start timer0
 	ET0 = 1; //enable timer0 interrupt;
 
-	// enable watchdog
-	WDOG_COUNT = 0x00;
-	GLOBAL_CFG |= bWDOG_EN;
-	
 	EA = 1;	 // enable all interrupts
-
 
 #if defined(OPT_SERIAL_MOUSE)
 	uint32_t serialMouseBps = 1200; // can do 19200 with custom mouse driver
@@ -202,8 +189,21 @@ void main(void)
 
 	InitSettings(WatchdogReset);
 
-	// main loop
+	
 
+	ANDYS_DEBUG_OUT("ok\n");
+
+	// enable watchdog
+	WDOG_COUNT = 0x00;
+	SAFE_MOD = 0x55;
+	SAFE_MOD = 0xAA;
+	GLOBAL_CFG |= bWDOG_EN;
+
+	WDOG_COUNT = 0x00;
+
+	//while(1);
+
+	// main loop
 	while (1)
 	{
 		// reset watchdog

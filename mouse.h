@@ -26,6 +26,11 @@
 #define MOUSE_PS2_REPORTING_OFF 0
 #define MOUSE_PS2_REPORTING_ON 1
 
+#define SERIAL_MOUSE_MODE_OFF    0
+#define SERIAL_MOUSE_MODE_RESET  1
+#define SERIAL_MOUSE_MODE_INIT   2
+#define SERIAL_MOUSE_MODE_ACTIVE 3
+
 typedef struct MOUSE {
 
     // the accumulated X, Y and wheel movements
@@ -67,6 +72,8 @@ void Ps2MouseSetResolution(uint8_t Resolution);
 void Ps2MouseSetScaling(uint8_t Scaling);
 void Ps2MouseSetReporting(bool Reporting);
 void Ps2MouseSetDefaults(void); 
+
+extern uint8_t serialMouseMode;
 
 void HandleMouse(void);
 

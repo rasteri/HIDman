@@ -231,9 +231,7 @@ void GPIOInit(void){
 }
 
 void ClockInit(void){
-	#if defined(OSC_EXTERNAL)
-	if (!(P3 & (1 << 4))) runBootloader();
-#endif
+
 
 	SAFE_MOD = 0x55;
 	SAFE_MOD = 0xAA;												 

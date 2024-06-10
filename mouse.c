@@ -18,6 +18,12 @@
 #include "menu.h"
 #include "mouse.h"
 #include "defs.h"
+#include "system.h"
+
+#if defined(OPT_SERIAL_MOUSE)
+	uint8_t serialMouseMode = SERIAL_MOUSE_MODE_OFF;
+	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
+#endif
 
 int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
 
@@ -32,6 +38,7 @@ void InitMice(void)
 uint8_t updates = 0;
 void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ)
 {
+
     for (int x = 0; x < 2; x++)
     {
         MOUSE *m = &OutputMice[x];
@@ -198,14 +205,12 @@ void HandleMouse(void) {
 		int16_t X, Y, Z;
 		uint8_t byte1, byte2, byte3, byte4;
 		uint8_t Buttons;
-
 		// Send PS/2 Mouse Packet if necessary
 		// make sure there's space in the buffer before we pop any mouse updates
 		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
 		{
 			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Z, &Buttons, (ps2Mouse->Ps2Scaling==MOUSE_PS2_SCALING_2X), (3-ps2Mouse->Ps2Resolution)))
 			{
-
 				// ps2 is inverted compared to USB
 				Y = -Y;
 
@@ -217,6 +222,7 @@ void HandleMouse(void) {
 
 				byte2 = (X & 0xFF);
 				byte3 = (Y & 0xFF);
+
 
 				if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE_3_BUTTON)
 				{

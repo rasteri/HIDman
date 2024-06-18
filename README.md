@@ -42,7 +42,7 @@ Hub support can be hit-and-miss. This is (mostly) not HIDman's fault - many mode
 
 * Connect male-to-male Mini-DIN cables from HIDman’s keyboard and mouse ports to your PC’s PS/2 ports.
 * Turn on your PC.
-* If necessary, press HIDman's power button to select PS/2 mode (⏻ should be light blue).
+* If necessary, press HIDman's ⏻ power button to select PS/2 mode (light blue).
 
 <img src=/images/newerpcs.svg width=400/>
 
@@ -53,7 +53,7 @@ Hub support can be hit-and-miss. This is (mostly) not HIDman's fault - many mode
 * Connect that adapter to your PC's keyboard port.
 * Connect a straight-through male-to-female DE-9 cable from HIDman's serial port to your PC's serial port.
 * Turn on your PC.
-* Press HIDman's power button to select AT mode (⏻ should be light blue), or XT mode for early 80's IBM PCs and clones (⏻ should be orange).
+* Press HIDman's ⏻ power button to select AT mode (light blue), or XT mode (orange) for early 80's IBM PCs and clones.
 
 <img src=/images/olderpcs.svg width=500/>
 

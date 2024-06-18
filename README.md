@@ -5,11 +5,11 @@ HIDman is an open source device to allow the use of modern USB keyboards and mic
 
 Peripherals that support legacy PCs are becoming hard to find, especially for the very first PCs. This project aims to provide a simple cheap solution that will cover everything from the original IBM 5150 PC all the way up to modern computers that have PS/2 ports.
 
-![Hidman Front](/images/hidmanfront.jpg)
-![Hidman Front](/images/hidmanrear.jpg)
+<img src=/images/hidmanfront.jpg width=50%/>
+<img src=/images/hidmanrear.jpg width=50%/>
 
 
-## Features
+# Features
 
 * (should) Support the majority of standard USB keyboards and mice, including ones that use wireless dongles.
 * Also supports (some) USB Game controllers - buttons/axes are mapped to keypresses or mouse actions
@@ -20,8 +20,45 @@ Peripherals that support legacy PCs are becoming hard to find, especially for th
   * PS/2 Mouse (with optional Intellipoint-style scroll wheel and up to 5 buttons)
 * Driverless configuration menu - change settings just by opening a text editor
 
-## Technical description
 
+# Quickstart Guide
+
+## USB Connection
+
+You can connect many different combinations of USB devices to HIDman.
+
+The most obvious being to connect a keyboard to one USB port, and a mouse to the other one :
+
+<img src=/images/usbsetup1.svg width=300/>
+
+Or, you could perhaps connect a wireless keyboard+mouse dongle to one port, and a game controller to the other :
+
+<img src=/images/usbsetup2.svg width=400/>
+
+Hub support can be hit-and-miss. This is (mostly) not HIDman's fault - many modern hubs don't support low-speed USB devices properly.
+
+
+## Newer PCs (PS/2) ###
+
+* Connect male-to-male Mini-DIN cables from HIDman’s keyboard and mouse ports to your PC’s PS/2 ports.
+* Turn on your PC.
+* If necessary, press HIDman's power button to select PS/2 mode (⏻ should be light blue).
+
+<img src=/images/newerpcs.svg width=400/>
+
+
+## Older PCs (AT/XT and Serial)
+
+* Connect a male-to-male Mini-DIN Cable from HIDman's keyboard port into a Mini-DIN to DIN adapter.
+* Connect that adapter to your PC's keyboard port.
+* Connect a straight-through male-to-female DE-9 cable from HIDman's serial port to your PC's serial port.
+* Turn on your PC.
+* Press HIDman's power button to select AT mode (⏻ should be light blue), or XT mode for early 80's IBM PCs and clones (⏻ should be orange).
+
+<img src=/images/olderpcs.svg width=500/>
+
+
+## Technical description
 
 The HIDman is based around the CH559 from WCH, a remarkably flexible chip with **two** USB HOST ports. This makes it ideal for our purposes.
 

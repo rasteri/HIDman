@@ -1021,7 +1021,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 	}
 #endif
 
-	mDelaymS(500);
+	mDelaymS(100);
 
 	SelectHubPort(port, EXHUB_PORT_NONE);
 
@@ -1176,7 +1176,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 							return FALSE;
 						}
 
-						mDelaymS(500);
+						mDelaymS(100);
 						do
 						{
 							s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);

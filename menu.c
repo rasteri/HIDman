@@ -360,7 +360,7 @@ void inputProcess(void) {
 			else {
 				// cycle through modes on unpress of button
 				HMSettings.KeyboardMode++;
-				if (HMSettings.KeyboardMode > 2)
+				if (HMSettings.KeyboardMode > 1)
 					HMSettings.KeyboardMode = 0;
 				SyncSettings();
 			}
@@ -397,17 +397,6 @@ void inputProcess(void) {
 		gpiodebounce++;
 	}
 
-	switch (FlashSettings->KeyboardMode){
-		case MODE_PS2:
-			LEDStatus = 0x04;
-		break;
-		case MODE_XT:
-			LEDStatus = 0x02;
-		break;
-		case MODE_AMSTRAD:
-			LEDStatus = 0x01;
-		break;
 
-	}
 
 }

@@ -81,26 +81,50 @@ void EveryMillisecond(void) {
 		P2 |= 0b00100000;
 #elif defined (BOARD_PS2)
 		P0 |= 0b01110000;
-		if (LEDStatus & 0x01)
-			P0 &= ~0b00010000;
-		if (LEDStatus & 0x02)
-			P0 &= ~0b00100000;
-		if (LEDStatus & 0x04)
-			P0 &= ~0b01000000;
+
+		switch (FlashSettings->KeyboardMode) {
+			case MODE_PS2:
+				// blue
+				P0 &= ~0b01000000;
+			break;
+			case MODE_XT:
+				// orange
+				P0 &= ~0b00010000;
+				P0 &= ~0b00100000;
+			break;
+			case MODE_AMSTRAD:
+				// white
+				P0 &= ~0b00010000;
+				P0 &= ~0b00100000;
+				P0 &= ~0b01000000;
+			break;
+		}
+
 #else
 			SetPWM1Dat(0x00);
 			SetPWM2Dat(0x00);
 			T3_FIFO_L = 0;
 			T3_FIFO_H = 0;
 
-			if (LEDStatus & 0x01)
-				SetPWM1Dat(0x30);
-			if (LEDStatus & 0x02)
-				SetPWM2Dat(0x30);
-			if (LEDStatus & 0x04)
-			{
-				T3_FIFO_L = 0xFF; // blue needs to be brighter
-				T3_FIFO_H = 0;
+			switch (FlashSettings->KeyboardMode){
+				case MODE_PS2:
+					// blue
+					T3_FIFO_L = 0xFF;
+					T3_FIFO_H = 0;
+				break;
+				case MODE_XT:
+					// orange
+					SetPWM2Dat(0x10);
+					SetPWM1Dat(0x40);
+				break;
+				case MODE_AMSTRAD:
+					// white
+					SetPWM1Dat(0x30);
+					SetPWM2Dat(0x20);
+					T3_FIFO_L = 0x3F;
+					T3_FIFO_H = 0;
+				break;
+
 			}
 #endif
 	}

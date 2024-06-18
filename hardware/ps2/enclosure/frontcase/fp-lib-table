@@ -1,3 +1,0 @@
-(fp_lib_table
-  (lib (name "ps2usb")(type "KiCad")(uri "C:/code/HIDman/hardware/ps2usb.pretty")(options "")(descr ""))
-)

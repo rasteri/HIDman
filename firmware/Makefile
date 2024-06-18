@@ -65,11 +65,14 @@ LFLAGS := $(CFLAGS)
 
 print-%  : ; @echo $* = $($*)
 
+makebuilddir:
+	@-mkdir build
+
 $(OBJDIR)/%.rel : %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 
-$(OBJDIR)/$(TARGET).ihx: $(OBJECTS)
+$(OBJDIR)/$(TARGET).ihx: makebuilddir $(OBJECTS)
 	$(CC) $(OBJECTS) $(LFLAGS) -o $(OBJDIR)/$(TARGET).ihx
 	
 

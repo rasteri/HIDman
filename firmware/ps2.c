@@ -160,11 +160,11 @@ void PS2ProcessPort(uint8_t port)
 			}
 			else
 			{
-				if (ports[port].rateLimit) ports[port].rateLimit--;
+				if (ports[port].rateLimit > 0) ports[port].rateLimit--;
 
 				//if rateLimit is ok and buffer not empty
 				//if buffer not empty
-				if (ports[port].sendBuffEnd != ports[port].sendBuffStart)
+				if (ports[port].rateLimit == 0 && ports[port].sendBuffEnd != ports[port].sendBuffStart)
 				{
 					ports[port].rateLimit = PS2_RATE_LIMIT;
 

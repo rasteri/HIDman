@@ -8,7 +8,7 @@
 
 // increase to reduce maximum rate bytes can be sent
 // units are in 60khz
-#define PS2_RATE_LIMIT 0
+#define PS2_RATE_LIMIT 50
 #define XT_RATE_LIMIT 1000
 
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro

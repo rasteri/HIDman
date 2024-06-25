@@ -33,7 +33,7 @@ The most obvious being to connect a keyboard to one USB port, and a mouse to the
 
 Or, you could perhaps connect a wireless keyboard+mouse dongle to one port, and a game controller to the other :
 
-<img src=/images/usbsetup2.svg width=400/>
+<img src=/images/usbsetup2.svg width=500/>
 
 Hub support can be hit-and-miss. This is (mostly) not HIDman's fault - many modern hubs don't support low-speed USB devices properly.
 

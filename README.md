@@ -73,6 +73,25 @@ Simply open a text editor on your target PC (eg notepad, edit, vi), then hold HI
 If you are having trouble getting a USB device to work, enable HID Dumping then connect the troublesome USB device. Wait for it to finish dumping, then press ESC and save the resulting data to a text file. Then send it to me for analysis.
 
 
+# Advanced Setups
+
+## Combined PS/2 port
+HIDman actually outputs keyboard *and* mouse signals on **BOTH** PS/2 connectors. If you have a PC that can take advantage of this (typically Mini PCs or Laptops), you can keep the cabling neater by using only one cable.
+
+<img src=/images/combined1.svg width=500/>
+
+Note that there are two different types of Combined PS/2 ports, and HIDman provides for both types. Generally, laptops will need plugged into the Mouse port on HIDman, and Mini PCs want the Keyboard port. If it doesn't work with one port, try the other one.
+
+
+## Splitter
+
+Another way to take advantage of the Combined PS/2 port functionality is to use a widely-available PS/2 splitter :
+
+<img src=/images/splitter.svg width=500/>
+
+This also allows neater cabling, as you could connect both keyboard and mouse ports to the rear, and not have to connect to the front mouse port.
+
+
 ## Technical description
 
 The HIDman is based around the CH559 from WCH, a remarkably flexible chip with **two** USB HOST ports. This makes it ideal for our purposes.

@@ -64,11 +64,15 @@ Configuration is provided through a built-in menu system. No software install is
 
 Simply open a text editor on your target PC (eg notepad, edit, vi), then hold HIDman's power button for a few seconds. The menu will be typed out into your text editor.
 
+<img src=/images/menu1.png width=394/>
+
 "Adv.Keyboard" and "Adv.Mouse" switch the keyboard and mouse respectively into "Native Mode". This may be required to access certain functions such as scroll wheels and extra buttons on mice.
 
 "Intellimouse" enables scroll wheel and 5-button support for PS/2 mice.
 
 "Debug" enables the debug menu. The most useful debugging option is "Dump HID Data". Enabling this dumps information about all USB devices connected after that point. 
+
+<img src=/images/menu2.png width=450/>
 
 If you are having trouble getting a USB device to work, enable HID Dumping then connect the troublesome USB device. Wait for it to finish dumping, then press ESC and save the resulting data to a text file. Then send it to me for analysis.
 

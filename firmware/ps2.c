@@ -168,6 +168,9 @@ void PS2ProcessPort(uint8_t port)
 				{
 					ports[port].rateLimit = PS2_RATE_LIMIT;
 
+					sb = ports[port].sendbit = 0;
+					ports[port].parity = 1;
+
 					if (port == PORT_KEY)
 					{
 						chunk = ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffStart];

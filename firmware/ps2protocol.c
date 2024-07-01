@@ -235,17 +235,18 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				{
 				// TODO scaling
 				case MAP_MOUSE_X:
-					/*if (currSeg->InputParam == 2)
-						currSeg->value = (uint8_t)((int8_t)((currSeg->value + 8) >> 4) - 0x08);
-					else*/
+					if (currSeg->InputParam == 2)
+						MouseMove(((int8_t)((currSeg->value + 8) >> 4) - 0x08), 0, 0);
+					else
 
 					MouseMove((int8_t)currSeg->value, 0, 0);
 
 					break;
 				case MAP_MOUSE_Y:
-					/*if (currSeg->InputParam == 2)
-						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
-					else*/
+					if (currSeg->InputParam == 2)
+						MouseMove(0, ((int8_t)((currSeg->value + 8) >> 4) - 0x08), 0);
+					else
+					
 
 					MouseMove(0, (int8_t)currSeg->value, 0);
 

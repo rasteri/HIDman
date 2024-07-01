@@ -200,7 +200,7 @@ __code JoyPreset DefaultJoyMaps[] = {
         REPORT_USAGE_PAGE_GENERIC, // Usage Page
         REPORT_USAGE_Z,            // Usage
         MAP_MOUSE,                 // Output Channel
-        MAP_MOUSE_Y,               // Output Control
+        MAP_MOUSE_X,               // Output Control
         MAP_TYPE_SCALE,            // InputType
         2                          // Input Param
     },
@@ -209,7 +209,7 @@ __code JoyPreset DefaultJoyMaps[] = {
         REPORT_USAGE_PAGE_GENERIC, // Usage Page
         REPORT_USAGE_Rz,           // Usage
         MAP_MOUSE,                 // Output Channel
-        MAP_MOUSE_X,               // Output Control
+        MAP_MOUSE_Y,               // Output Control
         MAP_TYPE_SCALE,            // InputType
         2                          // Input Param
     },

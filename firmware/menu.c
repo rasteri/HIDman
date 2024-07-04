@@ -179,7 +179,7 @@ void Menu_Task(void)
     switch (menuState)
     {
     case MENU_STATE_INIT:
-        SendKeyboardString("\n\nHIDMAN v1.0 Main Menu\n\n");
+        SendKeyboardString("\n\nHIDMAN v1.1 Main Menu\n\n");
         SendKeyboardString("1. Adv.Keyboard - ");
         YesNo(FlashSettings->KeyboardReportMode);
 

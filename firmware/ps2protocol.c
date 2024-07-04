@@ -116,6 +116,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 	uint8_t *currByte;
 	uint8_t pressed = 0;
 	uint8_t ButSet = 0, ButReset = 0;
+	int16_t tmpl;
 
 	if (currSeg->InputType == MAP_TYPE_BITFIELD)
 	{
@@ -231,20 +232,40 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			if (currSeg->OutputChannel == MAP_MOUSE)
 			{
 
+				#define DEADZONE 1
+
 				switch (currSeg->OutputControl)
 				{
 				// TODO scaling
 				case MAP_MOUSE_X:
-					if (currSeg->InputParam == 2)
-						MouseMove(((int8_t)((currSeg->value + 8) >> 4) - 0x08), 0, 0);
+					if (currSeg->InputParam == 2){
+
+						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
+
+						// deadzone
+						if (tmpl <= -DEADZONE) tmpl+= DEADZONE;
+						else if (tmpl >= DEADZONE) tmpl-= DEADZONE;
+						else tmpl = 0;
+						
+						MouseMove(tmpl, 0, 0);
+					}
 					else
 
 					MouseMove((int8_t)currSeg->value, 0, 0);
 
 					break;
 				case MAP_MOUSE_Y:
-					if (currSeg->InputParam == 2)
-						MouseMove(0, ((int8_t)((currSeg->value + 8) >> 4) - 0x08), 0);
+					if (currSeg->InputParam == 2){
+
+						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
+
+						// deadzone
+						if (tmpl <= -DEADZONE) tmpl+= DEADZONE;
+						else if (tmpl >= DEADZONE) tmpl-= DEADZONE;
+						else tmpl = 0;
+
+						MouseMove(0, tmpl, 0);
+					}
 					else
 					
 

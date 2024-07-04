@@ -1337,7 +1337,7 @@ static UINT8 QueryHubPortAttach(void)
 void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 {
 	UINT8 i, s, c;
-	UINT16 len;
+	UINT16 len, cnt;
 	USB_DEVICE *pUsbDevice = &pUsbHubPort->UsbDevice;
 	if (pUsbDevice->DeviceClass != USB_DEV_CLASS_HUB)
 	{
@@ -1392,12 +1392,12 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				if (DumpReport)
 				{
 					SendKeyboardString("\n\nInterface %hx Report Descriptor - \n", i);
-					for (c = 0; c < len; c++)
+					for (cnt = 0; cnt < len; cnt++)
 					{
-						if (!(c & 0x000F))
+						if (!(cnt & 0x000F))
 							SendKeyboardString("\n");
 
-						SendKeyboardString("%02X ", ReceiveDataBuffer[c]);
+						SendKeyboardString("%02X ", ReceiveDataBuffer[cnt]);
 					}
 					SendKeyboardString("\n");
 					SendKeyboardString("\n");

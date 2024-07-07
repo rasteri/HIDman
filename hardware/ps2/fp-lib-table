@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "HIDmanLibrary")(type "KiCad")(uri "${KIPRJMOD}/HIDmanLibrary.pretty")(options "")(descr ""))
+)

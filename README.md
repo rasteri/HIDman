@@ -96,7 +96,7 @@ If this is your first time updating, you're going to need to download and instal
 
 After that, follow the instructions in this diagram :
 
-<img src=/images/firmware2.svg width=600/>
+<img src=/images/firmware2.svg width=800/>
 
 
 ## Linux or Mac

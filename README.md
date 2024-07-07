@@ -77,6 +77,19 @@ Simply open a text editor on your target PC (eg notepad, edit, vi), then hold HI
 If you are having trouble getting a USB device to work, enable HID Dumping then connect the troublesome USB device. Wait for it to finish dumping, then press ESC and save the resulting data to a text file. Then send it to me for analysis.
 
 
+# Firmware Update
+
+Firmware development is always continuing, so if you have problems it's always worth updating to the latest version.
+
+Instructions are different depending on your OS.
+
+
+## Windows
+
+You're going to need to grab WCH's ISP tool
+<img src=/images/firmware2.svg width=600/>
+
+
 # Advanced Setups
 
 ## Combined PS/2 port

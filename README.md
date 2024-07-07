@@ -77,6 +77,38 @@ Simply open a text editor on your target PC (eg notepad, edit, vi), then hold HI
 If you are having trouble getting a USB device to work, enable HID Dumping then connect the troublesome USB device. Wait for it to finish dumping, then press ESC and save the resulting data to a text file. Then send it to me for analysis.
 
 
+# Firmware Update
+
+Firmware development is continuing, so if you have problems it's always worth updating to the latest version.
+
+The first step is to put the HIDman in firmware update mode.
+
+1. Disconnect everything from HIDman, including all USB devices and PCs. (failure to do this may result in damage to HIDman, your PC, or both).
+2. Hold down HIDman's ⏻ power button.
+3. Use a USB A-to-A cable to connect HIDman's LOWER USB port to a USB port on your modern PC.
+
+After that, update instructions will depend on your operating system.
+
+
+## Windows
+
+If this is your first time updating, you're going to need to download and install WCH's ISP tool - https://www.wch-ic.com/downloads/WCHISPTool_Setup_exe.html
+
+After that, follow the instructions in this diagram :
+
+<img src=/images/firmware2.svg width=600/>
+
+
+## Linux or Mac
+
+There are a few options here, but the only one I could get to work is ch55xtool : https://github.com/MarsTechHAN/ch552tool
+
+Once you've installed that, use the -f parameter to specify the firmware file to load. For example :
+
+```
+python3 ch55xtool.py -f hidman_axp_v1.1.bin
+```
+
 # Advanced Setups
 
 ## Combined PS/2 port

@@ -4719,7 +4719,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "ps2usb:DIN8"
+		(property "Footprint" "HIDmanLibrary:DIN8"
 			(at 207.01 88.9 0)
 			(effects
 				(font
@@ -6171,7 +6171,7 @@
 				)
 			)
 		)
-		(property "Footprint" "ps2usb:B3173BGR-20C0001Q3U1930"
+		(property "Footprint" "HIDmanLibrary:B3173BGR-20C0001Q3U1930"
 			(at 179.07 114.3 0)
 			(effects
 				(font

@@ -6,6 +6,10 @@
 #define MENU_STATE_INIT 0
 #define MENU_STATE_MAIN 1
 #define MENU_STATE_DUMPING 2
+#define MENU_STATE_KEYBOARD 3
+#define MENU_STATE_MOUSE 4
+#define MENU_STATE_GAME 5
+#define MENU_STATE_DEBUG 6
 
 void Menu_Press_Key(uint8_t key);
 extern __xdata bool MenuActive;

@@ -21,6 +21,12 @@ typedef struct Settings {
     // Emulate 3rd PS/2 button + Wheel
     bool Intellimouse;
 
+    // Limit XT keyboards to 81 keys only
+    bool XT81Keys;
+
+    // Use game controller to control mouse
+    bool GameControllerAsMouse;
+
     // What type of computer the keyboard is plugged into (i.e. PS2 or XT)
     uint8_t KeyboardMode;
 

@@ -4,7 +4,6 @@
     Handles the menu that appears when you press HIDman's button
 */
 
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,16 +34,18 @@ __xdata bool MenuActive = 0;
 
 uint8_t sendBufferState = SEND_STATE_IDLE;
 
-void PressKey(uint8_t currchar) {
+void PressKey(uint8_t currchar)
+{
     while (!SendKeyboard(
-        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]
-        ));
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]))
+        ;
 }
 
-void ReleaseKey(uint8_t currchar) {
+void ReleaseKey(uint8_t currchar)
+{
     while (!SendKeyboard(
-        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]
-        ));
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]))
+        ;
 }
 
 void SendKeyboardBuffer(void)
@@ -56,15 +57,16 @@ void SendKeyboardBuffer(void)
     {
         currchar = SendBuffer[BufferIndex];
 
-        if (!currchar){
+        if (!currchar)
+        {
             return;
         }
 
         // capitals, hold shift first
         if (currchar >= 0x41 && currchar <= 0x5A)
             while (!SendKeyboard(
-                (FlashSettings->KeyboardMode == MODE_PS2) ? KEY_LSHIFT_MAKE : XT_KEY_LSHIFT_MAKE
-                ));
+                (FlashSettings->KeyboardMode == MODE_PS2) ? KEY_LSHIFT_MAKE : XT_KEY_LSHIFT_MAKE))
+                ;
 
         // press the key
         PressKey(currchar);
@@ -75,7 +77,8 @@ void SendKeyboardBuffer(void)
         // release shift
         if (currchar >= 0x41 && currchar <= 0x5A)
         {
-            while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK));
+            while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK))
+                ;
         }
         BufferIndex++;
     }
@@ -83,9 +86,8 @@ void SendKeyboardBuffer(void)
 
 uint8_t fuckcount = 1;
 
-
-
 uint8_t menuState = MENU_STATE_INIT;
+uint8_t lastMenuState = MENU_STATE_INIT;
 
 uint8_t menuKey = 0;
 
@@ -94,127 +96,174 @@ void Menu_Press_Key(uint8_t key)
     menuKey = key;
 }
 
-void YesNo(bool x){
-    if (x) {SendKeyboardString("Yes\n");} else {SendKeyboardString("No\n");}
+void YesNo(bool x)
+{
+    if (x)
+    {
+        SendKeyboardString("Yes\n");
+    }
+    else
+    {
+        SendKeyboardString("No\n");
+    }
 }
-
-bool DebugMenu = 0;
 
 void Menu_Task(void)
 {
     switch (menuState)
     {
-    case MENU_STATE_INIT:
-        SendKeyboardString("\n\nHIDMAN v1.1 Main Menu\n\n");
-        SendKeyboardString("1. Adv.Keyboard - ");
-        YesNo(FlashSettings->KeyboardReportMode);
+        case MENU_STATE_INIT:
 
-        SendKeyboardString("2. Adv.Mouse - ");
-        YesNo(FlashSettings->MouseReportMode);
+            // SendKeyboardString("abababababababababababababababab"); // 32
+            // SendKeyboardString("abababababababababababababababababababababababababababababababab"); // 64
 
-        SendKeyboardString("3. Intellimouse - ");
-        YesNo(FlashSettings->Intellimouse);
+            menuState = MENU_STATE_MAIN;
+            menuKey = 0;
+            break;
 
-        if (DebugMenu){
-            SendKeyboardString("\n6. Simulate Hardlock\n");
-            SendKeyboardString("7. Simulate Softlock\n");
-            SendKeyboardString("8. Log HID Data\n");
-            SendKeyboardString("9. Dump PS2 mouse status\n");
-        }
-        else SendKeyboardString("\n5. Debug\n");
+        case MENU_STATE_MAIN:
+            if (lastMenuState != MENU_STATE_MAIN)
+            {
+                SendKeyboardString("\n\nHIDman v1.1.1\n\n");
+                SendKeyboardString("1. Key\n");
+                SendKeyboardString("2. Mouse\n");
+                SendKeyboardString("3. Game\n");
+                SendKeyboardString("\n4. Adv.\n\n");
+                SendKeyboardString("ESC to exit menu\n\n");
+                lastMenuState = menuState;
+            }
 
-        SendKeyboardString("ESC to exit menu\n\n");
-
-        //SendKeyboardString("abababababababababababababababab"); // 32
-        //SendKeyboardString("abababababababababababababababababababababababababababababababab"); // 64
-        
-        menuState = MENU_STATE_MAIN;
-        menuKey = 0;
-        break;
-    case MENU_STATE_MAIN:
-        if (menuKey)
-        {
             switch (menuKey)
             {
+                case KEY_1:     menuState = MENU_STATE_KEYBOARD; break;
+                case KEY_2:     menuState = MENU_STATE_MOUSE; break;
+                case KEY_3:     menuState = MENU_STATE_GAME; break;
 
+                case KEY_ESC:
+                    SendKeyboardString("Goodbye\n");
+                    menuState = MENU_STATE_INIT;
+                    MenuActive = 0;
+                    lastMenuState = 0;
+                    break;
+            }
+            
+            break;
+
+        case MENU_STATE_KEYBOARD:
+            if (lastMenuState != MENU_STATE_KEYBOARD){
+                SendKeyboardString("\n\Keyboard\n\n");
+                SendKeyboardString("1. Advanced USB - ");
+                YesNo(FlashSettings->KeyboardReportMode);
+
+                SendKeyboardString("2. 81 key mode - ");
+                YesNo(FlashSettings->XT81Keys);
+
+                SendKeyboardString("ESC main menu\n");
+                lastMenuState = menuState;
+            }
+            switch (menuKey) {
+                case KEY_1:     HMSettings.KeyboardReportMode ^= 1;     SyncSettings(); lastMenuState = 0; break;
+                case KEY_2:     HMSettings.XT81Keys ^= 1;               SyncSettings(); lastMenuState = 0; break;
+                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
+            }
+        break;
+
+        case MENU_STATE_MOUSE:
+            if (lastMenuState != MENU_STATE_MOUSE)
+            {
+                SendKeyboardString("\n\Mouse\n\n");
+                SendKeyboardString("1. Native Mode - ");
+                YesNo(FlashSettings->MouseReportMode);
+
+                SendKeyboardString("2. Intellimouse - ");
+                YesNo(FlashSettings->Intellimouse);
+
+                SendKeyboardString("ESC main menu\n");
+
+                lastMenuState = menuState;
+            }
+
+            switch (menuKey)
+            {
+                case KEY_1:     HMSettings.MouseReportMode ^= 1;        SyncSettings(); lastMenuState = 0; break;
+                case KEY_2:     HMSettings.Intellimouse ^= 1;           SyncSettings(); lastMenuState = 0; break;
+                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
+            }
+            break;
+
+        case MENU_STATE_GAME:
+            if (lastMenuState != MENU_STATE_GAME)
+            {
+                SendKeyboardString("\n\Game Controllers\n\n");
+                SendKeyboardString("1. Use as mouse - ");
+                YesNo(FlashSettings->MouseReportMode);
+
+                SendKeyboardString("\nESC main menu\n");
+
+                lastMenuState = menuState;
+            }
+
+            switch (menuKey)
+            {
+                case KEY_1:     HMSettings.MouseReportMode ^= 1;        SyncSettings(); lastMenuState = 0; break;
+                case KEY_2:     HMSettings.Intellimouse ^= 1;           SyncSettings(); lastMenuState = 0; break;
+                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
+            }
+            break;
+
+        case MENU_STATE_DEBUG:
+            if (lastMenuState != MENU_STATE_DEBUG)
+            {
+                SendKeyboardString("\n\nAdvanced\n\n");
+                SendKeyboardString("1. Hard Factory Reset\n");
+                SendKeyboardString("2. Soft Factory Reset\n");
+                SendKeyboardString("3. Log HID Data\n");
+                SendKeyboardString("4. Dump PS2 mouse status\n\n");
+                SendKeyboardString("ESC main menu\n");
+                lastMenuState = menuState;
+            }
+            switch (menuKey)
+            {
             case KEY_1:
-                HMSettings.KeyboardReportMode ^= 1;
-                SyncSettings();
-                menuState = MENU_STATE_INIT;
-                break;
-
-            case KEY_2:
-                HMSettings.MouseReportMode ^= 1;
-                SyncSettings();
-                menuState = MENU_STATE_INIT;
-                break;
-
-            case KEY_3:
-                HMSettings.Intellimouse ^= 1;
-                SyncSettings();
-                menuState = MENU_STATE_INIT;
-                break;
-
-            case KEY_4:
-                HMSettings.Intellimouse ^= 1;
-                SyncSettings();
-                menuState = MENU_STATE_INIT;
-                break;
-
-            case KEY_5:
-                DebugMenu = 1;
-                menuState = MENU_STATE_INIT;
-                break;
-
-            case KEY_6:
                 // stop timer0 resetting watchdog
                 ET0 = 0;
-            case KEY_7:
+            case KEY_2:
                 // trigger a watchdog reset by hanging around
-                while(1);
+                while (1);
                 break;
-
-            case KEY_8:
+            case KEY_3:
                 SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
                 DumpReport = 1;
                 menuState = MENU_STATE_DUMPING;
                 break;
-
-            case KEY_9:
-				SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
-				SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
-				SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
-				SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
-				SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
-				SendKeyboardString("\nCommand buffer\n");
-				for (UINT8 i=0; i<MOUSE_BUFFER_SIZE; i++) {
-					if (!(i & 0x000F))
-						SendKeyboardString("\n");
-					SendKeyboardString("%02X ", MouseBuffer[i]);
-				}
+            case KEY_4:
+                SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
+                SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
+                SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
+                SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
+                SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
+                SendKeyboardString("\nCommand buffer\n");
+                for (UINT8 i = 0; i < MOUSE_BUFFER_SIZE; i++)
+                {
+                    if (!(i & 0x000F))
+                        SendKeyboardString("\n");
+                    SendKeyboardString("%02X ", MouseBuffer[i]);
+                }
                 menuState = MENU_STATE_INIT;
-                break;
-
-
-            case KEY_ESC: // ESC
-                SendKeyboardString("Goodbye\n");
-                menuState = MENU_STATE_INIT;
-                MenuActive = 0;
                 break;
             }
-            menuKey = 0;
-        }
-        break;
-
-    case MENU_STATE_DUMPING:
-        if (menuKey == 0x29)
-        {
-            menuState = MENU_STATE_INIT;
-            DumpReport = 0;
             break;
-        }
-        break;
+
+        case MENU_STATE_DUMPING:
+            if (menuKey == 0x29)
+            {
+                menuState = MENU_STATE_INIT;
+                DumpReport = 0;
+                break;
+            }
+            break;
     }
+    menuKey = 0;
 }
 
 // blue LED on by default
@@ -228,102 +277,113 @@ int16_t gpiodebounce = 0;
 // How long in ms a button has to be pressed before it's considered held
 #define HOLDTIME 2000
 
-//should be run every 1ms
-void inputProcess(void) {
+// should be run every 1ms
+void inputProcess(void)
+{
 
-	uint8_t butstate = 0;
+    uint8_t butstate = 0;
 
-	static uint16_t ResetCounter = 0;
+    static uint16_t ResetCounter = 0;
 #if defined(OSC_EXTERNAL)
-	if (!(P3 & (1 << 4))){
+    if (!(P3 & (1 << 4)))
+    {
 #else
-	if (!(P4_IN & (1 << 6))){
+    if (!(P4_IN & (1 << 6)))
+    {
 #endif
 
-		butstate = 1;
+        butstate = 1;
 
-		// go into bootloader if user holds button for more than 5 seconds regardless of what else is going on
-		ResetCounter++;
-		if (ResetCounter > 5000) {
-			runBootloader();
-		}
-	}
+        // go into bootloader if user holds button for more than 5 seconds regardless of what else is going on
+        ResetCounter++;
+        if (ResetCounter > 5000)
+        {
+            runBootloader();
+        }
+    }
 
-	else 
-		ResetCounter = 0;
+    else
+        ResetCounter = 0;
 
-	// gpiodebounce = 0 when button not pressed
-	// > 0 and < DEBOUNCETIME when debouncing positive edge
-	// >= DEBOUNCETIME and < HOLDTIME when waiting for release or hold action
-	// = HOLDTIME when we register it as a hold action
-	// > HOLDTIME when waiting for release
-	// > -DEBOUNCETIME and < 0 when debouncing negative edge
+    // gpiodebounce = 0 when button not pressed
+    // > 0 and < DEBOUNCETIME when debouncing positive edge
+    // >= DEBOUNCETIME and < HOLDTIME when waiting for release or hold action
+    // = HOLDTIME when we register it as a hold action
+    // > HOLDTIME when waiting for release
+    // > -DEBOUNCETIME and < 0 when debouncing negative edge
 
-	// Button not pressed, check for button
-	if (gpiodebounce == 0) {
-		if (butstate) {
-			// button pressed
+    // Button not pressed, check for button
+    if (gpiodebounce == 0)
+    {
+        if (butstate)
+        {
+            // button pressed
 
+            // start the counter
+            gpiodebounce++;
+        }
+    }
 
-			// start the counter
-			gpiodebounce++;
-		}
-	}
+    // Debouncing positive edge, increment value
+    else if (gpiodebounce > 0 && gpiodebounce < DEBOUNCETIME)
+    {
+        gpiodebounce++;
+    }
 
-	// Debouncing positive edge, increment value
-	else if (gpiodebounce > 0 && gpiodebounce < DEBOUNCETIME) {
-		gpiodebounce++;
-	}
+    // debounce finished, keep incrementing until hold reached
+    else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME)
+    {
+        // check to see if unpressed
+        if (!butstate)
+        {
 
-	// debounce finished, keep incrementing until hold reached
-	else if (gpiodebounce >= DEBOUNCETIME && gpiodebounce < HOLDTIME) {
-		// check to see if unpressed
-		if (!butstate) {
-
-			if (menuState == MENU_STATE_DUMPING){
-				//reenumerate = 1;
-			}
-			else {
-				// cycle through modes on unpress of button
-				HMSettings.KeyboardMode++;
-				if (HMSettings.KeyboardMode > 2)
-					HMSettings.KeyboardMode = 0;
-				SyncSettings();
+            if (menuState == MENU_STATE_DUMPING)
+            {
+                // reenumerate = 1;
+            }
+            else
+            {
+                // cycle through modes on unpress of button
+                HMSettings.KeyboardMode++;
+                if (HMSettings.KeyboardMode > 2)
+                    HMSettings.KeyboardMode = 0;
+                SyncSettings();
                 ports[PORT_KEY].state = S_INIT;
-			}
+            }
 
+            // start the counter
+            gpiodebounce = -DEBOUNCETIME;
+        }
 
-			// start the counter
-			gpiodebounce = -DEBOUNCETIME;
-		}
+        else
+            gpiodebounce++;
+    }
+    // Button has been held for a while
+    else if (gpiodebounce == HOLDTIME)
+    {
+        MenuActive = 1;
+        gpiodebounce++;
+    }
 
-		else
-			gpiodebounce++;
-	}
-	// Button has been held for a while
-	else if (gpiodebounce == HOLDTIME) {
-		MenuActive = 1;
-		gpiodebounce++;
-	}
+    // Button still holding, check for release
+    else if (gpiodebounce > HOLDTIME)
+    {
+        // Still pressing, do action repeatedly
+        if (butstate)
+        {
+        }
+        // not still pressing, debounce release
+        else
+        {
+            // IOevent(i, IOEVENT_HOLDRELEASE);
+            //  start the counter
+            gpiodebounce = -DEBOUNCETIME;
+        }
+    }
 
-	// Button still holding, check for release
-	else if (gpiodebounce > HOLDTIME) {
-		// Still pressing, do action repeatedly
-		if (butstate) {
-		}
-		// not still pressing, debounce release
-		else {
-			//IOevent(i, IOEVENT_HOLDRELEASE);
-			// start the counter
-			gpiodebounce = -DEBOUNCETIME;
-		}
-	}
-
-	// Debouncing negative edge, increment value - will reset when zero is reached
-	else if (gpiodebounce < 0) {
-		gpiodebounce++;
-	}
-
-
-
+    // Debouncing negative edge, increment value - will reset when zero is reached
+    else if (gpiodebounce < 0)
+    {
+        gpiodebounce++;
+    }
 }

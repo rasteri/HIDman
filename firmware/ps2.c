@@ -95,7 +95,6 @@ bool ReadPS2Data(uint8_t port)
 
 void SimonSaysSendKeyboard(const uint8_t *chunk)
 {
-
 	if (chunk != NULL &&														 // chunk is valid
 		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
 	{
@@ -111,6 +110,12 @@ bool SendKeyboard(const uint8_t *chunk)
 
 	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 
+	// If we're emulating an 81-key keyboard, don't send keycodes starting with E0
+	if (FlashSettings->XT81Keys && chunk[1] == 0xE0) {
+		TR0 = 1; 
+		return 1; // just pretend we sent it
+	}
+
 	if (!ports[PORT_KEY].sendDisabled &&										 // send disabled by timer task, better not step on its toes
 		chunk != NULL &&														 // chunk is valid
 		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
@@ -120,7 +125,7 @@ bool SendKeyboard(const uint8_t *chunk)
 		TR0 = 1; // re-enable timer interrupt
 		return 1;
 	}
-
+	
 	TR0 = 1; // re-enable timer interrupt
 	return 0;
 }

@@ -35,80 +35,6 @@ __xdata bool MenuActive = 0;
 
 uint8_t sendBufferState = SEND_STATE_IDLE;
 
-/*bool Sendbuffer_Task()
-{
-    bool reEnter = 0;
-    do
-    {
-        reEnter = 0;
-        switch (sendBufferState)
-        {
-        case SEND_STATE_IDLE:
-            if (SendBuffer[0])
-            {
-                sendBufferState = SEND_STATE_SHIFTON;
-                reEnter = 1;
-            }
-            DEBUG_OUT("idle\n");
-            break;
-        case SEND_STATE_SHIFTON:
-            currchar = SendBuffer[BufferIndex];
-            if (currchar)
-            {
-                if (currchar >= 0x41 && currchar <= 0x5A)
-                {
-                    if (SendKeyboard(KEY_LSHIFT_MAKE))
-                    {
-                        sendBufferState = SEND_STATE_MAKE;
-                        reEnter = 1;
-                    }
-                }
-                else
-                {
-                    sendBufferState = SEND_STATE_MAKE;
-                    reEnter = 1;
-                }
-            }
-            else
-            {
-                sendBufferState = SEND_STATE_IDLE;
-                BufferIndex = 0;
-                SendBuffer[0] = 0;
-            }
-            DEBUG_OUT("Shifton\n");
-            break;
-
-        case SEND_STATE_MAKE:
-            if (SendKeyboard(HIDtoPS2_Make[ASCIItoHID[currchar]]))
-            {
-                sendBufferState = SEND_STATE_BREAK;
-                reEnter = 1;
-            }
-            DEBUG_OUT("Make\n");
-            break;
-
-        case SEND_STATE_BREAK:
-            if (SendKeyboard(HIDtoPS2_Break[ASCIItoHID[currchar]]))
-            {
-                sendBufferState = SEND_STATE_SHIFTOFF;
-                reEnter = 1;
-            }
-            DEBUG_OUT("Break\n");
-            break;
-
-        case SEND_STATE_SHIFTOFF:
-            if (SendKeyboard(KEY_LSHIFT_BREAK))
-            {
-                BufferIndex++;
-                sendBufferState = SEND_STATE_SHIFTON;
-                reEnter = 1;
-            }
-            DEBUG_OUT("Shiftoff\n");
-            break;
-        }
-    } while (reEnter);
-}*/
-
 void PressKey(uint8_t currchar) {
     while (!SendKeyboard(
         FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]
@@ -360,9 +286,10 @@ void inputProcess(void) {
 			else {
 				// cycle through modes on unpress of button
 				HMSettings.KeyboardMode++;
-				if (HMSettings.KeyboardMode > 1)
+				if (HMSettings.KeyboardMode > 2)
 					HMSettings.KeyboardMode = 0;
 				SyncSettings();
+                ports[PORT_KEY].state = S_INIT;
 			}
 
 

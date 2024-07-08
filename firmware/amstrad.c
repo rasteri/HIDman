@@ -11,9 +11,7 @@
 #include "defs.h"
 #include "xt.h"
 
-uint16_t ratelimit = 0;
-
-uint8_t oldstate = 0;
+uint8_t amsoldstate = 0;
 void AmstradProcessPort(void)
 {
 	const uint8_t *chunk;
@@ -23,10 +21,10 @@ void AmstradProcessPort(void)
 
 	do
 	{
-		/*if (ports[PORT_KEY].state != oldstate)
+		/*if (ports[PORT_KEY].state != amsoldstate)
 		{
 			printf("%hhd-%hhd\n", ports[PORT_KEY].state, ports[PORT_KEY].sendbit);
-			oldstate = ports[PORT_KEY].state;
+			amsoldstate = ports[PORT_KEY].state;
 		}*/
 		sb = ports[PORT_KEY].sendbit;
 		reEnter = 0;
@@ -38,12 +36,22 @@ void AmstradProcessPort(void)
 			ports[PORT_KEY].state = S_IDLE;
 			// data should be held high to detect inhibit
 			WritePS2Data(PORT_KEY, 1);
+
+			//clock appears to be normally high
+			WritePS2Clock(PORT_KEY, 1);
 			ports[PORT_KEY].sendbit = 0;
 			break;
 
 		case S_IDLE:
+
+			// if ps2 clock is low, host is resetting - send acknowledge
+			if (!ReadPS2Clock(PORT_KEY))
+			{
+				SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+			}
+
 			// if host is not inhibiting (i.e. not pulling data low)
-			if (ReadPS2Data(PORT_KEY))
+			else if (ReadPS2Data(PORT_KEY))
 			{
 				if (ports[PORT_KEY].rateLimit > 0) ports[PORT_KEY].rateLimit--;
 
@@ -73,7 +81,7 @@ void AmstradProcessPort(void)
 			// reuse recvbit as counter
 			ports[PORT_KEY].recvbit++;
 
-			// we want to set the data in the middle of the low cycle
+			// we want to set the data in the middle of the high cycle
 			if (ports[PORT_KEY].recvbit == 2)
 			{
 				// amstrad bits work MSB first because why not
@@ -92,26 +100,16 @@ void AmstradProcessPort(void)
 			break;
 
 		case S_SEND_CLOCK_FALL:
-			ports[PORT_KEY].recvbit++;
-
-			// first time round, set clock low
-			if (ports[PORT_KEY].recvbit == 1)
-			{
-				//make clock low
-				WritePS2Clock(PORT_KEY, 0);
-			}
-			// wait 6 clock cycles (100us) before the next thing
-			else if (ports[PORT_KEY].recvbit >= 2)
-			{
-				ports[PORT_KEY].state = S_SEND_CLOCK_LOW;
-			}
+			//make clock low
+			WritePS2Clock(PORT_KEY, 0);
+			ports[PORT_KEY].state = S_SEND_CLOCK_LOW;
 
 			break;
 
 		case S_SEND_CLOCK_LOW:
 
 			// if final bit, move onto next byte
-			if (sb == 9)
+			if (sb == 8)
 			{
 				ports[PORT_KEY].sendbit = 0;
 
@@ -133,25 +131,22 @@ void AmstradProcessPort(void)
 					ports[PORT_KEY].data = chunk[ports[PORT_KEY].bytenum + 1];
 				}
 
-				// also need to set data line high
-				WritePS2Data(PORT_KEY, 1);
-
 				// give ourselves a little break between bytes
 				ports[PORT_KEY].state = S_IDLE;
+
+				// data high so we can detect inhibit
+				WritePS2Data(PORT_KEY, 1);
 			}
 			else
 			{
-				ports[PORT_KEY].state = S_SEND_CLOCK_RISE;
+				ports[PORT_KEY].state = S_SEND_CLOCK_HIGH;
 			}
-			break;
 
-		// data has been set, send falling edge of clock
-		case S_SEND_CLOCK_RISE:
-
+			// either way set clock line high
 			WritePS2Clock(PORT_KEY, 1);
-			ports[PORT_KEY].state = S_SEND_CLOCK_HIGH;
-			ports[PORT_KEY].recvbit = 0;
+
 			break;
+
 		}
 	} while (reEnter);
 }

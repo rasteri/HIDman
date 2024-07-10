@@ -13,6 +13,8 @@
 #include "andyalloc.h"
 #include "keyboardled.h"
 #include "parsedescriptor.h"
+#include "ps2protocol.h"
+
 
 #define WAIT_USB_TOUT_200US 800 // �ȴ�USB�жϳ�ʱʱ��200uS
 
@@ -44,6 +46,128 @@ static void InitInterface(INTERFACE* Interface)
 		Interface->Endpoint[j].EndpointDir = ENDPOINT_IN;
 		Interface->Endpoint[j].TOG = FALSE;
 	}
+}
+
+
+BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_DEVICE *pUsbDevice)
+{
+	if (len > sizeof(USB_DEV_DESCR))
+	{
+		return FALSE;
+	}
+
+	pUsbDevice->MaxPacketSize0 = pDevDescr->bMaxPacketSize0;
+	pUsbDevice->DeviceClass = pDevDescr->bDeviceClass;
+
+	if (len == sizeof(USB_DEV_DESCR))
+	{
+		pUsbDevice->VendorID = pDevDescr->idVendorL | (pDevDescr->idVendorH << 8);
+		pUsbDevice->ProductID = pDevDescr->idProductL | (pDevDescr->idProductH << 8);
+		pUsbDevice->bcdDevice = pDevDescr->bcdDeviceL | (pDevDescr->bcdDeviceH << 8);
+	}
+
+	return TRUE;
+}
+
+BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_DEVICE *pUsbDevice)
+{
+	int index;
+
+	UINT8 *pDescr;
+	DESCR_HEADER *pDescrHeader;
+	USB_ITF_DESCR *pItfDescr = NULL;
+	USB_HID_DESCR *pHidDescr;
+	USB_ENDP_DESCR *pEdpDescr;
+
+	UINT8 descrType;
+	int endpointIndex;
+
+	UINT16 totalLen = pCfgDescr->wTotalLengthL | (pCfgDescr->wTotalLengthH << 8);
+	if (totalLen > len)
+	{
+		totalLen = len;
+	}
+
+	pUsbDevice->InterfaceNum = pCfgDescr->bNumInterfaces;
+	if (pUsbDevice->InterfaceNum > MAX_INTERFACE_NUM)
+	{
+		pUsbDevice->InterfaceNum = MAX_INTERFACE_NUM;
+	}
+
+	pUsbDevice->Interface = AllocInterface(pUsbDevice->InterfaceNum);
+
+	pDescr = (UINT8 *)pCfgDescr;
+
+	pDescr += pCfgDescr->bLength;
+
+	index = pCfgDescr->bLength;
+
+	while (index < totalLen)
+	{
+		pDescrHeader = (DESCR_HEADER *)pDescr;
+		descrType = pDescrHeader->bDescriptorType;
+
+		if (descrType == USB_DESCR_TYP_INTERF)
+		{
+			//interface descriptor
+			pItfDescr = (USB_ITF_DESCR *)pDescr;
+			if (pItfDescr->bInterfaceNumber >= pUsbDevice->InterfaceNum)
+			{
+				break;
+			}
+
+			if (pItfDescr->bAlternateSetting == 0)
+			{
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum = 0;
+
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceClass = pItfDescr->bInterfaceClass;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceProtocol = pItfDescr->bInterfaceProtocol;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceSubClass = pItfDescr->bInterfaceSubClass;
+			}
+		}
+		else if (descrType == USB_DESCR_TYP_HID)
+		{
+			//HID descriptor
+			pHidDescr = (USB_HID_DESCR *)pDescr;
+			if (pHidDescr->bDescriptorTypeX == USB_DESCR_TYP_REPORT)
+			{
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].ReportSize = pHidDescr->wDescriptorLengthL | (pHidDescr->wDescriptorLengthH << 8);
+			}
+		}
+		else if (descrType == USB_DESCR_TYP_ENDP)
+		{
+			//endpoint descriptor
+			pEdpDescr = (USB_ENDP_DESCR *)pDescr;
+
+			if (pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum >= MAX_ENDPOINT_NUM)
+			{
+				goto ONE_FINISH;
+			}
+
+			if (pItfDescr->bAlternateSetting == 0)
+			{
+				endpointIndex = pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum++;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointAddr = pEdpDescr->bEndpointAddress & 0x7f;
+				if (pEdpDescr->bEndpointAddress & 0x80)
+				{
+					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_IN;
+				}
+				else
+				{
+					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_OUT;
+				}
+
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].MaxPacketSize = pEdpDescr->wMaxPacketSizeL | (pEdpDescr->wMaxPacketSizeH << 8);
+			}
+		}
+	ONE_FINISH:
+		pDescr += pDescrHeader->bDescLength;
+
+		index += pDescrHeader->bDescLength;
+	}
+
+	return TRUE;
 }
 
 INTERFACE* AllocInterface(UINT8 count)
@@ -806,7 +930,7 @@ static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
 						//TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
-						ParseReport(&pInterface->HidSegStruct, len * 8, ReceiveDataBuffer);
+						ParseReport(pInterface, len * 8, ReceiveDataBuffer);
 						if (DumpReport)
 						{
 							SendKeyboardString("I%hX L%X- ", i, len);
@@ -1408,25 +1532,24 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				if (!HMSettings.MouseReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE && pInterface->InterfaceSubClass == 0x01)
 				{
 					SetBootProtocol(pUsbDevice, i);
-					ParseReportDescriptor(StandardMouseDescriptor, 50, &pInterface->HidSegStruct);
+					ParseReportDescriptor(StandardMouseDescriptor, 50, pInterface);
 				}
 				// keyboard next
 				else if (!HMSettings.KeyboardReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD && pInterface->InterfaceSubClass == 0x01){
 					SetBootProtocol(pUsbDevice, i);
-					ParseReportDescriptor(StandardKeyboardDescriptor, 63, &pInterface->HidSegStruct);
+					ParseReportDescriptor(StandardKeyboardDescriptor, 63, pInterface);
 				}
 				else
-					ParseReportDescriptor(ReceiveDataBuffer, len, &pInterface->HidSegStruct);
+					ParseReportDescriptor(ReceiveDataBuffer, len, pInterface);
 
-				HID_REPORT_DESC *bleh = &pInterface->HidSegStruct;
 				HID_SEG *tmpseg;
 				for (uint8_t x = 0; x < MAX_REPORTS; x++)
 				{
-					if (bleh->reports[x] != NULL)
+					if (pInterface->reports[x] != NULL)
 					{
-						tmpseg = bleh->reports[x]->firstHidSeg;
+						tmpseg = pInterface->reports[x]->firstHidSeg;
 
-						DEBUG_OUT("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
+						DEBUG_OUT("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
 						while (tmpseg != NULL)
 						{
 							DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);

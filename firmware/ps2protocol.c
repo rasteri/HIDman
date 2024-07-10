@@ -301,7 +301,7 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
 		return 0;
 }
 
-bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
+bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 {
 
 	HID_REPORT *descReport;
@@ -320,14 +320,14 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 #endif
 	LEDDelayMs = 33;
 
-	if (desc->usesReports)
+	if (interface->usesReports)
 	{
 		// first byte of report will be the report number
-		descReport = desc->reports[report[0]];
+		descReport = interface->reports[report[0]];
 	}
 	else
 	{
-		descReport = desc->reports[0];
+		descReport = interface->reports[0];
 	}
 
 	// sanity check length - smaller is no good

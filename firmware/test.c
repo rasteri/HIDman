@@ -17,15 +17,15 @@ void UART_Init()
     RI = 0;      /* waiting to receive */
 }
 
-HID_REPORT_DESC funky;
+INTERFACE funky;
 
 void main()
 {
     UART_Init();
 
-    ParseReportDescriptor(StandardKeyboardDescriptor, 50, &funky, 0);
+    ParseReportDescriptor(StandardKeyboardDescriptor, 63, &funky);
 
-    HID_REPORT_DESC *bleh = &funky;
+    INTERFACE *bleh = &funky;
 
     HID_SEG *tmpseg;
     for (uint8_t x = 0; x < MAX_REPORTS; x++)

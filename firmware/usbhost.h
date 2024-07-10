@@ -133,6 +133,8 @@ typedef struct _HID_ITEM_INFO
 
 #define MAX_USAGE_NUM      10
 
+#define MAX_REPORTS 10
+
 //interface struct
 typedef struct _INTERFACE
 {
@@ -145,7 +147,8 @@ typedef struct _INTERFACE
 	UINT8     EndpointNum;   //number of endpoints in this interface
 	ENDPOINT  Endpoint[MAX_ENDPOINT_NUM]; //endpoints
 	
-	HID_REPORT_DESC  HidSegStruct;	
+	bool usesReports;
+	HID_REPORT *reports[MAX_REPORTS];
 
 } INTERFACE, *PINTERFACE;
 

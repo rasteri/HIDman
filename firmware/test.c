@@ -46,8 +46,6 @@ void test(){
 
     printf("Num Interfaces=%d\n", pUsbDevice->InterfaceNum);
 
-
-
     for (uint8_t i = 0; i < pUsbDevice->InterfaceNum; i++)
     {
         pInterface = &pUsbDevice->Interface[i];

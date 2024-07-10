@@ -507,3 +507,124 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 ERR:
 	return FALSE;
 }
+
+BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_HUB_PORT *pUsbDevice)
+{
+	if (len > sizeof(USB_DEV_DESCR))
+	{
+		return FALSE;
+	}
+
+	pUsbDevice->MaxPacketSize0 = pDevDescr->bMaxPacketSize0;
+	pUsbDevice->DeviceClass = pDevDescr->bDeviceClass;
+
+	if (len == sizeof(USB_DEV_DESCR))
+	{
+		pUsbDevice->VendorID = pDevDescr->idVendorL | (pDevDescr->idVendorH << 8);
+		pUsbDevice->ProductID = pDevDescr->idProductL | (pDevDescr->idProductH << 8);
+		pUsbDevice->bcdDevice = pDevDescr->bcdDeviceL | (pDevDescr->bcdDeviceH << 8);
+	}
+
+	return TRUE;
+}
+
+BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *pUsbDevice)
+{
+	int index;
+
+	UINT8 *pDescr;
+	DESCR_HEADER *pDescrHeader;
+	USB_ITF_DESCR *pItfDescr = NULL;
+	USB_HID_DESCR *pHidDescr;
+	USB_ENDP_DESCR *pEdpDescr;
+
+	UINT8 descrType;
+	int endpointIndex;
+
+	UINT16 totalLen = pCfgDescr->wTotalLengthL | (pCfgDescr->wTotalLengthH << 8);
+	if (totalLen > len)
+	{
+		totalLen = len;
+	}
+
+	pUsbDevice->InterfaceNum = pCfgDescr->bNumInterfaces;
+	if (pUsbDevice->InterfaceNum > MAX_INTERFACE_NUM)
+	{
+		pUsbDevice->InterfaceNum = MAX_INTERFACE_NUM;
+	}
+
+	pUsbDevice->Interface = AllocInterface(pUsbDevice->InterfaceNum);
+
+	pDescr = (UINT8 *)pCfgDescr;
+
+	pDescr += pCfgDescr->bLength;
+
+	index = pCfgDescr->bLength;
+
+	while (index < totalLen)
+	{
+		pDescrHeader = (DESCR_HEADER *)pDescr;
+		descrType = pDescrHeader->bDescriptorType;
+
+		if (descrType == USB_DESCR_TYP_INTERF)
+		{
+			//interface descriptor
+			pItfDescr = (USB_ITF_DESCR *)pDescr;
+			if (pItfDescr->bInterfaceNumber >= pUsbDevice->InterfaceNum)
+			{
+				break;
+			}
+
+			if (pItfDescr->bAlternateSetting == 0)
+			{
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum = 0;
+
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceClass = pItfDescr->bInterfaceClass;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceProtocol = pItfDescr->bInterfaceProtocol;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceSubClass = pItfDescr->bInterfaceSubClass;
+			}
+		}
+		else if (descrType == USB_DESCR_TYP_HID)
+		{
+			//HID descriptor
+			pHidDescr = (USB_HID_DESCR *)pDescr;
+			if (pHidDescr->bDescriptorTypeX == USB_DESCR_TYP_REPORT)
+			{
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].ReportSize = pHidDescr->wDescriptorLengthL | (pHidDescr->wDescriptorLengthH << 8);
+			}
+		}
+		else if (descrType == USB_DESCR_TYP_ENDP)
+		{
+			//endpoint descriptor
+			pEdpDescr = (USB_ENDP_DESCR *)pDescr;
+
+			if (pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum >= MAX_ENDPOINT_NUM)
+			{
+				goto ONE_FINISH;
+			}
+
+			if (pItfDescr->bAlternateSetting == 0)
+			{
+				endpointIndex = pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum++;
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointAddr = pEdpDescr->bEndpointAddress & 0x7f;
+				if (pEdpDescr->bEndpointAddress & 0x80)
+				{
+					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_IN;
+				}
+				else
+				{
+					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_OUT;
+				}
+
+				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].MaxPacketSize = pEdpDescr->wMaxPacketSizeL | (pEdpDescr->wMaxPacketSizeH << 8);
+			}
+		}
+	ONE_FINISH:
+		pDescr += pDescrHeader->bDescLength;
+
+		index += pDescrHeader->bDescLength;
+	}
+
+	return TRUE;
+}

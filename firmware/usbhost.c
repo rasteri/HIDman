@@ -30,7 +30,7 @@ static USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
 //sub hub port
 static USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
 static INTERFACE __xdata sInterfacePool[MAX_GLOBAL_INTERFACE_NUM];
-static UINT8 sInterfacePoolPos = 0;
+UINT8 sInterfacePoolPos = 0;
 
 static void InitInterface(INTERFACE* Interface)
 {
@@ -49,7 +49,7 @@ static void InitInterface(INTERFACE* Interface)
 }
 
 
-BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_DEVICE *pUsbDevice)
+BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_HUB_PORT *pUsbDevice)
 {
 	if (len > sizeof(USB_DEV_DESCR))
 	{
@@ -69,7 +69,7 @@ BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_DEVICE *pUsb
 	return TRUE;
 }
 
-BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_DEVICE *pUsbDevice)
+BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *pUsbDevice)
 {
 	int index;
 
@@ -187,19 +187,19 @@ INTERFACE* AllocInterface(UINT8 count)
 static void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 {
 	pUsbHubPort->HubPortStatus = PORT_DEVICE_NONE;
-	pUsbHubPort->UsbDevice.DeviceClass = USB_DEV_CLASS_RESERVED;
-	pUsbHubPort->UsbDevice.MaxPacketSize0 = DEFAULT_ENDP0_SIZE;
+	pUsbHubPort->DeviceClass = USB_DEV_CLASS_RESERVED;
+	pUsbHubPort->MaxPacketSize0 = DEFAULT_ENDP0_SIZE;
 
-	pUsbHubPort->UsbDevice.VendorID = 0x0000;
-	pUsbHubPort->UsbDevice.ProductID = 0x0000;
-	pUsbHubPort->UsbDevice.bcdDevice = 0x0000;
+	pUsbHubPort->VendorID = 0x0000;
+	pUsbHubPort->ProductID = 0x0000;
+	pUsbHubPort->bcdDevice = 0x0000;
 
-	pUsbHubPort->UsbDevice.DeviceAddress = 0;
-	pUsbHubPort->UsbDevice.DeviceSpeed = FULL_SPEED;
-	pUsbHubPort->UsbDevice.InterfaceNum = 0;
-	pUsbHubPort->UsbDevice.Interface = 0;
+	pUsbHubPort->DeviceAddress = 0;
+	pUsbHubPort->DeviceSpeed = FULL_SPEED;
+	pUsbHubPort->InterfaceNum = 0;
+	pUsbHubPort->Interface = 0;
 
-	pUsbHubPort->UsbDevice.HubPortNum = 0;
+	pUsbHubPort->HubPortNum = 0;
 }
 
 static void InitRootHubPortData(UINT8 rootHubIndex)
@@ -224,18 +224,18 @@ static UINT8 EnableRootHubPort(UINT8 rootHubIndex)
 			{
 				if (USB_HUB_ST & bUHS_DM_LEVEL)
 				{
-					RootHubPort[0].UsbDevice.DeviceSpeed = LOW_SPEED;
+					RootHubPort[0].DeviceSpeed = LOW_SPEED;
 
 					TRACE("low speed device on hub 0\r\n");
 				}
 				else
 				{
-					RootHubPort[0].UsbDevice.DeviceSpeed = FULL_SPEED;
+					RootHubPort[0].DeviceSpeed = FULL_SPEED;
 
 					TRACE("full speed device on hub 0\r\n");
 				}
 
-				if (RootHubPort[0].UsbDevice.DeviceSpeed == LOW_SPEED)
+				if (RootHubPort[0].DeviceSpeed == LOW_SPEED)
 				{
 					UHUB0_CTRL |= bUH_LOW_SPEED;
 				}
@@ -254,18 +254,18 @@ static UINT8 EnableRootHubPort(UINT8 rootHubIndex)
 			{
 				if (USB_HUB_ST & bUHS_HM_LEVEL)
 				{
-					RootHubPort[1].UsbDevice.DeviceSpeed = LOW_SPEED;
+					RootHubPort[1].DeviceSpeed = LOW_SPEED;
 
 					TRACE("low speed device on hub 1\r\n");
 				}
 				else
 				{
-					RootHubPort[1].UsbDevice.DeviceSpeed = FULL_SPEED;
+					RootHubPort[1].DeviceSpeed = FULL_SPEED;
 
 					TRACE("full speed device on hub 1\r\n");
 				}
 
-				if (RootHubPort[1].UsbDevice.DeviceSpeed == LOW_SPEED)
+				if (RootHubPort[1].DeviceSpeed == LOW_SPEED)
 				{
 					UHUB1_CTRL |= bUH_LOW_SPEED;
 				}
@@ -340,12 +340,12 @@ static void SelectHubPort(UINT8 RootHubIndex, UINT8 HubPortIndex)
 	if (HubPortIndex == EXHUB_PORT_NONE)
 	{
 		//normal device
-		SetHostUsbAddr(RootHubPort[RootHubIndex].UsbDevice.DeviceAddress);
-		SetUsbSpeed(RootHubPort[RootHubIndex].UsbDevice.DeviceSpeed);
+		SetHostUsbAddr(RootHubPort[RootHubIndex].DeviceAddress);
+		SetUsbSpeed(RootHubPort[RootHubIndex].DeviceSpeed);
 	}
 	else
 	{
-		USB_DEVICE *pUsbDevice = &SubHubPort[RootHubIndex][HubPortIndex].UsbDevice;
+		USB_HUB_PORT *pUsbDevice = &SubHubPort[RootHubIndex][HubPortIndex];
 		SetHostUsbAddr(pUsbDevice->DeviceAddress);
 		if (pUsbDevice->DeviceSpeed == LOW_SPEED)
 		{
@@ -632,7 +632,7 @@ static void FillSetupReq(USB_SETUP_REQ *pSetupReq, UINT8 type, UINT8 req, UINT16
 }
 
 //-----------------------------------------------------------------------------------------
-static UINT8 GetDeviceDescr(USB_DEVICE *pUsbDevice, UINT8 *pDevDescr, UINT16 reqLen, UINT16 *pRetLen) //get device describtion
+static UINT8 GetDeviceDescr(USB_HUB_PORT *pUsbDevice, UINT8 *pDevDescr, UINT16 reqLen, UINT16 *pRetLen) //get device describtion
 {
 	UINT8 s;
 	UINT16 len;
@@ -655,7 +655,7 @@ static UINT8 GetDeviceDescr(USB_DEVICE *pUsbDevice, UINT8 *pDevDescr, UINT16 req
 }
 
 //----------------------------------------------------------------------------------------
-static UINT8 GetConfigDescr(USB_DEVICE *pUsbDevice, UINT8 *pCfgDescr, UINT16 reqLen, UINT16 *pRetLen)
+static UINT8 GetConfigDescr(USB_HUB_PORT *pUsbDevice, UINT8 *pCfgDescr, UINT16 reqLen, UINT16 *pRetLen)
 {
 	UINT8 s;
 	UINT16 len;
@@ -676,7 +676,7 @@ static UINT8 GetConfigDescr(USB_DEVICE *pUsbDevice, UINT8 *pCfgDescr, UINT16 req
 }
 
 //-------------------------------------------------------------------------------------
-static UINT8 SetUsbAddress(USB_DEVICE *pUsbDevice, UINT8 addr)
+static UINT8 SetUsbAddress(USB_HUB_PORT *pUsbDevice, UINT8 addr)
 {
 	UINT8 s;
 
@@ -694,7 +694,7 @@ static UINT8 SetUsbAddress(USB_DEVICE *pUsbDevice, UINT8 addr)
 }
 
 //-------------------------------------------------------------------------------------
-static UINT8 SetUsbConfig(USB_DEVICE *pUsbDevice, UINT8 cfg)
+static UINT8 SetUsbConfig(USB_HUB_PORT *pUsbDevice, UINT8 cfg)
 {
 	UINT8 s;
 
@@ -708,7 +708,7 @@ static UINT8 SetUsbConfig(USB_DEVICE *pUsbDevice, UINT8 cfg)
 }
 
 //-----------------------------------------------------------------------------------------
-static UINT8 GetHubDescriptor(USB_DEVICE *pUsbDevice, UINT8 *pHubDescr, UINT16 reqLen, UINT16 *pRetLen)
+static UINT8 GetHubDescriptor(USB_HUB_PORT *pUsbDevice, UINT8 *pHubDescr, UINT16 reqLen, UINT16 *pRetLen)
 {
 	UINT8 s;
 	UINT16 len;
@@ -730,7 +730,7 @@ static UINT8 GetHubDescriptor(USB_DEVICE *pUsbDevice, UINT8 *pHubDescr, UINT16 r
 }
 
 //-----------------------------------------------------------------------------------------
-static UINT8 GetHubPortStatus(USB_DEVICE *pUsbDevice, UINT8 HubPort, UINT16 *pPortStatus, UINT16 *pPortChange)
+static UINT8 GetHubPortStatus(USB_HUB_PORT *pUsbDevice, UINT8 HubPort, UINT16 *pPortStatus, UINT16 *pPortChange)
 {
 	UINT8 s;
 	UINT16 len;
@@ -759,7 +759,7 @@ static UINT8 GetHubPortStatus(USB_DEVICE *pUsbDevice, UINT8 HubPort, UINT16 *pPo
 }
 
 //------------------------------------------------------------------------------------------
-static UINT8 SetHubPortFeature(USB_DEVICE *pUsbDevice, UINT8 HubPort, UINT8 selector) //this function set feature for port						//this funciton set
+static UINT8 SetHubPortFeature(USB_HUB_PORT *pUsbDevice, UINT8 HubPort, UINT8 selector) //this function set feature for port						//this funciton set
 {
 	UINT8 s;
 
@@ -772,7 +772,7 @@ static UINT8 SetHubPortFeature(USB_DEVICE *pUsbDevice, UINT8 HubPort, UINT8 sele
 	return s;
 }
 
-static UINT8 ClearHubPortFeature(USB_DEVICE *pUsbDevice, UINT8 HubPort, UINT8 selector)
+static UINT8 ClearHubPortFeature(USB_HUB_PORT *pUsbDevice, UINT8 HubPort, UINT8 selector)
 {
 	UINT8 s;
 
@@ -786,7 +786,7 @@ static UINT8 ClearHubPortFeature(USB_DEVICE *pUsbDevice, UINT8 HubPort, UINT8 se
 }
 
 //-----------------------------------------------------------------------------------------
-static UINT8 GetReportDescriptor(USB_DEVICE *pUsbDevice, UINT8 interface, UINT8 *pReportDescr, UINT16 reqLen, UINT16 *pRetLen)
+static UINT8 GetReportDescriptor(USB_HUB_PORT *pUsbDevice, UINT8 interface, UINT8 *pReportDescr, UINT16 reqLen, UINT16 *pRetLen)
 {
 	UINT8 s;
 	UINT16 len;
@@ -808,7 +808,7 @@ static UINT8 GetReportDescriptor(USB_DEVICE *pUsbDevice, UINT8 interface, UINT8 
 	return s;
 }
 
-static UINT8 SetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
+static UINT8 SetBootProtocol(USB_HUB_PORT *pUsbDevice, UINT8 interface)
 {
 	UINT8 s;
 
@@ -820,7 +820,7 @@ static UINT8 SetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
 	return s;
 }
 
-static UINT8 GetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
+static UINT8 GetBootProtocol(USB_HUB_PORT *pUsbDevice, UINT8 interface)
 {
 	UINT8 s;
 	UINT8 ret;
@@ -835,7 +835,7 @@ static UINT8 GetBootProtocol(USB_DEVICE *pUsbDevice, UINT8 interface)
 }
 
 //-----------------------------------------------------------------------------------------
-static UINT8 SetIdle(USB_DEVICE *pUsbDevice, UINT16 durationMs, UINT8 reportID, UINT8 interface)
+static UINT8 SetIdle(USB_HUB_PORT *pUsbDevice, UINT16 durationMs, UINT8 reportID, UINT8 interface)
 {
 	UINT8 s;
 
@@ -851,7 +851,7 @@ static UINT8 SetIdle(USB_DEVICE *pUsbDevice, UINT16 durationMs, UINT8 reportID, 
 }
 
 //-----------------------------------------------------------------------------------------------
-static UINT8 SetReport(USB_DEVICE *pUsbDevice, UINT8 interface, UINT8 *pReport, UINT16 ReportLen)
+static UINT8 SetReport(USB_HUB_PORT *pUsbDevice, UINT8 interface, UINT8 *pReport, UINT16 ReportLen)
 {
 	UINT8 s;
 	UINT16 len;
@@ -904,7 +904,7 @@ static UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen,
 }
 
 //-------------------------------------------------------------------------------------------
-static UINT8 HIDDataTransferReceive(USB_DEVICE *pUsbDevice)
+static UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 {
 	UINT8 s = 0, p;
 	int i, j;
@@ -962,10 +962,10 @@ static BOOL EnumerateHubPort(USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	UINT16 len;
 	UINT16 cfgDescLen;
 
-	USB_DEVICE *pUsbDevice;
+	USB_HUB_PORT *pUsbDevice;
 	USB_CFG_DESCR *pCfgDescr;
 
-	pUsbDevice = &pUsbHubPort->UsbDevice;
+	pUsbDevice = pUsbHubPort;
 
 	//get first 8 bytes of device descriptor to get maxpacketsize0
 	s = GetDeviceDescr(pUsbDevice, ReceiveDataBuffer, 8, &len);
@@ -1159,7 +1159,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 		
 
 		//SelectHubPort(port, EXHUB_PORT_NONE);
-		if (RootHubPort[port].UsbDevice.DeviceClass == USB_DEV_CLASS_HUB)
+		if (RootHubPort[port].DeviceClass == USB_DEV_CLASS_HUB)
 		{
 			if (DumpReport) SendKeyboardString("\nFound hub\n");
 
@@ -1168,7 +1168,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 
 			UINT8 hubPortNum;
 			UINT16 hubPortStatus, hubPortChange;
-			USB_DEVICE *pUsbDevice = &RootHubPort[port].UsbDevice;
+			USB_HUB_PORT *pUsbDevice = &RootHubPort[port];
 
 			//hub
 			s = GetHubDescriptor(pUsbDevice, ReceiveDataBuffer, sizeof(USB_HUB_DESCR), &len);
@@ -1323,14 +1323,14 @@ static BOOL EnumerateRootHubPort(UINT8 port)
 							if (hubPortStatus & 0x0200)
 							{
 								//speed low
-								SubHubPort[port][i].UsbDevice.DeviceSpeed = LOW_SPEED;
+								SubHubPort[port][i].DeviceSpeed = LOW_SPEED;
 								if (DumpReport) SendKeyboardString("lowspeed\n");
 								TRACE("low speed device\r\n");
 							}
 							else
 							{
 								//full speed device
-								SubHubPort[port][i].UsbDevice.DeviceSpeed = FULL_SPEED;
+								SubHubPort[port][i].DeviceSpeed = FULL_SPEED;
 								if (DumpReport) SendKeyboardString("fullspeed\n");
 								TRACE("full speed device\r\n");
 							}
@@ -1462,7 +1462,7 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 {
 	UINT8 i, s, c;
 	UINT16 len, cnt;
-	USB_DEVICE *pUsbDevice = &pUsbHubPort->UsbDevice;
+	USB_HUB_PORT *pUsbDevice = pUsbHubPort;
 	if (pUsbDevice->DeviceClass != USB_DEV_CLASS_HUB)
 	{
 		for (i = 0; i < pUsbDevice->InterfaceNum; i++)
@@ -1577,21 +1577,21 @@ void RegrabDeviceReports(UINT8 port)
 
 	if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
 	{
-		if (pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
+		if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
 		{
 			SelectHubPort(port, EXHUB_PORT_NONE);
 			regrabinterfaces(pUsbHubPort);
 		}
 		else
 		{
-			UINT8 exHubPortNum = pUsbHubPort->UsbDevice.HubPortNum;
+			UINT8 exHubPortNum = pUsbHubPort->HubPortNum;
 			UINT8 i;
 
 			for (i = 0; i < exHubPortNum; i++)
 			{
 				pUsbHubPort = &SubHubPort[port][i];
 
-				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
+				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
 				{
 					SelectHubPort(port, i);
 					regrabinterfaces(pUsbHubPort);
@@ -1633,33 +1633,33 @@ void InterruptProcessRootHubPort(UINT8 port)
 
 	if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
 	{
-		if (pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
+		if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
 		{
 			SelectHubPort(port, EXHUB_PORT_NONE);
 
-			HIDDataTransferReceive(&pUsbHubPort->UsbDevice);
+			HIDDataTransferReceive(pUsbHubPort);
 		}
 		else
 		{
-			UINT8 exHubPortNum = pUsbHubPort->UsbDevice.HubPortNum;
+			UINT8 exHubPortNum = pUsbHubPort->HubPortNum;
 			UINT8 i;
 
 			for (i = 0; i < exHubPortNum; i++)
 			{
 				pUsbHubPort = &SubHubPort[port][i];
 
-				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
+				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
 				{
 					SelectHubPort(port, i);
 
-					HIDDataTransferReceive(&pUsbHubPort->UsbDevice);
+					HIDDataTransferReceive(pUsbHubPort);
 				}
 			}
 		}
 	}
 }
 
-static void UpdateUsbKeyboardLedInternal(USB_DEVICE *pUsbDevice, UINT8 led)
+static void UpdateUsbKeyboardLedInternal(USB_HUB_PORT *pUsbDevice, UINT8 led)
 {
 	UINT8 i;
 	for (i = 0; i < pUsbDevice->InterfaceNum; i++)
@@ -1687,25 +1687,25 @@ void UpdateUsbKeyboardLed(UINT8 led)
 		USB_HUB_PORT *pUsbHubPort = &RootHubPort[i];
 		if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
 		{
-			if (pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
+			if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
 			{
 				SelectHubPort(i, EXHUB_PORT_NONE);
 
-				UpdateUsbKeyboardLedInternal(&pUsbHubPort->UsbDevice, led);
+				UpdateUsbKeyboardLedInternal(pUsbHubPort, led);
 			}
 			else
 			{
-				int exHubPortNum = pUsbHubPort->UsbDevice.HubPortNum;
+				int exHubPortNum = pUsbHubPort->HubPortNum;
 
 				for (j = 0; j < exHubPortNum; j++)
 				{
 					pUsbHubPort = &SubHubPort[i][j];
 
-					if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->UsbDevice.DeviceClass != USB_DEV_CLASS_HUB)
+					if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
 					{
 						SelectHubPort(i, j);
 
-						UpdateUsbKeyboardLedInternal(&pUsbHubPort->UsbDevice, led);
+						UpdateUsbKeyboardLedInternal(pUsbHubPort, led);
 					}
 				}
 			}

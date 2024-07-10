@@ -17,9 +17,8 @@ OBJDIR = ./build
 
 TARGET = hidman
 
-OBJECTS = \
+COMMON = \
 $(OBJDIR)/keyboardled.rel \
-$(OBJDIR)/main.rel \
 $(OBJDIR)/parsedescriptor.rel \
 $(OBJDIR)/system.rel \
 $(OBJDIR)/usbhost.rel \
@@ -36,8 +35,8 @@ $(OBJDIR)/amstrad.rel \
 $(OBJDIR)/xt.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)
-	OBJECTS += $(OBJDIR)/uart.rel
-	OBJECTS += $(OBJDIR)/uart1.rel
+	COMMON += $(OBJDIR)/uart.rel
+	COMMON += $(OBJDIR)/uart1.rel
 endif
 
 ifndef FREQ_SYS
@@ -73,8 +72,8 @@ $(OBJDIR)/%.rel : %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 
-$(OBJDIR)/$(TARGET).ihx: makebuilddir $(OBJECTS)
-	$(CC) $(OBJECTS) $(LFLAGS) -o $(OBJDIR)/$(TARGET).ihx
+$(OBJDIR)/$(TARGET).ihx: makebuilddir $(COMMON) $(OBJDIR)/main.rel
+	$(CC) $(COMMON) $(OBJDIR)/main.rel $(LFLAGS) -o $(OBJDIR)/$(TARGET).ihx
 	
 
 $(OBJDIR)/$(TARGET).hex: $(OBJDIR)/$(TARGET).ihx
@@ -98,6 +97,6 @@ all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 clean:
 	rm -f $(OBJDIR)/*
 
-test: $(OBJECTS) $(OBJDIR)/test.rel
-	$(CC) build/test.rel build/parsedescriptor.rel build/andyalloc.rel build/data.rel build/uart.rel $(LFLAGS) -o $(OBJDIR)/test.ihx
+test: $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel
+	$(CC) $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel $(LFLAGS) -o $(OBJDIR)/test.ihx
 	s51 -s - build/test 

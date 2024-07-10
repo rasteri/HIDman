@@ -3,7 +3,7 @@
 #include "ch559.h"
 #include "system.h"
 
-
+volatile uint16_t SoftWatchdog = 0;
 
 FunctionReference runBootloader = (FunctionReference)0xF400;
 

@@ -20,8 +20,6 @@
 
 uint8_t UsbUpdateCounter = 0;
 
-volatile uint16_t SoftWatchdog = 0;
-
 void EveryMillisecond(void) {
 
 	// Soft watchdog is to get around the fact that the real watchdog runs too fast

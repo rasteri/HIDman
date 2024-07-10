@@ -98,6 +98,8 @@ typedef struct _ENDPOINT
 #define USAGE_Y            0x31
 #define USAGE_WHEEL        0x38
 
+extern UINT8 sInterfacePoolPos;
+
 typedef struct _HID_ITEM_INFO
 {
 	unsigned int format;
@@ -152,9 +154,20 @@ typedef struct _INTERFACE
 
 } INTERFACE, *PINTERFACE;
 
-//device struct
-typedef struct _USB_DEVICE
+
+//hub struct
+#define  PORT_DEVICE_NONE         0
+#define  PORT_DEVICE_INSERT       1
+#define  PORT_DEVICE_ENUM_FAILED  2
+#define  PORT_DEVICE_ENUM_SUCCESS 3
+
+typedef struct _USB_HUB_PORT
 {
+	// Port status
+	UINT8  HubPortStatus;
+	UINT8       HubPortNum;
+
+	// Device Status
 	UINT8       DeviceClass;
 	UINT8       MaxPacketSize0;
 	
@@ -166,20 +179,6 @@ typedef struct _USB_DEVICE
 	UINT8       DeviceSpeed;
 	UINT8       InterfaceNum;
 	INTERFACE*  Interface;
-	
-	UINT8       HubPortNum;
-} USB_DEVICE, *PUSB_DEVICE;
-
-//hub struct
-#define  PORT_DEVICE_NONE         0
-#define  PORT_DEVICE_INSERT       1
-#define  PORT_DEVICE_ENUM_FAILED  2
-#define  PORT_DEVICE_ENUM_SUCCESS 3
-
-typedef struct _USB_HUB_PORT
-{
-	UINT8  HubPortStatus;
-	USB_DEVICE UsbDevice;
 	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 

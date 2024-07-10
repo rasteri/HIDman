@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "defs.h"
+
 extern __code uint8_t KEY_ACK[];
 extern __code uint8_t KEY_BATCOMPLETE[];
 extern __code uint8_t KEY_ID[];
@@ -55,6 +57,8 @@ extern const uint8_t * const ModtoXT_MAKE[];
 extern __code uint8_t ASCIItoHID[];
 
 extern __code JoyPreset DefaultJoyMaps[];
+extern __code JoyPreset ConfigGameNoMouse[];
+extern __code JoyPreset ConfigGameMouse[];
 
 extern __xdata uint8_t StandardKeyboardDescriptor[];
 extern __xdata uint8_t StandardMouseDescriptor[];

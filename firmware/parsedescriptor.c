@@ -22,6 +22,7 @@
 #include "parsedescriptor.h"
 #include "andyalloc.h"
 #include "system.h"
+#include "preset.h"
 
 uint8_t JoyNum = 0;
 
@@ -176,25 +177,27 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 		currSegPnt->reportSize = hidGlobalPnt->reportSize;                                                       \
 	}
 
+JoyPreset *currPreset;
+
 //search though preset to see if this matches a mapping
 #define CreateMapping()                                                        \
 	{                                                                          \
-		k = 0;                                                                 \
-		DEBUG_OUT("rrrrs %hx\n", hidGlobalPnt->reportSize);                       \
-		while (DefaultJoyMaps[k].InputType != MAP_TYPE_NONE)                   \
+		currPreset = JoyPresets;												\
+																				\
+		while (currPreset != NULL)												\
 		{                                                                      \
-			if (DefaultJoyMaps[k].InputUsagePage == hidGlobalPnt->usagePage && \
-				DefaultJoyMaps[k].InputUsage == hidLocal.usage &&              \
-				DefaultJoyMaps[k].Number == JoyNum)                            \
+			if (currPreset->InputUsagePage == hidGlobalPnt->usagePage && \
+				currPreset->InputUsage == hidLocal.usage &&              \
+				currPreset->Number == JoyNum)                            \
 			{                                                                  \
 				CreateSeg();                                                   \
 				tempSB -= hidGlobalPnt->reportSize;                            \
-				currSegPnt->OutputChannel = DefaultJoyMaps[k].OutputChannel;   \
-				currSegPnt->OutputControl = DefaultJoyMaps[k].OutputControl;   \
-				currSegPnt->InputType = DefaultJoyMaps[k].InputType;           \
-				currSegPnt->InputParam = DefaultJoyMaps[k].InputParam;         \
+				currSegPnt->OutputChannel = currPreset->OutputChannel;   \
+				currSegPnt->OutputControl = currPreset->OutputControl;   \
+				currSegPnt->InputType = currPreset->InputType;           \
+				currSegPnt->InputParam = currPreset->InputParam;         \
 			}                                                                  \
-			k++;                                                               \
+			currPreset = currPreset->next; 										\
 		}                                                                      \
 		tempSB += hidGlobalPnt->reportSize;                                    \
 	}

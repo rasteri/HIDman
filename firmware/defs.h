@@ -229,6 +229,9 @@ typedef struct JoyPreset
 
 	// Param has different meanings depending on InputType
 	uint16_t InputParam;
+
+	// linked list
+	struct JoyPreset *next;
 } JoyPreset;
 
 

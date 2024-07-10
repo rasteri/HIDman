@@ -13,6 +13,92 @@
 #include "defs.h"
 #include "usbhidkeys.h"
 
+// configuration for when game controller mouse emulation is enabled
+// buttons 5 and 6 mapped to mouse buttons
+__code JoyPreset ConfigGameMouse[] = {
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        5,                        // Input Usage
+        MAP_MOUSE,                // Output Channel
+        MAP_MOUSE_BUTTON2,        // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        6,                        // Input Usage
+        MAP_MOUSE,                // Output Channel
+        MAP_MOUSE_BUTTON1,        // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Z,            // Usage
+        MAP_MOUSE,                 // Output Channel
+        MAP_MOUSE_X,               // Output Control
+        MAP_TYPE_SCALE,            // InputType
+        2                          // Input Param
+    },
+    {
+        1,                         // Number
+        REPORT_USAGE_PAGE_GENERIC, // Usage Page
+        REPORT_USAGE_Rz,           // Usage
+        MAP_MOUSE,                 // Output Channel
+        MAP_MOUSE_Y,               // Output Control
+        MAP_TYPE_SCALE,            // InputType
+        2                          // Input Param
+    },
+    // null to signify end
+    {
+        0, // Number
+        0, // Input Usage Page
+        0, // Input Usage
+        0, // Output Channel
+        0, // Output Control
+        0, // InputType
+        0  // Input Param
+    }
+};
+
+// game controller mouse emulation NOT enabled
+// buttons 5 and 6 should just be mapped to keys
+__code JoyPreset ConfigGameNoMouse[] = {
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        5,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_E,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    {
+        1,                        // Number
+        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
+        6,                        // Input Usage
+        MAP_KEYBOARD,             // Output Channel
+        KEY_F,                    // Output Control
+        MAP_TYPE_THRESHOLD_ABOVE, // InputType
+        0                         // Input Param
+    },
+    // null to signify end
+    {
+        0, // Number
+        0, // Input Usage Page
+        0, // Input Usage
+        0, // Output Channel
+        0, // Output Control
+        0, // InputType
+        0  // Input Param
+    },
+};
+
+
+
 __code JoyPreset DefaultJoyMaps[] = {
 
     {
@@ -48,24 +134,6 @@ __code JoyPreset DefaultJoyMaps[] = {
         4,                        // Input Usage
         MAP_KEYBOARD,             // Output Channel
         KEY_D,                    // Output Control
-        MAP_TYPE_THRESHOLD_ABOVE, // InputType
-        0                         // Input Param
-    },
-    {
-        1,                        // Number
-        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        5,                        // Input Usage
-        MAP_KEYBOARD,             // Output Channel
-        KEY_E,                    // Output Control
-        MAP_TYPE_THRESHOLD_ABOVE, // InputType
-        0                         // Input Param
-    },
-    {
-        1,                        // Number
-        REPORT_USAGE_PAGE_BUTTON, // Input Usage Page
-        6,                        // Input Usage
-        MAP_KEYBOARD,             // Output Channel
-        KEY_F,                    // Output Control
         MAP_TYPE_THRESHOLD_ABOVE, // InputType
         0                         // Input Param
     },
@@ -194,24 +262,6 @@ __code JoyPreset DefaultJoyMaps[] = {
         KEY_UP,                    // Output Control
         MAP_TYPE_THRESHOLD_BELOW,  // InputType
         64                         // Input Param
-    },
-    {
-        1,                         // Number
-        REPORT_USAGE_PAGE_GENERIC, // Usage Page
-        REPORT_USAGE_Z,            // Usage
-        MAP_MOUSE,                 // Output Channel
-        MAP_MOUSE_X,               // Output Control
-        MAP_TYPE_SCALE,            // InputType
-        2                          // Input Param
-    },
-    {
-        1,                         // Number
-        REPORT_USAGE_PAGE_GENERIC, // Usage Page
-        REPORT_USAGE_Rz,           // Usage
-        MAP_MOUSE,                 // Output Channel
-        MAP_MOUSE_Y,               // Output Control
-        MAP_TYPE_SCALE,            // InputType
-        2                          // Input Param
     },
     // 0 on hat switch, just press up
     {

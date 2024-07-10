@@ -14,6 +14,7 @@
 #include "parsedescriptor.h"
 #include "ps2protocol.h"
 #include "testdata.h"
+#include "preset.h"
 
 void UART_Init()
 {
@@ -33,6 +34,7 @@ void test(){
     INTERFACE *pInterface;
 
     andyclearmem();
+    InitPresets();
 	sInterfacePoolPos = 0;
 
     USB_HUB_PORT *pUsbDevice = &TestPort;

@@ -158,7 +158,7 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 
 }
 
-#define CreateSeg()                                                                                              \
+void CreateSeg()                                                                                              \
 	{                                                                                                            \
 		if (pHidSegStruct->reports[hidGlobalPnt->reportID]->firstHidSeg == NULL)                                 \
 		{                                                                                                        \

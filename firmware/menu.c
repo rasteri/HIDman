@@ -19,6 +19,7 @@
 #include "settings.h"
 #include "usbhidkeys.h"
 #include "system.h"
+#include "andyalloc.h"
 
 __xdata char SendBuffer[255];
 
@@ -138,6 +139,7 @@ void Menu_Task(void)
                 case KEY_1:     menuState = MENU_STATE_KEYBOARD; break;
                 case KEY_2:     menuState = MENU_STATE_MOUSE; break;
                 case KEY_3:     menuState = MENU_STATE_GAME; break;
+                case KEY_4:     menuState = MENU_STATE_DEBUG; break;
 
                 case KEY_ESC:
                     SendKeyboardString("Goodbye\n");
@@ -155,10 +157,10 @@ void Menu_Task(void)
                 SendKeyboardString("1. Advanced USB - ");
                 YesNo(FlashSettings->KeyboardReportMode);
 
-                SendKeyboardString("2. 81 key mode - ");
+                SendKeyboardString("2. 81 Key Mode - ");
                 YesNo(FlashSettings->XT81Keys);
 
-                SendKeyboardString("ESC main menu\n");
+                SendKeyboardString("\nESC. Main Menu\n");
                 lastMenuState = menuState;
             }
             switch (menuKey) {
@@ -178,7 +180,7 @@ void Menu_Task(void)
                 SendKeyboardString("2. Intellimouse - ");
                 YesNo(FlashSettings->Intellimouse);
 
-                SendKeyboardString("ESC main menu\n");
+                SendKeyboardString("\nESC. Main Menu\n");
 
                 lastMenuState = menuState;
             }
@@ -195,7 +197,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_GAME)
             {
                 SendKeyboardString("\n\Game Controllers\n\n");
-                SendKeyboardString("1. Use as mouse - ");
+                SendKeyboardString("1. Use as Mouse - ");
                 YesNo(FlashSettings->MouseReportMode);
 
                 SendKeyboardString("\nESC main menu\n");
@@ -218,7 +220,8 @@ void Menu_Task(void)
                 SendKeyboardString("1. Hard Factory Reset\n");
                 SendKeyboardString("2. Soft Factory Reset\n");
                 SendKeyboardString("3. Log HID Data\n");
-                SendKeyboardString("4. Dump PS2 mouse status\n\n");
+                SendKeyboardString("4. Dump PS2 mouse status\n");
+                SendKeyboardString("5. Memory Test\n\n");
                 SendKeyboardString("ESC main menu\n");
                 lastMenuState = menuState;
             }
@@ -250,6 +253,16 @@ void Menu_Task(void)
                     SendKeyboardString("%02X ", MouseBuffer[i]);
                 }
                 menuState = MENU_STATE_INIT;
+                break;
+
+            case KEY_5:
+                SendKeyboardString("Used %lx, free %lx\n", MemoryUsed(), MemoryFree());
+                SendKeyboardString("Testing allocator, will reset when complete\n");
+                for (int i = 0; i < 128; i++) {
+                    andyalloc(256);
+                }
+                DumpReport = 1;
+                menuState = MENU_STATE_DUMPING;
                 break;
             }
             break;

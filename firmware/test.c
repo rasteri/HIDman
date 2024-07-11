@@ -15,6 +15,8 @@
 #include "ps2protocol.h"
 #include "testdata.h"
 #include "preset.h"
+#include "test.h"
+#include "usbll.h"
 
 void UART_Init()
 {
@@ -29,7 +31,29 @@ void UART_Init()
 
 static USB_HUB_PORT __xdata TestPort;
 
-void test(){
+void DumpHID(INTERFACE *pInterface)
+{
+    HID_SEG *tmpseg;
+    for (uint8_t x = 0; x < MAX_REPORTS; x++)
+    {
+        if (pInterface->reports[x] != NULL)
+        {
+            tmpseg = pInterface->reports[x]->firstHidSeg;
+
+            printf("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
+            while (tmpseg != NULL)
+            {
+                printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
+                tmpseg = tmpseg->next;
+            }
+        }
+    }
+}
+
+void TestDescriptors(
+    uint8_t *Dev, uint16_t DevLen, 
+    uint8_t *Config, uint16_t ConfigLen, 
+    uint8_t *Report, uint16_t ReportLen){
 
     INTERFACE *pInterface;
 
@@ -38,13 +62,13 @@ void test(){
 	sInterfacePoolPos = 0;
 
     USB_HUB_PORT *pUsbDevice = &TestPort;
-    HID_SEG *tmpseg;
+    InitHubPortData(pUsbDevice);
 
-    ParseDeviceDescriptor((USB_DEV_DESCR *)PS4DeviceDescriptor, 18, pUsbDevice);
+    ParseDeviceDescriptor((USB_DEV_DESCR *)Dev, DevLen, pUsbDevice);
     
     printf("VendorID=0x%04X,ProductID=0x%04X,bcdDevice=0x%04X\n", pUsbDevice->VendorID, pUsbDevice->ProductID, pUsbDevice->bcdDevice);
 
-    ParseConfigDescriptor((USB_CFG_DESCR *)PS4ConfigDescriptor, 225, pUsbDevice);
+    ParseConfigDescriptor((USB_CFG_DESCR *)Config, ConfigLen, pUsbDevice);
 
     printf("Num Interfaces=%d\n", pUsbDevice->InterfaceNum);
 
@@ -58,22 +82,9 @@ void test(){
 		if (pInterface->InterfaceClass == USB_DEV_CLASS_HID)
 		{
             printf("Oooh that's HID\n");
-            ParseReportDescriptor(PS4ReportDescriptor, 507, pInterface);
+            ParseReportDescriptor(Report, ReportLen, pInterface);
 
-            for (uint8_t x = 0; x < MAX_REPORTS; x++)
-            {
-                if (pInterface->reports[x] != NULL)
-                {
-                    tmpseg = pInterface->reports[x]->firstHidSeg;
-
-                    printf("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
-                    while (tmpseg != NULL)
-                    {
-                        printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
-                        tmpseg = tmpseg->next;
-                    }
-                }
-            }
+            DumpHID(pInterface);
         }
     }
 
@@ -81,35 +92,38 @@ void test(){
     RegrabDeviceReports(i);*/
 }
 
+
 INTERFACE funky;
 
 void main()
 {
     UART_Init();
 
-    test();
+    TestDescriptors(
+        PS4DeviceDescriptor, 18,
+        PS4ConfigDescriptor, 225,
+        PS4ReportDescriptor, 507
+    );
 
-    /*ParseReportDescriptor(StandardKeyboardDescriptor, 63, &funky);
+    TestDescriptors(
+        CheapoGamepadDeviceDescriptor, 18,
+        CheapoGamepadConfigDescriptor, 34,
+        CheapoGamepadReportDescriptor, 89
+    );
 
-    INTERFACE *bleh = &funky;
+    TestDescriptors(
+        PS4DeviceDescriptor, 18,
+        PS4ConfigDescriptor, 225,
+        PS4ReportDescriptor, 507
+    );
 
-    HID_SEG *tmpseg;
-    for (uint8_t x = 0; x < MAX_REPORTS; x++)
-    {
-        if (bleh->reports[x] != NULL)
-        {
-            tmpseg = bleh->reports[x]->firstHidSeg;
+    TestDescriptors(
+        CheapoGamepadDeviceDescriptor, 18,
+        CheapoGamepadConfigDescriptor, 34,
+        CheapoGamepadReportDescriptor, 89
+    );
 
-            printf("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
-            while (tmpseg != NULL)
-            {
-                printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
-                tmpseg = tmpseg->next;
-            }
-        }
-    }
 
-    printf("\n");*/
 
     for (;;)
     {

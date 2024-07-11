@@ -33,7 +33,7 @@ void mDelaymS(UINT16 n);              // ��mSΪ��λ��ʱ
 
 #include <stdio.h>
 #define ANDYS_DEBUG_OUT(...) printf(__VA_ARGS__);
-#if 0
+#if 1
 #define DEBUG_OUT(...) printf(__VA_ARGS__);
 #else
 #define DEBUG_OUT(...) (void)0;

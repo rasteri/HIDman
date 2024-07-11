@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "type.h"
 #include "ch559.h"
 #include "system.h"
@@ -15,6 +16,7 @@
 #include "parsedescriptor.h"
 #include "ps2protocol.h"
 #include "usbll.h"
+#include "preset.h"
 
 #define RECEIVE_BUFFER_LEN 512
 static UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
@@ -25,10 +27,13 @@ UINT8 sInterfacePoolPos = 0;
 
 static void InitInterface(INTERFACE* Interface)
 {
+	memset(Interface, 0, sizeof(INTERFACE));
+
 	Interface->InterfaceClass = USB_DEV_CLASS_RESERVED;
 	Interface->InterfaceProtocol = USB_PROTOCOL_NONE;
 	Interface->ReportSize = 0;
 	Interface->EndpointNum = 0;
+
 
 	for (int j = 0; j < MAX_ENDPOINT_NUM; j++)
 	{
@@ -37,6 +42,10 @@ static void InitInterface(INTERFACE* Interface)
 		Interface->Endpoint[j].EndpointDir = ENDPOINT_IN;
 		Interface->Endpoint[j].TOG = FALSE;
 	}
+
+	Interface->usesReports = 0;
+	
+
 }
 
 
@@ -960,10 +969,10 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 					{
 						tmpseg = pInterface->reports[x]->firstHidSeg;
 
-						DEBUG_OUT("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
+						ANDYS_DEBUG_OUT("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
 						while (tmpseg != NULL)
 						{
-							DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
+							ANDYS_DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
 							tmpseg = tmpseg->next;
 						}
 					}
@@ -1017,7 +1026,9 @@ void ReenumerateAllPorts(void){
 	if (DumpReport) SendKeyboardString("reenumerating all ports\n");
 	mDelaymS(150);
 	//TR0 = 0;
+	InitUsbData();
 	andyclearmem();
+	InitPresets();
 	sInterfacePoolPos = 0;
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 	{

@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include "ch559.h"
 #include "usbhost.h"
@@ -17,6 +17,7 @@
 #include "dataflash.h"
 #include "settings.h"
 #include "system.h"
+
 
 uint8_t UsbUpdateCounter = 0;
 
@@ -166,7 +167,7 @@ void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 	}
 }
 
-void main(void)
+int main(void)
 {
 	bool WatchdogReset = 0;
 

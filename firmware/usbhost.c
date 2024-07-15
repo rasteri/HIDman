@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1073,7 +1072,6 @@ void InterruptProcessRootHubPort(UINT8 port)
 				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
 				{
 					SelectHubPort(port, i);
-
 					HIDDataTransferReceive(pUsbHubPort);
 				}
 			}

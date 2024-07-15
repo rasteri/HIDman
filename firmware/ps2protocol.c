@@ -303,7 +303,6 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
 
 bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 {
-
 	HID_REPORT *descReport;
 	HID_SEG *currSeg;
 

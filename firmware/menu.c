@@ -174,7 +174,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_MOUSE)
             {
                 SendKeyboardString("\n\Mouse\n\n");
-                SendKeyboardString("1. Native Mode - ");
+                SendKeyboardString("1. Advanced USB - ");
                 YesNo(FlashSettings->MouseReportMode);
 
                 SendKeyboardString("2. Intellimouse - ");
@@ -220,8 +220,8 @@ void Menu_Task(void)
                 SendKeyboardString("1. Hard Factory Reset\n");
                 SendKeyboardString("2. Soft Factory Reset\n");
                 SendKeyboardString("3. Log HID Data\n");
-                SendKeyboardString("4. Dump PS2 mouse status\n");
-                SendKeyboardString("5. Memory Test\n\n");
+                SendKeyboardString("4. Dump PS2 mouse status\n\n");
+                //SendKeyboardString("5. Memory Test\n\n");
                 SendKeyboardString("ESC main menu\n");
                 lastMenuState = menuState;
             }
@@ -255,7 +255,7 @@ void Menu_Task(void)
                 menuState = MENU_STATE_INIT;
                 break;
 
-            case KEY_5:
+            /*case KEY_5:
                 SendKeyboardString("Used %lx, free %lx\n", MemoryUsed(), MemoryFree());
                 SendKeyboardString("Testing allocator, will reset when complete\n");
                 for (int i = 0; i < 128; i++) {
@@ -263,7 +263,7 @@ void Menu_Task(void)
                 }
                 DumpReport = 1;
                 menuState = MENU_STATE_DUMPING;
-                break;
+                break;*/
             }
             break;
 

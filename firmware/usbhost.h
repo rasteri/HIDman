@@ -2,6 +2,7 @@
 #ifndef _USBHOST_H_
 #define _USBHOST_H_
 
+#include <stdbool.h>
 #include "defs.h"
 
 // ���ӳ��򷵻�״̬��

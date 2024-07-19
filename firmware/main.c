@@ -11,6 +11,7 @@
 #include "menu.h"
 #include "mouse.h"
 #include "xt.h"
+#include "amstrad.h"
 #include "pwm.h"
 #include "keyboardled.h"
 #include "dataflash.h"
@@ -142,6 +143,10 @@ void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 
 		case (MODE_XT):
 			XTProcessPort();
+			break;
+
+		case (MODE_AMSTRAD):
+			AmstradProcessPort();
 			break;
 	}
 

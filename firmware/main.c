@@ -27,12 +27,12 @@ void EveryMillisecond(void) {
 	SoftWatchdog++;
 	if (SoftWatchdog > 5000) {
 		// if soft watchdog overflows, just go into an infinite loop and we'll trigger the real watchdog
+		ANDYS_DEBUG_OUT("Soft overflow\n");
 		while(1);
 	}
 
 	// otherwise, reset the real watchdog
 	WDOG_COUNT = 0x00;
-
 	// every 4 milliseconds (250hz), check one or the other USB port (so each gets checked at 125hz)
 	if (UsbUpdateCounter == 4)
 		s_CheckUsbPort0 = TRUE;

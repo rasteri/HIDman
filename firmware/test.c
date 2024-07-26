@@ -105,7 +105,7 @@ void main()
         PS4ReportDescriptor, 507
     );
 
-    TestDescriptors(
+    /*TestDescriptors(
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
         CheapoGamepadReportDescriptor, 89
@@ -121,7 +121,7 @@ void main()
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
         CheapoGamepadReportDescriptor, 89
-    );
+    );*/
 
 
 

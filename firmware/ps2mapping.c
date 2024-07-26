@@ -49,7 +49,6 @@ HID_SEG *currSegPnt = 0;
 #define CreateMapping()                                                        \
 	{                                                                          \
 		currPreset = JoyPresets;												\
-																				\
 		while (currPreset != NULL)												\
 		{                                                                      \
 			if (currPreset->InputUsagePage == HIDParseState.hidGlobal.usagePage && \
@@ -120,42 +119,49 @@ void CreateUsageMapping(INTERFACE *pHidSegStruct){
 
 	tempSB = HIDParseState.startBit;
 
-	if (HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC)
+	// need to make a seg for each found usage
+	for (i = 0; i < HIDParseState.usagePtr; i++)
 	{
-		if (HIDParseState.appUsage == REPORT_USAGE_MOUSE)
+		if (HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC)
 		{
-			CreateSeg();
-			if (HIDParseState.hidGlobal.usagePage == REPORT_USAGE_PAGE_GENERIC)
+			if (HIDParseState.appUsage == REPORT_USAGE_MOUSE)
 			{
-				currSegPnt->OutputChannel = MAP_MOUSE;
-				switch (HIDParseState.hidLocal.usage)
+				CreateSeg();
+				if (HIDParseState.hidGlobal.usagePage == REPORT_USAGE_PAGE_GENERIC)
 				{
-				case REPORT_USAGE_X:
-					// Mouse - value field
-					currSegPnt->OutputControl = MAP_MOUSE_X;
-					currSegPnt->InputType = MAP_TYPE_SCALE;
-					break;
+					currSegPnt->OutputChannel = MAP_MOUSE;
+					switch (HIDParseState.arrUsage[i])
+					{
+					case REPORT_USAGE_X:
+						// Mouse - value field
+						currSegPnt->OutputControl = MAP_MOUSE_X;
+						currSegPnt->InputType = MAP_TYPE_SCALE;
+						break;
 
-				case REPORT_USAGE_Y:
-					// Mouse - value field
-					currSegPnt->OutputControl = MAP_MOUSE_Y;
-					currSegPnt->InputType = MAP_TYPE_SCALE;
-					break;
-				
-				case REPORT_USAGE_WHEEL:
-					// Mouse - value field
-					currSegPnt->OutputControl = MAP_MOUSE_WHEEL;
-					currSegPnt->InputType = MAP_TYPE_SCALE;
-					break;
+					case REPORT_USAGE_Y:
+						// Mouse - value field
+						currSegPnt->OutputControl = MAP_MOUSE_Y;
+						currSegPnt->InputType = MAP_TYPE_SCALE;
+						break;
 					
+					case REPORT_USAGE_WHEEL:
+						// Mouse - value field
+						currSegPnt->OutputControl = MAP_MOUSE_WHEEL;
+						currSegPnt->InputType = MAP_TYPE_SCALE;
+						break;
+						
+					}
 				}
 			}
-		}
-		else if (HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || HIDParseState.appUsage == REPORT_USAGE_GAMEPAD)
-		{
-			CreateMapping();
+			else if (HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || HIDParseState.appUsage == REPORT_USAGE_GAMEPAD)
+			{
+				HIDParseState.hidLocal.usage = HIDParseState.arrUsage[i];
+				CreateMapping();
+			}
 		}
 	}
+
+
 }
 
 void CreateArrayMapping(INTERFACE *pHidSegStruct){
@@ -173,7 +179,6 @@ void CreateArrayMapping(INTERFACE *pHidSegStruct){
 		// need to make a seg for each report seg
 		for (i = 0; i < HIDParseState.hidGlobal.reportCount; i++)
 		{
-			
 			CreateSeg();
 			currSegPnt->OutputChannel = MAP_KEYBOARD;
 			currSegPnt->InputType = MAP_TYPE_ARRAY;

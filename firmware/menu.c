@@ -56,6 +56,7 @@ void SendKeyboardBuffer(void)
 
     while (1)
     {
+        SoftWatchdog = 0;
         currchar = SendBuffer[BufferIndex];
 
         if (!currchar)
@@ -198,7 +199,7 @@ void Menu_Task(void)
             {
                 SendKeyboardString("\n\Game Controllers\n\n");
                 SendKeyboardString("1. Use as Mouse - ");
-                YesNo(FlashSettings->MouseReportMode);
+                YesNo(FlashSettings->GameControllerAsMouse);
 
                 SendKeyboardString("\nESC main menu\n");
 
@@ -207,8 +208,7 @@ void Menu_Task(void)
 
             switch (menuKey)
             {
-                case KEY_1:     HMSettings.MouseReportMode ^= 1;        SyncSettings(); lastMenuState = 0; break;
-                case KEY_2:     HMSettings.Intellimouse ^= 1;           SyncSettings(); lastMenuState = 0; break;
+                case KEY_1:     HMSettings.GameControllerAsMouse ^= 1;        SyncSettings(); lastMenuState = 0; break;
                 case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
             }
             break;

@@ -10,6 +10,8 @@ typedef struct ParseState {
 	HID_LOCAL hidLocal;
 	uint16_t startBit, appUsage, appUsagePage;
     uint8_t JoyNum;
+	uint8_t arrUsage[MAX_USAGE_NUM];
+	uint8_t usagePtr;
 } ParseState;
 
 extern __xdata ParseState HIDParseState;

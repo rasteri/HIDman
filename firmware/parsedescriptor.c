@@ -166,7 +166,7 @@ __xdata ParseState HIDParseState;
 
 BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegStruct)
 {
-	static __xdata uint8_t i, k, collectionDepth, usagePtr, arrUsage[MAX_USAGE_NUM];
+	static __xdata uint8_t i, k, collectionDepth;
 
 	uint8_t *start, *end;
 
@@ -180,7 +180,6 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 	i = 0;
 	k = 0;
 	collectionDepth = 0;
-	usagePtr = 0;
 
 	memset(&HIDParseState, 0x00, sizeof(ParseState));
 	HIDParseState.hidLocal.usageMax = 0xffff;
@@ -219,14 +218,9 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 				if (ItemUData(&item) & HID_INPUT_VARIABLE)
 				{
 					// we found some discrete usages, get to it
-					if (usagePtr)
+					if (HIDParseState.usagePtr)
 					{
-						// need to make a seg for each found usage
-						for (i = 0; i < usagePtr; i++)
-						{
-							HIDParseState.hidLocal.usage = arrUsage[i];
-							CreateUsageMapping(pHidSegStruct);
-						}
+						CreateUsageMapping(pHidSegStruct);
 					}
 					// if no usages found, maybe a bitfield
 					else if (HIDParseState.hidLocal.usageMin != 0xFFFF && HIDParseState.hidLocal.usageMax != 0xFFFF &&
@@ -271,7 +265,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 				}
 			}
 
-			usagePtr = 0;
+			HIDParseState.usagePtr = 0;
 			HIDParseState.hidLocal.usage = 0x00;
 			HIDParseState.hidLocal.usageMax = 0xffff;
 			HIDParseState.hidLocal.usageMin = 0xffff;
@@ -335,10 +329,10 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 			{
 				HIDParseState.hidLocal.usage = ItemUData(&item);
 
-				if (usagePtr < MAX_USAGE_NUM)
+				if (HIDParseState.usagePtr < MAX_USAGE_NUM)
 				{
-					arrUsage[usagePtr] = ItemUData(&item);
-					usagePtr++;
+					HIDParseState.arrUsage[HIDParseState.usagePtr] = ItemUData(&item);
+					HIDParseState.usagePtr++;
 				}
 			}
 			else if (item.tag == HID_LOCAL_ITEM_TAG_USAGE_MIN)

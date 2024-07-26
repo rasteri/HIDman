@@ -197,34 +197,35 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		{
 			make = 0;
 		}
-
-		if (make)
+		// hack for mouse, as it needs to explicity switch on and off
+		// this needs rewritten
+		if (currSeg->OutputChannel == MAP_MOUSE && currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE) {
+			switch (currSeg->OutputControl)
+				{
+				case MAP_MOUSE_BUTTON1:
+					MouseSet(0, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON2:
+					MouseSet(1, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON3:
+					MouseSet(2, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON4:
+					MouseSet(3, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON5:
+					MouseSet(4, currSeg->value);
+					break;
+				}
+		}
+		else if (make)
 		{
+
 
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
 				SetKey(currSeg->OutputControl, report);
-			}
-			else
-			{
-				switch (currSeg->OutputControl)
-				{
-				case MAP_MOUSE_BUTTON1:
-					MouseSet(0, pressed);
-					break;
-				case MAP_MOUSE_BUTTON2:
-					MouseSet(1, pressed);
-					break;
-				case MAP_MOUSE_BUTTON3:
-					MouseSet(2, pressed);
-					break;
-				case MAP_MOUSE_BUTTON4:
-					MouseSet(3, pressed);
-					break;
-				case MAP_MOUSE_BUTTON5:
-					MouseSet(4, pressed);
-					break;
-				}
 			}
 		}
 		else if (currSeg->InputType == MAP_TYPE_SCALE)

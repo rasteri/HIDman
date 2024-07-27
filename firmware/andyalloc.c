@@ -30,3 +30,14 @@ void andyclearmem(void)
 {
     MemPoolPtr = MemPool;
 }
+
+void printhexval(uint8_t x){
+    printf("sp %X\n", x);
+}
+
+void printstackpointer(void)
+{
+    uint8_t dumdum = 0;
+
+    printhexval(&dumdum);
+}

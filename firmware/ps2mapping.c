@@ -27,7 +27,7 @@ HID_SEG *currSegPnt = 0;
 //search though preset to see if this matches a mapping
 
 #define CreateSeg()                                                                                              \
-	{                                                                                                            \
+	{                                                                                                         \
 		if (pHidSegStruct->reports[HIDParseState.hidGlobal.reportID]->firstHidSeg == NULL)                                 \
 		{                                                                                                        \
 			pHidSegStruct->reports[HIDParseState.hidGlobal.reportID]->firstHidSeg = (HID_SEG *)andyalloc(sizeof(HID_SEG)); \
@@ -69,7 +69,7 @@ HID_SEG *currSegPnt = 0;
 
 
 
-void CreateBitfieldMapping(INTERFACE *pHidSegStruct) {
+void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 
 	static __xdata uint8_t i;
 	static __xdata uint16_t tempSB;
@@ -112,7 +112,7 @@ void CreateBitfieldMapping(INTERFACE *pHidSegStruct) {
 }
 
 
-void CreateUsageMapping(INTERFACE *pHidSegStruct){
+void CreateUsageMapping(__xdata INTERFACE *pHidSegStruct){
 	
 	static __xdata uint8_t i;
 	static __xdata uint16_t tempSB;
@@ -164,7 +164,7 @@ void CreateUsageMapping(INTERFACE *pHidSegStruct){
 
 }
 
-void CreateArrayMapping(INTERFACE *pHidSegStruct){
+void CreateArrayMapping(__xdata INTERFACE *pHidSegStruct){
 
 	static __xdata uint8_t i;
 	static __xdata uint16_t tempSB;

@@ -99,17 +99,7 @@ void main()
 {
     UART_Init();
 
-    TestDescriptors(
-        PS4DeviceDescriptor, 18,
-        PS4ConfigDescriptor, 225,
-        PS4ReportDescriptor, 507
-    );
-
-    /*TestDescriptors(
-        CheapoGamepadDeviceDescriptor, 18,
-        CheapoGamepadConfigDescriptor, 34,
-        CheapoGamepadReportDescriptor, 89
-    );
+    printstackpointer();
 
     TestDescriptors(
         PS4DeviceDescriptor, 18,
@@ -121,7 +111,19 @@ void main()
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
         CheapoGamepadReportDescriptor, 89
-    );*/
+    );
+
+    TestDescriptors(
+        PS4DeviceDescriptor, 18,
+        PS4ConfigDescriptor, 225,
+        PS4ReportDescriptor, 507
+    );
+
+    TestDescriptors(
+        CheapoGamepadDeviceDescriptor, 18,
+        CheapoGamepadConfigDescriptor, 34,
+        CheapoGamepadReportDescriptor, 89
+    );
 
 
 

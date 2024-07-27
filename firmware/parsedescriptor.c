@@ -168,7 +168,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 {
 	static __xdata uint8_t i, k, collectionDepth;
 
-	uint8_t *start, *end;
+	static uint8_t *start, *end;
 
 	static __xdata HID_GLOBAL *hidGlobalPnt = &HIDParseState.hidGlobal;
 	static __xdata HID_ITEM item;

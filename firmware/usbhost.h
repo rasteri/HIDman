@@ -2,6 +2,7 @@
 #ifndef _USBHOST_H_
 #define _USBHOST_H_
 
+#include <stdbool.h>
 #include "defs.h"
 
 // ���ӳ��򷵻�״̬��
@@ -98,6 +99,8 @@ typedef struct _ENDPOINT
 #define USAGE_Y            0x31
 #define USAGE_WHEEL        0x38
 
+extern UINT8 sInterfacePoolPos;
+
 typedef struct _HID_ITEM_INFO
 {
 	unsigned int format;
@@ -133,6 +136,8 @@ typedef struct _HID_ITEM_INFO
 
 #define MAX_USAGE_NUM      10
 
+#define MAX_REPORTS 10
+
 //interface struct
 typedef struct _INTERFACE
 {
@@ -145,13 +150,25 @@ typedef struct _INTERFACE
 	UINT8     EndpointNum;   //number of endpoints in this interface
 	ENDPOINT  Endpoint[MAX_ENDPOINT_NUM]; //endpoints
 	
-	HID_REPORT_DESC  HidSegStruct;	
+	bool usesReports;
+	HID_REPORT *reports[MAX_REPORTS];
 
 } INTERFACE, *PINTERFACE;
 
-//device struct
-typedef struct _USB_DEVICE
+
+//hub struct
+#define  PORT_DEVICE_NONE         0
+#define  PORT_DEVICE_INSERT       1
+#define  PORT_DEVICE_ENUM_FAILED  2
+#define  PORT_DEVICE_ENUM_SUCCESS 3
+
+typedef struct _USB_HUB_PORT
 {
+	// Port status
+	UINT8  HubPortStatus;
+	UINT8       HubPortNum;
+
+	// Device Status
 	UINT8       DeviceClass;
 	UINT8       MaxPacketSize0;
 	
@@ -163,20 +180,6 @@ typedef struct _USB_DEVICE
 	UINT8       DeviceSpeed;
 	UINT8       InterfaceNum;
 	INTERFACE*  Interface;
-	
-	UINT8       HubPortNum;
-} USB_DEVICE, *PUSB_DEVICE;
-
-//hub struct
-#define  PORT_DEVICE_NONE         0
-#define  PORT_DEVICE_INSERT       1
-#define  PORT_DEVICE_ENUM_FAILED  2
-#define  PORT_DEVICE_ENUM_SUCCESS 3
-
-typedef struct _USB_HUB_PORT
-{
-	UINT8  HubPortStatus;
-	USB_DEVICE UsbDevice;
 	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 

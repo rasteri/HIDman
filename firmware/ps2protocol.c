@@ -197,34 +197,35 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		{
 			make = 0;
 		}
-
-		if (make)
+		// hack for mouse, as it needs to explicity switch on and off
+		// this needs rewritten
+		if (currSeg->OutputChannel == MAP_MOUSE && currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE) {
+			switch (currSeg->OutputControl)
+				{
+				case MAP_MOUSE_BUTTON1:
+					MouseSet(0, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON2:
+					MouseSet(1, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON3:
+					MouseSet(2, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON4:
+					MouseSet(3, currSeg->value);
+					break;
+				case MAP_MOUSE_BUTTON5:
+					MouseSet(4, currSeg->value);
+					break;
+				}
+		}
+		else if (make)
 		{
+
 
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
 				SetKey(currSeg->OutputControl, report);
-			}
-			else
-			{
-				switch (currSeg->OutputControl)
-				{
-				case MAP_MOUSE_BUTTON1:
-					MouseSet(0, pressed);
-					break;
-				case MAP_MOUSE_BUTTON2:
-					MouseSet(1, pressed);
-					break;
-				case MAP_MOUSE_BUTTON3:
-					MouseSet(2, pressed);
-					break;
-				case MAP_MOUSE_BUTTON4:
-					MouseSet(3, pressed);
-					break;
-				case MAP_MOUSE_BUTTON5:
-					MouseSet(4, pressed);
-					break;
-				}
 			}
 		}
 		else if (currSeg->InputType == MAP_TYPE_SCALE)
@@ -301,9 +302,8 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
 		return 0;
 }
 
-bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
+bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 {
-
 	HID_REPORT *descReport;
 	HID_SEG *currSeg;
 
@@ -320,14 +320,14 @@ bool ParseReport(HID_REPORT_DESC *desc, uint32_t len, uint8_t *report)
 #endif
 	LEDDelayMs = 33;
 
-	if (desc->usesReports)
+	if (interface->usesReports)
 	{
 		// first byte of report will be the report number
-		descReport = desc->reports[report[0]];
+		descReport = interface->reports[report[0]];
 	}
 	else
 	{
-		descReport = desc->reports[0];
+		descReport = interface->reports[0];
 	}
 
 	// sanity check length - smaller is no good

@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include "ch559.h"
 #include "usbhost.h"
@@ -18,9 +18,8 @@
 #include "settings.h"
 #include "system.h"
 
-uint8_t UsbUpdateCounter = 0;
 
-volatile uint16_t SoftWatchdog = 0;
+uint8_t UsbUpdateCounter = 0;
 
 void EveryMillisecond(void) {
 
@@ -28,12 +27,12 @@ void EveryMillisecond(void) {
 	SoftWatchdog++;
 	if (SoftWatchdog > 5000) {
 		// if soft watchdog overflows, just go into an infinite loop and we'll trigger the real watchdog
+		ANDYS_DEBUG_OUT("Soft overflow\n");
 		while(1);
 	}
 
 	// otherwise, reset the real watchdog
 	WDOG_COUNT = 0x00;
-
 	// every 4 milliseconds (250hz), check one or the other USB port (so each gets checked at 125hz)
 	if (UsbUpdateCounter == 4)
 		s_CheckUsbPort0 = TRUE;
@@ -168,7 +167,7 @@ void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 	}
 }
 
-void main(void)
+int main(void)
 {
 	bool WatchdogReset = 0;
 

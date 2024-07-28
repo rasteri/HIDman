@@ -229,6 +229,9 @@ typedef struct JoyPreset
 
 	// Param has different meanings depending on InputType
 	uint16_t InputParam;
+
+	// linked list
+	struct JoyPreset *next;
 } JoyPreset;
 
 
@@ -277,12 +280,5 @@ typedef struct _HID_REPORT
 	HID_SEG *firstHidSeg;
 } HID_REPORT;
 
-#define MAX_REPORTS 10
-
-typedef struct _HID_REPORT_DESC
-{
-	bool usesReports;
-	HID_REPORT *reports[MAX_REPORTS];
-} HID_REPORT_DESC;
 
 #endif

@@ -18,6 +18,8 @@
 #include "test.h"
 #include "usbll.h"
 
+#define TESTVERBOSE
+
 void UART_Init()
 {
     SCON = 0x50; /* configure serial */
@@ -50,7 +52,7 @@ void DumpHID(INTERFACE *pInterface)
     }
 }
 
-void TestDescriptors(
+bool TestDescriptors(
     uint8_t *Dev, uint16_t DevLen, 
     uint8_t *Config, uint16_t ConfigLen, 
     uint8_t *Report, uint16_t ReportLen){
@@ -64,43 +66,59 @@ void TestDescriptors(
     USB_HUB_PORT *pUsbDevice = &TestPort;
     InitHubPortData(pUsbDevice);
 
-    ParseDeviceDescriptor((USB_DEV_DESCR *)Dev, DevLen, pUsbDevice);
-    
-    printf("VendorID=0x%04X,ProductID=0x%04X,bcdDevice=0x%04X\n", pUsbDevice->VendorID, pUsbDevice->ProductID, pUsbDevice->bcdDevice);
+    if (!ParseDeviceDescriptor((USB_DEV_DESCR *)Dev, DevLen, pUsbDevice)) {
+        printf("Can't parse Device Descriptor\n");
+        return 1;
+    }
 
-    ParseConfigDescriptor((USB_CFG_DESCR *)Config, ConfigLen, pUsbDevice);
+    if (!ParseConfigDescriptor((USB_CFG_DESCR *)Config, ConfigLen, pUsbDevice)) {
+        printf("Can't parse Config Descriptor\n");
+        return 1;
+    }
 
-    printf("Num Interfaces=%d\n", pUsbDevice->InterfaceNum);
+    #ifdef TESTVERBOSE 
+        printf("Num Interfaces=%d\n", pUsbDevice->InterfaceNum);
+        printf("VendorID=0x%04X,ProductID=0x%04X,bcdDevice=0x%04X\n", pUsbDevice->VendorID, pUsbDevice->ProductID, pUsbDevice->bcdDevice);
+    #endif 
 
     for (uint8_t i = 0; i < pUsbDevice->InterfaceNum; i++)
     {
         pInterface = &pUsbDevice->Interface[i];
-        printf("\n\nInterface %d - ", i);
-        printf("InterfaceClass=0x%02X - ", (UINT16)pInterface->InterfaceClass);
-		printf("InterfaceProtocol=0x%02X\n", (UINT16)pInterface->InterfaceProtocol);
+        #ifdef TESTVERBOSE 
+            printf("\n\nInterface %d - ", i);
+            printf("InterfaceClass=0x%02X - ", (UINT16)pInterface->InterfaceClass);
+            printf("InterfaceProtocol=0x%02X\n", (UINT16)pInterface->InterfaceProtocol);
+        #endif
 
 		if (pInterface->InterfaceClass == USB_DEV_CLASS_HID)
 		{
-            printf("Oooh that's HID\n");
-            ParseReportDescriptor(Report, ReportLen, pInterface);
+            if (!ParseReportDescriptor(Report, ReportLen, pInterface)) {
+                printf("Can't parse Report Descriptor\n");
+                return 1;
+            }
 
-            DumpHID(pInterface);
+            #ifdef TESTVERBOSE 
+                DumpHID(pInterface);
+            #endif
         }
     }
 
-    /*EnumerateRootHubPort(i);
-    RegrabDeviceReports(i);*/
 }
 
 /*
 	Func to test the sizes of various types
 	Mainly just to remind me how big all the various weird pointers are
 */
-#define testintsize(TP, SZ) \
-	if (sizeof(TP) != SZ) printf("type " #TP " is not " #SZ " bytes! (%d instead)\n", sizeof(TP));
+#ifdef TESTVERBOSE
+    #define testintsize(TP, SZ) \
+        if (sizeof(TP) != SZ){ printf("type " #TP " is %d, expected " #SZ "\n", sizeof(TP));\
+        return 1;}
+#else
+    #define testintsize(TP, SZ) \
+        if (sizeof(TP) != SZ) return 1;
+#endif
 
-
-void testintsizes(){
+bool testintsizes(){
 
 	// trad C - note ints and shorts are both 2 bytes
 	testintsize(char, 1); testintsize(unsigned char, 1);
@@ -138,6 +156,8 @@ void testintsizes(){
 
 	// pdata pointers should be 8bit (they are paged 256-byte segments of xdata), page is selected by P2 (or an SFR? depends on 8051 variant)
 	testintsize(__pdata uint8_t *, 1); testintsize(__pdata uint32_t *, 1);
+
+    return 0;
 }
 
 INTERFACE funky;
@@ -147,19 +167,9 @@ void main()
     UART_Init();
 
     printstackpointer();
-    testintsizes();
 
-    TestDescriptors(
-        PS4DeviceDescriptor, 18,
-        PS4ConfigDescriptor, 225,
-        PS4ReportDescriptor, 507
-    );
-
-    TestDescriptors(
-        CheapoGamepadDeviceDescriptor, 18,
-        CheapoGamepadConfigDescriptor, 34,
-        CheapoGamepadReportDescriptor, 89
-    );
+    if (testintsizes()) printf("Integer size test failed\n");
+    else printf("Integer size test passed\n");
 
     TestDescriptors(
         PS4DeviceDescriptor, 18,

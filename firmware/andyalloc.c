@@ -19,8 +19,22 @@ __xdata uint8_t MemPool[MEMPOOLMAXSIZE];
 __xdata uint8_t *MemPoolPtr = MemPool;
 __xdata uint8_t *tmp;
 
+uint16_t MemoryUsed(void) {
+    return MemPoolPtr - MemPool;
+}
+
+uint16_t MemoryFree(void) {
+    return MEMPOOLMAXSIZE - MemoryUsed();
+}
+
 void __xdata *andyalloc(size_t size)
 {
+    // trigger a watchdog reset if we run out of memory
+    if (MemoryFree() <= size) {
+        DEBUG_OUT("Memory Exhausted");
+        ET0 = 0;
+        while (1);
+    }
     tmp = MemPoolPtr;
     MemPoolPtr += size;
     return tmp;

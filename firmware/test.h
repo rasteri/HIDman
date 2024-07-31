@@ -1,2 +1,2 @@
 #pragma once
-void DumpHID(INTERFACE * pInterface);
+uint8_t DumpHID(INTERFACE *pInterface);

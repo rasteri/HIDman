@@ -18,7 +18,7 @@
 #include "test.h"
 #include "usbll.h"
 
-#define TESTVERBOSE
+//#define TESTVERBOSE
 
 void UART_Init()
 {
@@ -33,35 +33,41 @@ void UART_Init()
 
 static USB_HUB_PORT __xdata TestPort;
 
-void DumpHID(INTERFACE *pInterface)
+uint8_t DumpHID(INTERFACE *pInterface)
 {
     HID_SEG *tmpseg;
+    uint8_t count = 0;
     for (uint8_t x = 0; x < MAX_REPORTS; x++)
     {
         if (pInterface->reports[x] != NULL)
         {
             tmpseg = pInterface->reports[x]->firstHidSeg;
 
-            printf("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
+            #ifdef TESTVERBOSE 
+                printf("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
+            #endif
             while (tmpseg != NULL)
             {
-                printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
+                #ifdef TESTVERBOSE 
+                    printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
+                #endif
                 tmpseg = tmpseg->next;
+                count++;
             }
         }
     }
+    return count;
 }
 
 bool TestDescriptors(
     uint8_t *Dev, uint16_t DevLen, 
     uint8_t *Config, uint16_t ConfigLen, 
-    uint8_t *Report, uint16_t ReportLen){
+    uint8_t *Report, uint16_t ReportLen,
+    uint8_t ExpectedSegments){
 
     INTERFACE *pInterface;
 
-    andyclearmem();
-    InitPresets();
-	sInterfacePoolPos = 0;
+
 
     USB_HUB_PORT *pUsbDevice = &TestPort;
     InitHubPortData(pUsbDevice);
@@ -98,10 +104,15 @@ bool TestDescriptors(
             }
 
             #ifdef TESTVERBOSE 
-                DumpHID(pInterface);
+                if (DumpHID(pInterface) != ExpectedSegments){
+                    printf("Expected segments wrong, not %u\n", ExpectedSegments);
+                    return 1;
+                }
             #endif
         }
     }
+
+    return 0;
 
 }
 
@@ -118,7 +129,7 @@ bool TestDescriptors(
         if (sizeof(TP) != SZ) return 1;
 #endif
 
-bool testintsizes(){
+bool testintsizes() {
 
 	// trad C - note ints and shorts are both 2 bytes
 	testintsize(char, 1); testintsize(unsigned char, 1);
@@ -171,17 +182,25 @@ void main()
     if (testintsizes()) printf("Integer size test failed\n");
     else printf("Integer size test passed\n");
 
-    TestDescriptors(
+    andyclearmem();
+    InitPresets();
+	sInterfacePoolPos = 0;
+
+    TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
-        PS4ReportDescriptor, 507
+        PS4ReportDescriptor, 507,
+        31
     );
 
-    TestDescriptors(
+    TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
-        CheapoGamepadReportDescriptor, 89
+        CheapoGamepadReportDescriptor, 89,
+        13
     );
+
+    printf("Parser tests passed\n");
 
 
 

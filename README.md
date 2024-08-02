@@ -81,7 +81,10 @@ If you are having trouble getting a USB device to work, enable HID Dumping then 
 
 Firmware development is continuing, so if you have problems it's always worth updating to the latest version.
 
-The first step is to put the HIDman in firmware update mode.
+If you're on windows, first install WCH's ISP tool - https://www.wch-ic.com/downloads/WCHISPTool_Setup_exe.html
+If on Mac or Linux, install ch55xtool : https://github.com/MarsTechHAN/ch552tool
+
+The next step is to put the HIDman in firmware update mode.
 
 1. Disconnect everything from HIDman, including all USB devices and PCs. (failure to do this may result in damage to HIDman, your PC, or both).
 2. Hold down HIDman's ⏻ power button.
@@ -89,21 +92,16 @@ The first step is to put the HIDman in firmware update mode.
 
 After that, update instructions will depend on your operating system.
 
-
 ## Windows
 
-If this is your first time updating, you're going to need to download and install WCH's ISP tool - https://www.wch-ic.com/downloads/WCHISPTool_Setup_exe.html
-
-After that, follow the instructions in this diagram :
+Follow the instructions in this diagram :
 
 <img src=/images/firmware2.svg width=800/>
 
 
 ## Linux or Mac
 
-There are a few options here, but the only one I could get to work is ch55xtool : https://github.com/MarsTechHAN/ch552tool
-
-Once you've installed that, use the -f parameter to specify the firmware file to load. For example :
+Pass the -f parameter to ch55xtool specify the firmware file to load. For example :
 
 ```
 python3 ch55xtool.py -f hidman_axp_v1.1.bin

@@ -66,6 +66,7 @@ void GPIOInit(void);
 void ClockInit(void);
 
 extern volatile uint16_t SoftWatchdog;
+extern volatile bool OutputsEnabled;
 
 #endif
 

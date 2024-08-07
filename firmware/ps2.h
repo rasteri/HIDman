@@ -11,6 +11,8 @@
 #define PS2_RATE_LIMIT 0
 #define XT_RATE_LIMIT 1000
 
+void InitPS2Ports();
+
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
 	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port

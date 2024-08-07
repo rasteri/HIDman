@@ -1022,9 +1022,10 @@ void RegrabDeviceReports(UINT8 port)
 
 void ReenumerateAllPorts(void){
 	UINT8 i;
+	OutputsEnabled = 0;
 	if (DumpReport) SendKeyboardString("reenumerating all ports\n");
 	mDelaymS(150);
-	//TR0 = 0;
+
 	InitUsbData();
 	andyclearmem();
 	InitPresets();
@@ -1032,16 +1033,18 @@ void ReenumerateAllPorts(void){
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 	{
 		if (DumpReport) SendKeyboardString("port %d\n", i);
+
 		EnumerateRootHubPort(i);
 		RegrabDeviceReports(i);
 	}
-	//TR0 = 1;
+	OutputsEnabled = 1;
 }
 
 //----------------------------------------------------------------------------------
 void DealUsbPort(void) //main function should use it at least 500ms
 {
 	UINT8 s = QueryHubPortAttach();
+
 	if (s == ERR_USB_CONNECT)
 	{
 		ReenumerateAllPorts();

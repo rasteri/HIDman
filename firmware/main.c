@@ -130,34 +130,39 @@ void EveryMillisecond(void) {
 	}
 }
 
+volatile bool OutputsEnabled = 0;
+
 // timer should run at 48MHz divided by (0xFFFF - (TH0TL0))
 // i.e. 60khz
 void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 {
 
-	switch (FlashSettings->KeyboardMode) {
-		case (MODE_PS2):
-			PS2ProcessPort(PORT_KEY);
-			break;
+	if (OutputsEnabled) {
 
-		case (MODE_XT):
-			XTProcessPort();
-			break;
+		switch (FlashSettings->KeyboardMode) {
+			case (MODE_PS2):
+				PS2ProcessPort(PORT_KEY);
+				break;
 
-		case (MODE_AMSTRAD):
-			AmstradProcessPort();
-			break;
-	}
+			case (MODE_XT):
+				XTProcessPort();
+				break;
 
-	// May as well do this even in XT mode, can't hurt
-	PS2ProcessPort(PORT_MOUSE);
+			case (MODE_AMSTRAD):
+				AmstradProcessPort();
+				break;
+		}
 
-	// Handle keyboard typematic repeat timers
-	// (divide timer down to 15KHz to make maths easier)
-	static uint8_t repeatDiv = 0;
-	if (++repeatDiv == 4) {
-		repeatDiv = 0;
-		RepeatTimer();
+		// May as well do this even in XT mode, can't hurt
+		PS2ProcessPort(PORT_MOUSE);
+
+		// Handle keyboard typematic repeat timers
+		// (divide timer down to 15KHz to make maths easier)
+		static uint8_t repeatDiv = 0;
+		if (++repeatDiv == 4) {
+			repeatDiv = 0;
+			RepeatTimer();
+		}
 	}
 
 	static uint8_t msDiv = 0;
@@ -165,6 +170,7 @@ void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 		msDiv = 0;
 		EveryMillisecond();
 	}
+
 }
 
 int main(void)
@@ -177,7 +183,10 @@ int main(void)
 	}
 
 	GPIOInit();
-	mDelaymS(10);
+
+	//delay a bit, without using the builtin functions
+	UsbUpdateCounter = 255;
+	while (--UsbUpdateCounter);
 
 #if defined(OSC_EXTERNAL)
 	if (!(P3 & (1 << 4))) runBootloader();
@@ -195,6 +204,7 @@ int main(void)
 
 	InitPWM();
 
+	InitPS2Ports();
 
 	// timer0 setup
 	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
@@ -217,10 +227,6 @@ int main(void)
 
 	InitSettings(WatchdogReset);
 
-	
-
-	ANDYS_DEBUG_OUT("ok\n");
-
 	// enable watchdog
 	WDOG_COUNT = 0x00;
 	SAFE_MOD = 0x55;
@@ -231,19 +237,21 @@ int main(void)
 
 	//while(1);
 
+	OutputsEnabled = 1;
+
+	ANDYS_DEBUG_OUT("ok\n");
+
 	// main loop
 	while (1)
 	{
 		// reset watchdog
 		SoftWatchdog = 0;
-
 		if (MenuActive)
 			Menu_Task();
-
 		ProcessUsbHostPort();
 		ProcessKeyboardLed();
 		HandleRepeats();
 		HandleMouse();
-
+		
 	}
 }

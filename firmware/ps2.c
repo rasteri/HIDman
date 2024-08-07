@@ -18,53 +18,17 @@
 #include "settings.h"
 #include "system.h"
 
-__xdata ps2port ports[] = {
-	// keyboard
-	{
-		S_INIT, //state
-		0xFF,	//data
-		0,		//sendbit
-		0x01,	//recvbit
-		1,		//parity
-		0,		//recvstate
+__xdata ps2port ports[2];
 
-		0, //bytenum
+void InitPS2Ports()
+{
+	memset(ports, 0x00, sizeof(ports));
+	ports[0].data = 0xFF;
+	ports[0].parity = 1;
 
-		0, //recvout
-		0, //sendDisabled
-
-		0, // lastByte
-
-		0, // rateLimit
-
-		0, //sendBuffStart
-		0  //sendBuffEnd
-
-	},
-
-	//mouse
-	{
-		S_INIT, //state
-		0xFF,	//data
-		0,		//sendbit
-		0x01,	//recvbit
-		1,		//parity
-		0,		//recvstate
-
-		0, //bytenum
-
-		0, //recvout
-		0, //sendDisabled
-
-		0, // lastByte
-
-		0, // rateLimit
-
-		0, //sendBuffStart
-		0  //sendBuffEnd
-	}
-
-};
+	ports[1].data = 0xFF;
+	ports[1].parity = 1;
+}
 
 bool ReadPS2Clock(uint8_t port)
 {

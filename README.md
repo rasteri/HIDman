@@ -13,9 +13,11 @@ Peripherals that support legacy PCs are becoming hard to find, especially for th
 
 * (should) Support the majority of standard USB keyboards and mice, including ones that use wireless dongles.
 * Also supports (some) USB Game controllers - buttons/axes are mapped to keypresses or mouse actions
-* Can emulate the following devices :
-* * OG IBM PC / XT Keyboard
-  * AT / PS/2 Keyboard
+* Can emulate the following keyboards :
+* * OG IBM PC / XT and clones
+  * AT / PS/2
+  * Amstrad PC (PC1512, PC1640, PC2xxx, PC3xxx, PC4xxx)
+* And the following mice :
   * Serial Mouse (with optional Logitech-style 3rd button)
   * PS/2 Mouse (with optional Intellipoint-style scroll wheel and up to 5 buttons)
 * Driverless configuration menu - change settings just by opening a text editor

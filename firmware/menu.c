@@ -126,7 +126,7 @@ void Menu_Task(void)
         case MENU_STATE_MAIN:
             if (lastMenuState != MENU_STATE_MAIN)
             {
-                SendKeyboardString("\n\nHIDman v1.1.2\n\n");
+                SendKeyboardString("\n\nHIDman v1.1.3\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");
@@ -254,6 +254,8 @@ void Menu_Task(void)
                 }
                 menuState = MENU_STATE_INIT;
                 break;
+
+            case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
 
             /*case KEY_5:
                 SendKeyboardString("Used %lx, free %lx\n", MemoryUsed(), MemoryFree());

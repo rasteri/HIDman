@@ -301,7 +301,7 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
 	else
 		return 0;
 }
-
+ 
 bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 {
 	HID_REPORT *descReport;
@@ -333,7 +333,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 	// sanity check length - smaller is no good
 	if (len < descReport->length)
 	{
-		ANDYS_DEBUG_OUT("Bad length - %u -> %lu\n", descReport->length, len);
+		ANDYS_DEBUG_OUT("Bad length - %u > %lu\n", descReport->length, len);
 		return 0;
 	}
 

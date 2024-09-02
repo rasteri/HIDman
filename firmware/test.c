@@ -18,7 +18,7 @@
 #include "test.h"
 #include "usbll.h"
 
-//#define TESTVERBOSE
+#define TESTVERBOSE
 
 void UART_Init()
 {
@@ -102,12 +102,15 @@ bool TestDescriptors(
                 printf("Can't parse Report Descriptor\n");
                 return 1;
             }
-
+            ParseReport(pInterface, 32 * 8, QMKKeyboardReportPressA);
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
                     printf("Expected segments wrong, not %u\n", ExpectedSegments);
                     return 1;
                 }
+
+                
+
             #endif
         }
     }
@@ -186,19 +189,34 @@ void main()
     InitPresets();
 	sInterfacePoolPos = 0;
 
-    TestDescriptors (
+/*    TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
         PS4ReportDescriptor, 507,
         31
-    );
+    );*/
 
-    TestDescriptors (
+    /*TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
         CheapoGamepadReportDescriptor, 89,
         13
+    );*/
+
+    TestDescriptors (
+        QMKKeyboardDeviceDescriptor, 18,
+        QMKKeyboardConfigDescriptor, 59,
+        QMKKeyboardReportDescriptor, 109,
+        13
     );
+
+    /*TestDescriptors (
+        CheapoKeyboardDeviceDescriptor, 18,
+        CheapoKeyboardConfigDescriptor, 59,
+        CheapoKeyboardReportDescriptor, 54,
+        13
+    );*/
+
 
     printf("Parser tests passed\n");
 

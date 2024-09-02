@@ -130,7 +130,7 @@ void EveryMillisecond(void) {
 	}
 }
 
-volatile bool OutputsEnabled = 0;
+
 
 // timer should run at 48MHz divided by (0xFFFF - (TH0TL0))
 // i.e. 60khz

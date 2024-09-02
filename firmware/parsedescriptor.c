@@ -238,7 +238,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 					CreateArrayMapping(pHidSegStruct);
 				}
 
-				HIDParseState.startBit += hidGlobalPnt->reportSize * hidGlobalPnt->reportCount;
+				HIDParseState.startBit += (uint16_t)hidGlobalPnt->reportSize * (uint16_t)hidGlobalPnt->reportCount;
 				pHidSegStruct->reports[hidGlobalPnt->reportID]->length = HIDParseState.startBit;
 			}
 			else if (item.tag == HID_MAIN_ITEM_TAG_COLLECTION_START)

@@ -11,6 +11,7 @@ extern __code uint8_t QMKKeyboardDeviceDescriptor[];
 extern __code uint8_t QMKKeyboardConfigDescriptor[];
 
 extern __code uint8_t QMKKeyboardReportPressA[];
+extern __code uint8_t QMKKeyboardReportReleaseA[];
 
 extern __code uint8_t CheapoKeyboardReportDescriptor[];
 extern __code uint8_t CheapoKeyboardDeviceDescriptor[];

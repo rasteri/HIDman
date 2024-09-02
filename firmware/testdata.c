@@ -793,6 +793,43 @@ __code uint8_t QMKKeyboardReportPressA[] = {
 };
 
 
+__code uint8_t QMKKeyboardReportReleaseA[] = {
+0x06,        
+0x00,        
+0x00, 
+0x00, 
+0x00, 
+0x00, 
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00,        
+0x00        
+// 32 bytes
+};
+
+
 __code uint8_t CheapoKeyboardDeviceDescriptor[] = {
 0x12,        // bLength
 0x01,        // bDescriptorType (Device)

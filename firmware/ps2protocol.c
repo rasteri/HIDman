@@ -103,10 +103,11 @@ void HandleRepeats(void)
 	}
 }
 
-void SetKey(uint8_t key, HID_REPORT *report)
-{
-	report->KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07);
-}
+
+#define SetKey(key,report) (report->KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07))
+
+#define GetOldKey(key,report) (report->oldKeyboardKeyMap[key >> 3] & (1 << (key & 0x07)))
+
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 {
@@ -139,8 +140,18 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			{
 				if (pressed)
 				{
+					
 					SetKey(tmp, report);
-					report->keyboardUpdated = 1;
+					if (!GetOldKey(tmp, report)) {
+						report->keyboardUpdated = 1;
+					}
+				}
+				else
+				{
+					
+					if (GetOldKey(tmp, report)) {
+						report->keyboardUpdated = 1;
+					}
 				}
 			}
 			else
@@ -380,6 +391,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 					// break
 					if (c <= 0x67)
 					{
+
 						// if the key we just released is the one that's repeating then stop
 						if (c == RepeatKey)
 						{
@@ -399,6 +411,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 					}
 				}
 			}
+			
 		}
 
 		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 32);

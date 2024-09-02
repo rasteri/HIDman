@@ -1022,7 +1022,10 @@ void RegrabDeviceReports(UINT8 port)
 
 void ReenumerateAllPorts(void){
 	UINT8 i;
-	OutputsEnabled = 0;
+	
+	if (!DumpReport)
+		OutputsEnabled = 0;
+
 	if (DumpReport) SendKeyboardString("reenumerating all ports\n");
 	mDelaymS(150);
 

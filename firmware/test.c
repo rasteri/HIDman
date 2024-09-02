@@ -102,7 +102,10 @@ bool TestDescriptors(
                 printf("Can't parse Report Descriptor\n");
                 return 1;
             }
+            
             ParseReport(pInterface, 32 * 8, QMKKeyboardReportPressA);
+            ParseReport(pInterface, 32 * 8, QMKKeyboardReportReleaseA);
+
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
                     printf("Expected segments wrong, not %u\n", ExpectedSegments);

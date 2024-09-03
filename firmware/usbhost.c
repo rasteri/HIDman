@@ -21,7 +21,7 @@
 static UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
 
 
-static INTERFACE __xdata sInterfacePool[MAX_GLOBAL_INTERFACE_NUM];
+__xdata INTERFACE sInterfacePool[MAX_GLOBAL_INTERFACE_NUM];
 UINT8 sInterfacePoolPos = 0;
 
 static void InitInterface(INTERFACE* Interface)

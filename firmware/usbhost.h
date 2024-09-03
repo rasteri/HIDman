@@ -43,7 +43,7 @@
 //maximum number of interfaces per devicve
 #define MAX_INTERFACE_NUM      4
 //maximum number of interfaces across all devices
-#define MAX_GLOBAL_INTERFACE_NUM      16
+#define MAX_GLOBAL_INTERFACE_NUM      12
 //maximum number of endpoints per interface
 #define MAX_ENDPOINT_NUM       4
 //maximum level of external hub
@@ -136,7 +136,7 @@ typedef struct _HID_ITEM_INFO
 
 #define MAX_USAGE_NUM      10
 
-#define MAX_REPORTS 10
+#define MAX_REPORTS 18
 
 //interface struct
 typedef struct _INTERFACE

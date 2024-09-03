@@ -103,8 +103,8 @@ bool TestDescriptors(
                 return 1;
             }
             
-            ParseReport(pInterface, 32 * 8, QMKKeyboardReportPressA);
-            ParseReport(pInterface, 32 * 8, QMKKeyboardReportReleaseA);
+            ParseReport(pInterface, 168, KeychronWirelessReportPressA);
+            ParseReport(pInterface, 168, KeychronWirelessReportReleaseA);
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -206,10 +206,17 @@ void main()
         13
     );*/
 
-    TestDescriptors (
+    /*TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         QMKKeyboardReportDescriptor, 109,
+        13
+    );*/
+
+    TestDescriptors (
+        QMKKeyboardDeviceDescriptor, 18,
+        QMKKeyboardConfigDescriptor, 59,
+        KeychronWirelessKeyboardReportDescriptor, 164,
         13
     );
 

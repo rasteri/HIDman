@@ -391,7 +391,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 					// break
 					if (c <= 0x67)
 					{
-
+						DEBUG_OUT("\nBreakn %x\n", c);
 						// if the key we just released is the one that's repeating then stop
 						if (c == RepeatKey)
 						{

@@ -24,7 +24,7 @@ static UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
 __xdata INTERFACE sInterfacePool[MAX_GLOBAL_INTERFACE_NUM];
 UINT8 sInterfacePoolPos = 0;
 
-static void InitInterface(INTERFACE* Interface)
+void InitInterface(INTERFACE* Interface)
 {
 	memset(Interface, 0, sizeof(INTERFACE));
 
@@ -46,23 +46,6 @@ static void InitInterface(INTERFACE* Interface)
 	
 
 }
-
-
-
-INTERFACE* AllocInterface(UINT8 count)
-{
-	if (count + sInterfacePoolPos > MAX_GLOBAL_INTERFACE_NUM)
-		return 0;
-
-	INTERFACE* ptr = sInterfacePool + sInterfacePoolPos;
-	sInterfacePoolPos += count;
-
-	for (UINT8 i = 0; i < count; ++i)
-		InitInterface(ptr + i);
-
-	return ptr;
-}
-
 
 
 static void FillSetupReq(USB_SETUP_REQ *pSetupReq, UINT8 type, UINT8 req, UINT16 value, UINT16 index, UINT16 length)
@@ -334,7 +317,8 @@ static UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 	interfaceNum = pUsbDevice->InterfaceNum;
 	for (i = 0; i < interfaceNum; i++)
 	{
-		INTERFACE *pInterface = &pUsbDevice->Interface[i];
+		//INTERFACE *pInterface = &pUsbDevice->Interface[i];
+		INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
 		if (pInterface->InterfaceClass == USB_DEV_CLASS_HID)
 		{
 			endpointNum = pInterface->EndpointNum;
@@ -648,7 +632,7 @@ static BOOL EnumerateRootHubPort(UINT8 port)
                 TRACE("ClearHubPortFeature OK\r\n");
             }
 */
-			INTERFACE *pInterface = &pUsbDevice->Interface[0];
+			INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, 0);
 
 			ENDPOINT *pEndPoint = &pInterface->Endpoint[0];
 
@@ -889,7 +873,8 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 #ifdef DEBUG
 			int j;
 #endif
-			INTERFACE *pInterface = &pUsbDevice->Interface[i];
+			//INTERFACE *pInterface = &pUsbDevice->Interface[i];		
+			INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
 
 			TRACE1("InterfaceClass=0x%02X\r\n", (UINT16)pInterface->InterfaceClass);
 			TRACE1("InterfaceProtocol=0x%02X\r\n", (UINT16)pInterface->InterfaceProtocol);
@@ -1090,7 +1075,8 @@ static void UpdateUsbKeyboardLedInternal(USB_HUB_PORT *pUsbDevice, UINT8 led)
 	UINT8 i;
 	for (i = 0; i < pUsbDevice->InterfaceNum; i++)
 	{
-		INTERFACE *pInterface = &pUsbDevice->Interface[i];
+		//INTERFACE *pInterface = &pUsbDevice->Interface[i];
+		INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
 		if (pInterface->InterfaceClass == USB_DEV_CLASS_HID)
 		{
 			if (pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD)
@@ -1159,33 +1145,3 @@ void ProcessUsbHostPort(void)
 		InterruptProcessRootHubPort(1);
 	}
 }
-
-/*void DumpyTown()
-{
-	HID_REPORT_DESC *bleh;
-	HID_SEG *tmpseg;
-	DEBUG_OUT("\033[2J\033[H");
-	for (uint8_t y = 0; y < MAX_HID_DEVICES; y++)
-	{
-
-		if (HIDdevice[y].connected)
-		{
-			DEBUG_OUT("---- DEVICE %d ----\n", y);
-			bleh = &(HIDdevice[y].HidSegStruct);
-			for (uint8_t x = 0; x < MAX_REPORTS; x++)
-			{
-				if (bleh->reports[x] != NULL)
-				{
-					tmpseg = bleh->reports[x]->firstHidSeg;
-
-					DEBUG_OUT("Report %x, usage %x, length %u: \n", x, bleh->reports[x]->appUsage, bleh->reports[x]->length);
-					while (tmpseg != NULL)
-					{
-						DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize);
-						tmpseg = tmpseg->next;
-					}
-				}
-			}
-		}
-	}
-}*/

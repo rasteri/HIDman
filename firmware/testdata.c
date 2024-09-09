@@ -1,7 +1,7 @@
 
 #include "defs.h"
 #include "type.h"
-
+/*
 __code uint8_t PS4ReportDescriptor[] =
 {
     0x05, 0x01,    	// Usage Page (Generic Desktop Ctrls)
@@ -508,6 +508,8 @@ __code uint8_t PS4ConfigDescriptor[] = {
     // 225 bytes
 };
 
+/*
+
 __code uint8_t CheapoGamepadDeviceDescriptor[] = {
     0x12,        // bLength
     0x01,        // bDescriptorType (Device)
@@ -614,7 +616,7 @@ __code uint8_t CheapoGamepadReportDescriptor[] = {
 // 89 bytes
 
 };
-
+*/
 __code uint8_t QMKKeyboardDeviceDescriptor[] = {
 0x12,        // bLength
 0x01,        // bDescriptorType (Device)
@@ -829,7 +831,7 @@ __code uint8_t QMKKeyboardReportReleaseA[] = {
 // 32 bytes
 };
 
-
+/*
 __code uint8_t CheapoKeyboardDeviceDescriptor[] = {
 0x12,        // bLength
 0x01,        // bDescriptorType (Device)
@@ -1046,4 +1048,4 @@ __code uint8_t KeychronWirelessReportReleaseA[] = {
 0x00,        
 0x00,
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+};*/

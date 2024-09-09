@@ -17,7 +17,7 @@
 #include "preset.h"
 #include "test.h"
 #include "usbll.h"
-
+#include "linkedlist.h"
 #define TESTVERBOSE
 
 void UART_Init()
@@ -67,8 +67,6 @@ bool TestDescriptors(
 
     INTERFACE *pInterface;
 
-
-
     USB_HUB_PORT *pUsbDevice = &TestPort;
     InitHubPortData(pUsbDevice);
 
@@ -89,7 +87,13 @@ bool TestDescriptors(
 
     for (uint8_t i = 0; i < pUsbDevice->InterfaceNum; i++)
     {
-        pInterface = &pUsbDevice->Interface[i];
+        pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
+
+        if (pInterface == NULL) {
+            printf("Interface %d not HID\n", i);
+            continue;
+        }
+
         #ifdef TESTVERBOSE 
             printf("\n\nInterface %d - ", i);
             printf("InterfaceClass=0x%02X - ", (UINT16)pInterface->InterfaceClass);
@@ -103,8 +107,8 @@ bool TestDescriptors(
                 return 1;
             }
             
-            ParseReport(pInterface, 168, KeychronWirelessReportPressA);
-            ParseReport(pInterface, 168, KeychronWirelessReportReleaseA);
+            ParseReport(pInterface, 256, QMKKeyboardReportPressA);
+            ParseReport(pInterface, 256, QMKKeyboardReportReleaseA);
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -192,7 +196,7 @@ void main()
     InitPresets();
 	sInterfacePoolPos = 0;
 
-/*    TestDescriptors (
+    /*TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
         PS4ReportDescriptor, 507,
@@ -206,19 +210,19 @@ void main()
         13
     );*/
 
-    /*TestDescriptors (
+    TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         QMKKeyboardReportDescriptor, 109,
         13
-    );*/
+    );
 
-    TestDescriptors (
+    /*TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         KeychronWirelessKeyboardReportDescriptor, 164,
         13
-    );
+    );*/
 
     /*TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
@@ -227,6 +231,29 @@ void main()
         13
     );*/
 
+    /*Node *head = NULL;
+
+    head = ListAdd(head, sizeof(HID_SEG));
+    head->index = 1;
+    ((HID_SEG *)(head->data))->startBit=0x69;
+
+    head = ListAdd(head, sizeof(HID_SEG));
+    head->index = 2;
+    ((HID_SEG *)(head->data))->startBit=0x80;
+
+    head = ListAdd(head, sizeof(HID_SEG));
+    head->index = 3;
+    ((HID_SEG *)(head->data))->startBit=0x08;
+
+
+    if (
+            ((HID_SEG *)(ListGet(head, 3)->data))->startBit != 0x08 || 
+            ((HID_SEG *)(ListGet(head, 2)->data))->startBit != 0x80 || 
+            ((HID_SEG *)(ListGet(head, 1)->data))->startBit != 0x69
+        )
+        printf("list broken\n");
+    else printf("list passed\n");
+    //testlinkedlist();*/
 
     printf("Parser tests passed\n");
 

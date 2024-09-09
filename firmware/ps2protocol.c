@@ -344,7 +344,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 	// sanity check length - smaller is no good
 	if (len < descReport->length)
 	{
-		ANDYS_DEBUG_OUT("Bad length - %u > %lu\n", descReport->length, len);
+		ANDYS_DEBUG_OUT("report too short - %lu < %u\n", len, descReport->length);
 		return 0;
 	}
 
@@ -370,7 +370,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 					Menu_Press_Key(c);
 				else
 				{
-					DEBUG_OUT("\nSendn %x\n", c);
+					ANDYS_DEBUG_OUT("\nSendn %x\n", c);
 					// Make
 					if (c <= 0x67)
 					{
@@ -391,7 +391,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 					// break
 					if (c <= 0x67)
 					{
-						DEBUG_OUT("\nBreakn %x\n", c);
+						ANDYS_DEBUG_OUT("\nBreakn %x\n", c);
 						// if the key we just released is the one that's repeating then stop
 						if (c == RepeatKey)
 						{

@@ -24,7 +24,7 @@
 #include "andyalloc.h"
 #include "system.h"
 #include "preset.h"
-
+#include "linkedlist.h"
 
 
 
@@ -377,11 +377,12 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 {
 	int index;
 
-	UINT8 *pDescr;
-	DESCR_HEADER *pDescrHeader;
-	USB_ITF_DESCR *pItfDescr = NULL;
-	USB_HID_DESCR *pHidDescr;
-	USB_ENDP_DESCR *pEdpDescr;
+	static  UINT8 * __xdata pDescr;
+	static DESCR_HEADER * __xdata pDescrHeader;
+	static USB_ITF_DESCR * __xdata pItfDescr = NULL;
+	static USB_HID_DESCR * __xdata pHidDescr;
+	static USB_ENDP_DESCR * __xdata pEdpDescr;
+	static INTERFACE * __xdata currInt;
 
 	UINT8 descrType;
 	int endpointIndex;
@@ -398,8 +399,6 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 		pUsbDevice->InterfaceNum = MAX_INTERFACE_NUM;
 	}
 
-	pUsbDevice->Interface = AllocInterface(pUsbDevice->InterfaceNum);
-
 	pDescr = (UINT8 *)pCfgDescr;
 
 	pDescr += pCfgDescr->bLength;
@@ -415,18 +414,28 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 		{
 			//interface descriptor
 			pItfDescr = (USB_ITF_DESCR *)pDescr;
+			printf("0ddn %x\n", pItfDescr->bInterfaceClass);
 			if (pItfDescr->bInterfaceNumber >= pUsbDevice->InterfaceNum)
 			{
 				break;
 			}
 
-			if (pItfDescr->bAlternateSetting == 0)
+			if (pItfDescr->bInterfaceClass == USB_DEV_CLASS_HID)
 			{
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum = 0;
+			
+				pUsbDevice->Interfaces = ListAdd(pUsbDevice->Interfaces, sizeof(INTERFACE));
+				pUsbDevice->Interfaces->index = pItfDescr->bInterfaceNumber;
+				currInt = (INTERFACE*)(pUsbDevice->Interfaces->data);
+				InitInterface(currInt);
 
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceClass = pItfDescr->bInterfaceClass;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceProtocol = pItfDescr->bInterfaceProtocol;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceSubClass = pItfDescr->bInterfaceSubClass;
+				if (pItfDescr->bAlternateSetting == 0)
+				{
+					currInt->EndpointNum = 0;
+
+					currInt->InterfaceClass = pItfDescr->bInterfaceClass;
+					currInt->InterfaceProtocol = pItfDescr->bInterfaceProtocol;
+					currInt->InterfaceSubClass = pItfDescr->bInterfaceSubClass;
+				}
 			}
 		}
 		else if (descrType == USB_DESCR_TYP_HID)
@@ -435,7 +444,7 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 			pHidDescr = (USB_HID_DESCR *)pDescr;
 			if (pHidDescr->bDescriptorTypeX == USB_DESCR_TYP_REPORT)
 			{
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].ReportSize = pHidDescr->wDescriptorLengthL | (pHidDescr->wDescriptorLengthH << 8);
+				currInt->ReportSize = pHidDescr->wDescriptorLengthL | (pHidDescr->wDescriptorLengthH << 8);
 			}
 		}
 		else if (descrType == USB_DESCR_TYP_ENDP)
@@ -443,26 +452,26 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 			//endpoint descriptor
 			pEdpDescr = (USB_ENDP_DESCR *)pDescr;
 
-			if (pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum >= MAX_ENDPOINT_NUM)
+			if (currInt->EndpointNum >= MAX_ENDPOINT_NUM)
 			{
 				goto ONE_FINISH;
 			}
 
 			if (pItfDescr->bAlternateSetting == 0)
 			{
-				endpointIndex = pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum++;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointAddr = pEdpDescr->bEndpointAddress & 0x7f;
+				endpointIndex = currInt->EndpointNum;
+				currInt->EndpointNum++;
+				currInt->Endpoint[endpointIndex].EndpointAddr = pEdpDescr->bEndpointAddress & 0x7f;
 				if (pEdpDescr->bEndpointAddress & 0x80)
 				{
-					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_IN;
+					currInt->Endpoint[endpointIndex].EndpointDir = ENDPOINT_IN;
 				}
 				else
 				{
-					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_OUT;
+					currInt->Endpoint[endpointIndex].EndpointDir = ENDPOINT_OUT;
 				}
 
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].MaxPacketSize = pEdpDescr->wMaxPacketSizeL | (pEdpDescr->wMaxPacketSizeH << 8);
+				currInt->Endpoint[endpointIndex].MaxPacketSize = pEdpDescr->wMaxPacketSizeL | (pEdpDescr->wMaxPacketSizeH << 8);
 			}
 		}
 	ONE_FINISH:

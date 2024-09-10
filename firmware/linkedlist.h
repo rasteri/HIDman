@@ -12,7 +12,7 @@ typedef struct LinkedList {
     struct LinkedList *next;
 } LinkedList;
 
-LinkedList* ListAdd(LinkedList* head, size_t data_size);
+LinkedList* ListAdd(LinkedList* head, size_t data_size, uint8_t index);
 void *ListGetData(LinkedList* head, uint8_t index);
 
 #endif

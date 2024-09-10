@@ -24,10 +24,11 @@
 JoyPreset *currPreset;
 HID_SEG *currSegPnt = 0;
 
-//search though preset to see if this matches a mapping
+// running startbit that increments as segments get matched
+uint16_t tempSB = 0;
 
-#define CreateSeg()                                                                                              \
-	{                                                                                                         \
+//search though preset to see if this matches a mapping
+/*
 		if (pHidSegStruct->reports[HIDParseState.hidGlobal.reportID]->firstHidSeg == NULL)                                 \
 		{                                                                                                        \
 			pHidSegStruct->reports[HIDParseState.hidGlobal.reportID]->firstHidSeg = (HID_SEG *)andyalloc(sizeof(HID_SEG)); \
@@ -39,14 +40,22 @@ HID_SEG *currSegPnt = 0;
 			currSegPnt = currSegPnt->next;                                                                       \
 		}                                                                                                        \
 		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                  \
-		currSegPnt->startBit = tempSB;                                                                           \
-		currSegPnt->reportCount = HIDParseState.hidGlobal.reportCount;                                                     \
-		tempSB += HIDParseState.hidGlobal.reportSize;                                                                      \
-		currSegPnt->reportSize = HIDParseState.hidGlobal.reportSize;                                                       \
-	}
+*/
+
+void CreateSeg(INTERFACE *pInterface)                                                                                       
+{                                 
+	HID_REPORT *rep = (HID_REPORT *)ListGetData(pInterface->Reports, HIDParseState.hidGlobal.reportID);
+	  
+	rep->HidSegments = ListAdd(rep->HidSegments, sizeof(HID_SEG), 0x69);
+	currSegPnt = (HID_SEG *)(rep->HidSegments->data);
+	currSegPnt->startBit = tempSB;                                                                     
+	currSegPnt->reportCount = HIDParseState.hidGlobal.reportCount;                                     
+	tempSB += HIDParseState.hidGlobal.reportSize;                                                      
+	currSegPnt->reportSize = HIDParseState.hidGlobal.reportSize;                                       
+}
 
 
-#define CreateMapping()                                                        \
+/*#define CreateMapping()                                                        \
 	{                                                                          \
 		currPreset = JoyPresets;												\
 		while (currPreset != NULL)												\
@@ -67,12 +76,11 @@ HID_SEG *currSegPnt = 0;
 		tempSB += HIDParseState.hidGlobal.reportSize;                                    \
 	}
 
-
+*/
 
 void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 
 	static __xdata uint8_t i;
-	static __xdata uint16_t tempSB;
 
 	tempSB = HIDParseState.startBit;
 
@@ -82,7 +90,7 @@ void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 		{
 			if (HIDParseState.hidGlobal.usagePage == REPORT_USAGE_PAGE_KEYBOARD)
 			{
-				CreateSeg();
+				CreateSeg(pHidSegStruct);
 				// Keyboard - 1 bit per key (usually for modifier field)
 				currSegPnt->OutputChannel = MAP_KEYBOARD;
 				currSegPnt->OutputControl = HIDParseState.hidLocal.usageMin;
@@ -93,7 +101,7 @@ void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 		{
 			if (HIDParseState.hidGlobal.usagePage == REPORT_USAGE_PAGE_BUTTON)
 			{
-				CreateSeg();
+				CreateSeg(pHidSegStruct);
 				// Mouse - 1 bit per button
 				currSegPnt->OutputChannel = MAP_MOUSE;
 				currSegPnt->OutputControl = HIDParseState.hidLocal.usageMin;
@@ -105,7 +113,7 @@ void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 			for (i = HIDParseState.hidLocal.usageMin; i < HIDParseState.hidLocal.usageMax; i++)
 			{
 				HIDParseState.hidLocal.usage = i;
-				CreateMapping();
+				//CreateMapping();
 			}
 		}
 	}
@@ -115,7 +123,6 @@ void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 void CreateUsageMapping(__xdata INTERFACE *pHidSegStruct){
 	
 	static __xdata uint8_t i;
-	static __xdata uint16_t tempSB;
 
 	tempSB = HIDParseState.startBit;
 
@@ -126,7 +133,7 @@ void CreateUsageMapping(__xdata INTERFACE *pHidSegStruct){
 		{
 			if (HIDParseState.appUsage == REPORT_USAGE_MOUSE)
 			{
-				CreateSeg();
+				CreateSeg(pHidSegStruct);
 				if (HIDParseState.hidGlobal.usagePage == REPORT_USAGE_PAGE_GENERIC)
 				{
 					currSegPnt->OutputChannel = MAP_MOUSE;
@@ -156,7 +163,7 @@ void CreateUsageMapping(__xdata INTERFACE *pHidSegStruct){
 			else if (HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || HIDParseState.appUsage == REPORT_USAGE_GAMEPAD)
 			{
 				HIDParseState.hidLocal.usage = HIDParseState.arrUsage[i];
-				CreateMapping();
+				//CreateMapping();
 			}
 		}
 	}
@@ -167,7 +174,6 @@ void CreateUsageMapping(__xdata INTERFACE *pHidSegStruct){
 void CreateArrayMapping(__xdata INTERFACE *pHidSegStruct){
 
 	static __xdata uint8_t i;
-	static __xdata uint16_t tempSB;
 
 	tempSB = HIDParseState.startBit;
 
@@ -179,7 +185,7 @@ void CreateArrayMapping(__xdata INTERFACE *pHidSegStruct){
 		// need to make a seg for each report seg
 		for (i = 0; i < HIDParseState.hidGlobal.reportCount; i++)
 		{
-			CreateSeg();
+			CreateSeg(pHidSegStruct);
 			currSegPnt->OutputChannel = MAP_KEYBOARD;
 			currSegPnt->InputType = MAP_TYPE_ARRAY;
 		}

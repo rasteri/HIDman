@@ -1,22 +1,27 @@
-// https://www.geeksforgeeks.org/generic-linked-list-in-c-2/
+/*
+    linkedlist.c
+
+    generic int-indexed linked list
+    can be used as a sparse array
+    kinda based on https://www.geeksforgeeks.org/generic-linked-list-in-c-2/
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "andyalloc.h"
 #include "linkedlist.h"
 
-
-
 // Inserts node at HEAD of list, i.e. before head
-LinkedList* ListAdd(LinkedList* head, size_t data_size) {
+LinkedList* ListAdd(LinkedList* head, size_t data_size, uint8_t index) {
 
     // Allocate memory for node
     struct LinkedList* newNode = (LinkedList*)andyalloc(sizeof(LinkedList));
-    printf("addn %x\n", newNode);
 
-    newNode->data = malloc(data_size);
+    newNode->data = andyalloc(data_size);
     newNode->next = head;
+
     memset(newNode->data, 0x00, data_size);
+    newNode->index = index;
 
     return newNode;
 }

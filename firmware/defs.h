@@ -5,6 +5,7 @@
 #include <string.h>
 #include "type.h"
 #include "andyalloc.h"
+#include "linkedlist.h"
 
 #if defined(BOARD_AXP)
 	#define OPT_SERIAL_MOUSE
@@ -280,7 +281,7 @@ typedef struct _HID_REPORT
 	uint8_t KeyboardKeyMap[32];
 	uint8_t oldKeyboardKeyMap[32];
 
-	HID_SEG *firstHidSeg;
+	LinkedList *HidSegments;
 } HID_REPORT;
 
 

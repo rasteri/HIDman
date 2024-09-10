@@ -152,7 +152,7 @@ typedef struct _INTERFACE
 	ENDPOINT  Endpoint[MAX_ENDPOINT_NUM]; //endpoints
 	
 	bool usesReports;
-	HID_REPORT *reports[MAX_REPORTS];
+	LinkedList *Reports;
 
 } INTERFACE, *PINTERFACE;
 void InitInterface(INTERFACE* Interface);

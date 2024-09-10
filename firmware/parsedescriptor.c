@@ -164,7 +164,7 @@ __xdata ParseState HIDParseState;
 
 
 
-BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegStruct)
+BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterface)
 {
 	static __xdata uint8_t i, k, collectionDepth;
 
@@ -173,6 +173,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 	static __xdata HID_GLOBAL *hidGlobalPnt = &HIDParseState.hidGlobal;
 	static __xdata HID_ITEM item;
 
+	static HID_REPORT * __xdata currHidReport = NULL;
 
 	HIDParseState.startBit = 0;
 	HIDParseState.appUsage = 0;
@@ -203,13 +204,13 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 		case TYPE_MAIN:
 			if (item.tag == HID_MAIN_ITEM_TAG_INPUT)
 			{
-				if (pHidSegStruct->reports[hidGlobalPnt->reportID] == NULL)
+				if (currHidReport == NULL)
 				{
-					pHidSegStruct->reports[hidGlobalPnt->reportID] = (HID_REPORT *)andyalloc(sizeof(HID_REPORT));
-					memset(pHidSegStruct->reports[hidGlobalPnt->reportID], 0x00, sizeof(HID_REPORT));
+					currHidReport = (HID_REPORT *)andyalloc(sizeof(HID_REPORT));
+					memset(currHidReport, 0x00, sizeof(HID_REPORT));
 
-					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = HIDParseState.appUsagePage;
-					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsage = HIDParseState.appUsage;
+					currHidReport->appUsagePage = HIDParseState.appUsagePage;
+					currHidReport->appUsage = HIDParseState.appUsage;
 
 					if (HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC && (HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || HIDParseState.appUsage == REPORT_USAGE_GAMEPAD))
 						HIDParseState.JoyNum++;
@@ -220,13 +221,13 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 					// we found some discrete usages, get to it
 					if (HIDParseState.usagePtr)
 					{
-						CreateUsageMapping(pHidSegStruct);
+						CreateUsageMapping(pInterface);
 					}
 					// if no usages found, maybe a bitfield
 					else if (HIDParseState.hidLocal.usageMin != 0xFFFF && HIDParseState.hidLocal.usageMax != 0xFFFF &&
 							 hidGlobalPnt->reportSize == 1)
 					{
-						CreateBitfieldMapping(pHidSegStruct);
+						CreateBitfieldMapping(pInterface);
 					}
 					else
 					{
@@ -235,11 +236,11 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 				// Item is array style, whole range appears in every segment
 				else
 				{
-					CreateArrayMapping(pHidSegStruct);
+					CreateArrayMapping(pInterface);
 				}
 
 				HIDParseState.startBit += (uint16_t)hidGlobalPnt->reportSize * (uint16_t)hidGlobalPnt->reportCount;
-				pHidSegStruct->reports[hidGlobalPnt->reportID]->length = HIDParseState.startBit;
+				currHidReport = HIDParseState.startBit;
 			}
 			else if (item.tag == HID_MAIN_ITEM_TAG_COLLECTION_START)
 			{
@@ -276,12 +277,14 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 			switch (item.tag)
 			{
 			case HID_GLOBAL_ITEM_TAG_REPORT_ID:
-				pHidSegStruct->usesReports = 1;
+				pInterface->usesReports = 1;
 				// report id
 				HIDParseState.startBit = 0;
 				HIDParseState.startBit += item.size * 8;
 				//JoyNum++;
 				hidGlobalPnt->reportID = ItemUData(&item);
+				pInterface->Reports = ListAdd(pInterface->Reports, sizeof(HID_REPORT), hidGlobalPnt->reportID);
+				currHidReport = (HID_REPORT *)(pInterface->Reports->data);
 				break;
 
 			case HID_GLOBAL_ITEM_TAG_LOGICAL_MINIMUM:
@@ -423,8 +426,7 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 			if (pItfDescr->bInterfaceClass == USB_DEV_CLASS_HID)
 			{
 			
-				pUsbDevice->Interfaces = ListAdd(pUsbDevice->Interfaces, sizeof(INTERFACE));
-				pUsbDevice->Interfaces->index = pItfDescr->bInterfaceNumber;
+				pUsbDevice->Interfaces = ListAdd(pUsbDevice->Interfaces, sizeof(INTERFACE), pItfDescr->bInterfaceNumber);
 				currInt = (INTERFACE*)(pUsbDevice->Interfaces->data);
 				InitInterface(currInt);
 

@@ -35,23 +35,26 @@ static USB_HUB_PORT __xdata TestPort;
 
 uint8_t DumpHID(INTERFACE *pInterface)
 {
-    HID_SEG *tmpseg;
+    LinkedList *tmpsegNode;
+    HID_SEG *tmpsegment;
     uint8_t count = 0;
     for (uint8_t x = 0; x < MAX_REPORTS; x++)
     {
-        if (pInterface->reports[x] != NULL)
+        HID_REPORT *tr = (HID_REPORT *)ListGetData(pInterface->Reports, x);
+        if (tr != NULL)
         {
-            tmpseg = pInterface->reports[x]->firstHidSeg;
+            tmpsegNode = tr->HidSegments;
 
             #ifdef TESTVERBOSE 
-                printf("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
+                printf("Report %x, usage %x, length %u: \n", x, tr->appUsage, tr->length);
             #endif
-            while (tmpseg != NULL)
+            while (tmpsegNode != NULL)
             {
+                tmpsegment = (HID_SEG *)(tmpsegNode->data);
                 #ifdef TESTVERBOSE 
-                    printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
+                    printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpsegment->startBit, tmpsegment->InputType, tmpsegment->InputParam, tmpsegment->OutputChannel, tmpsegment->OutputControl, tmpsegment->reportSize, tmpsegment->reportCount);
                 #endif
-                tmpseg = tmpseg->next;
+                tmpsegNode = tmpsegNode->next;
                 count++;
             }
         }
@@ -194,7 +197,6 @@ void main()
 
     andyclearmem();
     InitPresets();
-	sInterfacePoolPos = 0;
 
     /*TestDescriptors (
         PS4DeviceDescriptor, 18,
@@ -203,12 +205,12 @@ void main()
         31
     );*/
 
-    /*TestDescriptors (
+    TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
         CheapoGamepadReportDescriptor, 89,
         13
-    );*/
+    );
 
     TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
@@ -217,19 +219,19 @@ void main()
         13
     );
 
-    /*TestDescriptors (
+    TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         KeychronWirelessKeyboardReportDescriptor, 164,
         13
-    );*/
+    );
 
-    /*TestDescriptors (
+    TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         CheapoKeyboardReportDescriptor, 54,
         13
-    );*/
+    );
 
     /*Node *head = NULL;
 

@@ -20,10 +20,6 @@
 #define RECEIVE_BUFFER_LEN 512
 static UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
 
-
-__xdata INTERFACE sInterfacePool[MAX_GLOBAL_INTERFACE_NUM];
-UINT8 sInterfacePoolPos = 0;
-
 void InitInterface(INTERFACE* Interface)
 {
 	memset(Interface, 0, sizeof(INTERFACE));
@@ -43,8 +39,6 @@ void InitInterface(INTERFACE* Interface)
 	}
 
 	Interface->usesReports = 0;
-	
-
 }
 
 
@@ -946,21 +940,23 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 				else
 					ParseReportDescriptor(ReceiveDataBuffer, len, pInterface);
 
-				HID_SEG *tmpseg;
-				for (uint8_t x = 0; x < MAX_REPORTS; x++)
+				static HID_SEG * __xdata tmpseg;
+				/*for (uint8_t x = 0; x < MAX_REPORTS; x++)
 				{
-					if (pInterface->reports[x] != NULL)
+					static HID_REPORT * __xdata prnreport;
+					prnreport = ListGetData(pInterface->Reports, x);
+					if (prnreport != NULL)
 					{
-						tmpseg = pInterface->reports[x]->firstHidSeg;
+						tmpseg = prnreport->firstHidSeg;
 
-						DEBUG_OUT("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
+						DEBUG_OUT("Report %x, usage %x, length %u: \n", x, prnreport->appUsage, prnreport->length);
 						while (tmpseg != NULL)
 						{
 							DEBUG_OUT("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
 							tmpseg = tmpseg->next;
 						}
 					}
-				}
+				}*/
 
 				if (pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD)
 				{
@@ -1017,7 +1013,6 @@ void ReenumerateAllPorts(void){
 	InitUsbData();
 	andyclearmem();
 	InitPresets();
-	sInterfacePoolPos = 0;
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 	{
 		if (DumpReport) SendKeyboardString("port %d\n", i);

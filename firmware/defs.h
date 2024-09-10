@@ -218,7 +218,7 @@ typedef struct JoyPreset
 
 	uint8_t InputUsagePage;
 
-	uint8_t InputUsage;
+	uint32_t InputUsage;
 
 	// Mouse or keyboard
 	uint8_t OutputChannel;

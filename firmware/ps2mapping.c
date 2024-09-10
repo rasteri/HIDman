@@ -28,23 +28,11 @@ HID_SEG *currSegPnt = 0;
 uint16_t tempSB = 0;
 
 //search though preset to see if this matches a mapping
-/*
-		if (pHidSegStruct->reports[HIDParseState.hidGlobal.reportID]->firstHidSeg == NULL)                                 \
-		{                                                                                                        \
-			pHidSegStruct->reports[HIDParseState.hidGlobal.reportID]->firstHidSeg = (HID_SEG *)andyalloc(sizeof(HID_SEG)); \
-			currSegPnt = pHidSegStruct->reports[HIDParseState.hidGlobal.reportID]->firstHidSeg;                            \
-		}                                                                                                        \
-		else                                                                                                     \
-		{                                                                                                        \
-			currSegPnt->next = (HID_SEG *)andyalloc(sizeof(HID_SEG));                                            \
-			currSegPnt = currSegPnt->next;                                                                       \
-		}                                                                                                        \
-		memset(currSegPnt, 0, sizeof(HID_SEG));                                                                  \
-*/
 
 void CreateSeg(INTERFACE *pInterface)                                                                                       
 {                                 
-	HID_REPORT *rep = (HID_REPORT *)ListGetData(pInterface->Reports, HIDParseState.hidGlobal.reportID);
+	static HID_REPORT * __xdata rep;
+	rep = (HID_REPORT *)ListGetData(pInterface->Reports, HIDParseState.hidGlobal.reportID);
 	  
 	rep->HidSegments = ListAdd(rep->HidSegments, sizeof(HID_SEG), 0x69);
 	currSegPnt = (HID_SEG *)(rep->HidSegments->data);
@@ -54,29 +42,32 @@ void CreateSeg(INTERFACE *pInterface)
 	currSegPnt->reportSize = HIDParseState.hidGlobal.reportSize;                                       
 }
 
+void CreateMapping(INTERFACE *pInterface)                                                        
+{                                                                          
+	currPreset = JoyPresets;		
+										
+	while (currPreset != NULL)												
+	{       
 
-/*#define CreateMapping()                                                        \
-	{                                                                          \
-		currPreset = JoyPresets;												\
-		while (currPreset != NULL)												\
-		{                                                                      \
-			if (currPreset->InputUsagePage == HIDParseState.hidGlobal.usagePage && \
-				currPreset->InputUsage == HIDParseState.hidLocal.usage &&              \
-				currPreset->Number == HIDParseState.JoyNum)                            \
-			{                                                                  \
-				CreateSeg();                                                   \
-				tempSB -= HIDParseState.hidGlobal.reportSize;                            \
-				currSegPnt->OutputChannel = currPreset->OutputChannel;   \
-				currSegPnt->OutputControl = currPreset->OutputControl;   \
-				currSegPnt->InputType = currPreset->InputType;           \
-				currSegPnt->InputParam = currPreset->InputParam;         \
-			}                                                                  \
-			currPreset = currPreset->next; 										\
-		}                                                                      \
-		tempSB += HIDParseState.hidGlobal.reportSize;                                    \
-	}
+		if (currPreset->InputUsagePage == HIDParseState.hidGlobal.usagePage && 
+			currPreset->InputUsage == HIDParseState.hidLocal.usage &&              
+			currPreset->Number == HIDParseState.JoyNum)                            
+		{                 
+			CreateSeg(pInterface);                                                   
+			tempSB -= HIDParseState.hidGlobal.reportSize;                            
+			currSegPnt->OutputChannel = currPreset->OutputChannel;   
+			currSegPnt->OutputControl = currPreset->OutputControl;   
+			currSegPnt->InputType = currPreset->InputType;           
+			currSegPnt->InputParam = currPreset->InputParam;    
+     
+		}                                                                 
+		currPreset = currPreset->next; 										
+	}                         
+	                                            
+	tempSB += HIDParseState.hidGlobal.reportSize;                                    
+}
 
-*/
+
 
 void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 
@@ -113,7 +104,7 @@ void CreateBitfieldMapping(__xdata INTERFACE *pHidSegStruct) {
 			for (i = HIDParseState.hidLocal.usageMin; i < HIDParseState.hidLocal.usageMax; i++)
 			{
 				HIDParseState.hidLocal.usage = i;
-				//CreateMapping();
+				CreateMapping(pHidSegStruct);
 			}
 		}
 	}
@@ -163,7 +154,7 @@ void CreateUsageMapping(__xdata INTERFACE *pHidSegStruct){
 			else if (HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || HIDParseState.appUsage == REPORT_USAGE_GAMEPAD)
 			{
 				HIDParseState.hidLocal.usage = HIDParseState.arrUsage[i];
-				//CreateMapping();
+				CreateMapping(pHidSegStruct);
 			}
 		}
 	}

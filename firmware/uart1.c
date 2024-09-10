@@ -28,8 +28,6 @@ UINT8 CH559UART1_FIFO_CNT = 0;
 #define CH559UART1_FIFO_TRIG 7 // FIFO full 7 bytes trigger interrupt (1, 2, 4, or 7 bytes)
 #endif
 
-UINT8 Str[] = {"hello world!"};
-
 /************************************************* ******************************
 * Function Name: UART1RegCfgValue()
 * Description: CH559UART1 readable register value after correct configuration

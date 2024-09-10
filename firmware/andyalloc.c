@@ -31,7 +31,7 @@ void __xdata *andyalloc(size_t size)
 {
     // trigger a watchdog reset if we run out of memory
     if (MemoryFree() <= size) {
-        DEBUG_OUT("Memory Exhausted");
+        ANDYS_DEBUG_OUT("Memory Exhausted");
         ET0 = 0;
         while (1);
     }

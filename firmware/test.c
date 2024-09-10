@@ -68,9 +68,9 @@ bool TestDescriptors(
     uint8_t *Report, uint16_t ReportLen,
     uint8_t ExpectedSegments){
 
-    INTERFACE *pInterface;
+    static  INTERFACE * __xdata pInterface;
 
-    USB_HUB_PORT *pUsbDevice = &TestPort;
+    static USB_HUB_PORT *__xdata pUsbDevice = &TestPort;
     InitHubPortData(pUsbDevice);
 
     if (!ParseDeviceDescriptor((USB_DEV_DESCR *)Dev, DevLen, pUsbDevice)) {
@@ -110,8 +110,8 @@ bool TestDescriptors(
                 return 1;
             }
             
-            ParseReport(pInterface, 256, QMKKeyboardReportPressA);
-            ParseReport(pInterface, 256, QMKKeyboardReportReleaseA);
+            /*ParseReport(pInterface, 256, QMKKeyboardReportPressA);
+            ParseReport(pInterface, 256, QMKKeyboardReportReleaseA);*/
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -198,12 +198,13 @@ void main()
     andyclearmem();
     InitPresets();
 
-    /*TestDescriptors (
+
+    TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
         PS4ReportDescriptor, 507,
         31
-    );*/
+    );
 
     TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,
@@ -216,22 +217,25 @@ void main()
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         QMKKeyboardReportDescriptor, 109,
-        13
+        2
     );
 
     TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         KeychronWirelessKeyboardReportDescriptor, 164,
-        13
+        10
     );
 
     TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         CheapoKeyboardReportDescriptor, 54,
-        13
+        8
     );
+
+    printf("memused : %u\n", MemoryUsed());
+    printf("memfree : %u\n", MemoryFree());
 
     /*Node *head = NULL;
 

@@ -934,7 +934,11 @@ void regrabinterfaces(USB_HUB_PORT *pUsbHubPort)
 					// if it supports boot mode, enable that and use the default descriptor
 					if (pInterface->InterfaceSubClass == 0x01) {
 						SetBootProtocol(pUsbDevice, i);
-						ParseReportDescriptor(pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE ? StandardMouseDescriptor : StandardKeyboardDescriptor, 50, pInterface);
+						ParseReportDescriptor(
+							pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE ? StandardMouseDescriptor : StandardKeyboardDescriptor, 
+							pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE ? 50 : 63, 
+							pInterface
+						);
 					}
 					// Otherwise don't attempt to use this device at all unless advanced USB is enabled
 					else continue;

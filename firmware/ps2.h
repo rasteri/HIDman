@@ -15,14 +15,20 @@ void InitPS2Ports();
 
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
+	SBIT(KEYAUX_CLOCK, 0x90, 7);
 	#if defined(OPT_SWAP_KBD_MSC) // Makes it easier to direct solder combo PS/2 port
 		SBIT(KEY_DATA, 0x90, 6);
+		SBIT(KEYAUX_DATA, 0x90, 6);
 		SBIT(MOUSE_CLOCK, 0x90, 4);
+		SBIT(MOUSEAUX_CLOCK, 0x90, 4);
 	#else
 		SBIT(KEY_DATA, 0x90, 4);
+		SBIT(KEYAUX_DATA, 0x90, 4);
 		SBIT(MOUSE_CLOCK, 0x90, 6);
+		SBIT(MOUSEAUX_CLOCK, 0x90, 6);
 	#endif
 	SBIT(MOUSE_DATA, 0x90, 5);
+	SBIT(MOUSEAUX_DATA, 0x90, 5);
 #elif defined(BOARD_PS2)
 	SBIT(KEY_CLOCK, 0xB0, 4);
 	SBIT(KEY_DATA, 0xB0, 5);

@@ -171,7 +171,7 @@ void PS2ProcessPort(uint8_t port);
 
 
 
-#if defined(BOARD_AXP)
+#if defined(BOARD_AXP) || defined(BOARD_MINI)
 //P4 dir should be 1 (output) when low, 0 (input) when high
 #define WritePS2Data(port, val)     \
 	if (port == PORT_KEY){        \

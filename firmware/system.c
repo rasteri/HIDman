@@ -137,6 +137,11 @@ void GPIOInit(void){
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00100000;	  // LED off by default (i.e. high)
 
+	//port4 setup
+	P4_DIR = 0b00000000; // 4.6 is SWITCH
+	P4_PU = 0b01000000;	 // pullup on switch
+	P4_OUT = 0b00000000;
+
 #elif defined(BOARD_PS2) // Pinouts for old PS2 version
 
 	//port0 setup

@@ -78,7 +78,7 @@ void EveryMillisecond(void) {
 		LEDDelayMs--;
 	} else {
 #if defined(BOARD_MICRO)
-		P2 |= 0b00100000;
+		SetPWM2Dat(0x10);
 #elif defined (BOARD_PS2)
 		P0 |= 0b01110000;
 

@@ -496,8 +496,8 @@ __code uint8_t XT_KEY_APOSTROPHE_MAKE[] = {1, 0x28};
 __code uint8_t XT_KEY_COMMA_MAKE[] = {1, 0x33};
 __code uint8_t XT_KEY_PERIOD_MAKE[] = {1, 0x34};
 __code uint8_t XT_KEY_FWSLASH_MAKE[] = {1, 0x35};
-/*__code uint8_t XT_KEY_EURO1_MAKE[] = {1, 0x5D};
-__code uint8_t XT_KEY_EURO2_MAKE[] = {1, 0x61};*/
+__code uint8_t XT_KEY_EURO1_MAKE[] = {1, 0x29};
+__code uint8_t XT_KEY_EURO2_MAKE[] = {1, 0x2B};
 
 __code uint8_t XT_KEY_A_BREAK[] = {1, 0x9E};
 __code uint8_t XT_KEY_B_BREAK[] = {1, 0xB0};
@@ -603,6 +603,8 @@ __code uint8_t XT_KEY_APOSTROPHE_BREAK[] = {1, 0xA8};
 __code uint8_t XT_KEY_COMMA_BREAK[] = {1, 0xB3};
 __code uint8_t XT_KEY_PERIOD_BREAK[] = {1, 0xB4};
 __code uint8_t XT_KEY_FWSLASH_BREAK[] = {1, 0xB5};
+__code uint8_t XT_KEY_EURO1_BREAK[] = {1, 0xA9};
+__code uint8_t XT_KEY_EURO2_BREAK[] = {1, 0xAB};
 
 __code uint8_t KEY_A_MAKE[] = {1, 0x1C};
 __code uint8_t KEY_B_MAKE[] = {1, 0x32};
@@ -1137,7 +1139,7 @@ const uint8_t *const HIDtoXT_Make[] =
         XT_KEY_LEFTSQB_MAKE,
         XT_KEY_RIGHTSQB_MAKE, //30
         XT_KEY_BKSLASH_MAKE,
-        NULL,
+        XT_KEY_EURO1_MAKE,
         XT_KEY_SEMICOLON_MAKE,
         XT_KEY_APOSTROPHE_MAKE,
         XT_KEY_TILDE_MAKE,
@@ -1187,7 +1189,7 @@ const uint8_t *const HIDtoXT_Make[] =
         XT_KEY_PAD9_MAKE,
         XT_KEY_PAD0_MAKE,
         XT_KEY_PADDOT_MAKE,
-        NULL,
+        XT_KEY_EURO2_MAKE,
         XT_KEY_APPS_MAKE,
         NULL,
         XT_KEY_EQUAL_MAKE};
@@ -1244,7 +1246,7 @@ const uint8_t *const HIDtoXT_Break[] =
         XT_KEY_LEFTSQB_BREAK,
         XT_KEY_RIGHTSQB_BREAK, //30
         XT_KEY_BKSLASH_BREAK,
-        NULL,
+        XT_KEY_EURO1_BREAK,
         XT_KEY_SEMICOLON_BREAK,
         XT_KEY_APOSTROPHE_BREAK,
         XT_KEY_TILDE_BREAK,
@@ -1294,7 +1296,7 @@ const uint8_t *const HIDtoXT_Break[] =
         XT_KEY_PAD9_BREAK,        // = {1, 0x7D};
         XT_KEY_PAD0_BREAK,        // = {1, 0x70};
         XT_KEY_PADDOT_BREAK,
-        NULL,
+        XT_KEY_EURO2_BREAK,
         XT_KEY_APPS_BREAK,
         NULL,
         XT_KEY_EQUAL_BREAK};

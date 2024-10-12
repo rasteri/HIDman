@@ -35,39 +35,57 @@ void *ListGetData(LinkedList* head, uint8_t index) {
     return NULL;
 }
 
-// Function that access and prints the linked list. This function needs
-// to know how many bytes of memory is to be read to print the data
-// So a function pointer is required for printing different data type
-/*void printList(struct Node *head, void (*fptr)(void *)) {
-    while (head != NULL) {
-        (*fptr)(head->data);
-        head = head->next;
-    }
+LinkedList* AddInt(LinkedList *list, uint8_t index, int val){
+    int *currdat;
+
+    list = ListAdd(list, sizeof(int), index);
+    currdat = ((int*)(list->data));
+    *currdat = val;
+    return list;
 }
 
-// Helper function to print an integer
-void printInt(void *n) {
-   printf(" %d", *(int *)n);
+#define LL_OK 0
+#define LL_NOTFOUND 1
+#define LL_INCORRECTVAL 2
+
+uint8_t TestInt(LinkedList* list, uint8_t index, int expectedvalue) {
+
+    void *data = ListGetData(list, index);
+
+    if (data == NULL) return LL_NOTFOUND;
+
+    else if (*((int*)data) == expectedvalue) return LL_OK;
+
+    else return LL_INCORRECTVAL;
 }
+
 
 void testlinkedlist() {
 
-    // Create an int linked list
-    // 10 -> 20 -> 30 -> 40
-    struct Node *head = NULL;
-    unsigned i_size = sizeof(int);
-    int i_arr[4] = {40, 30, 20, 10};
-    head = ListAdd(head, i_size);
-    head->data = &i_arr[0];
-    head = ListAdd(head, i_size);
-    head->data = &i_arr[1];
-    head = ListAdd(head, i_size);
-    head->data = &i_arr[2];
-    head = ListAdd(head, i_size);
-    head->data = &i_arr[3];
+    LinkedList* list;
 
-    // Printing the Integer list
-    printf("Created integer linked list is \n");
-    printList(head, printInt);
+    list = AddInt(list, 1, 69);
+    list = AddInt(list, 2, 70);
+    list = AddInt(list, 3, 71);
+    list = AddInt(list, 4, 72);
+    list = AddInt(list, 5, 73);
 
-}*/
+    printf("%u",TestInt(list, 1, 69));
+    printf("%u",TestInt(list, 2, 70));
+    printf("%u",TestInt(list, 3, 71));
+    printf("%u",TestInt(list, 4, 72));
+    printf("%u",TestInt(list, 5, 73));
+
+    printf("%u",TestInt(list, 1, 69));
+    printf("%u",TestInt(list, 2, 69));
+    printf("%u",TestInt(list, 3, 69));
+    printf("%u",TestInt(list, 4, 69));
+    printf("%u",TestInt(list, 5, 69));
+
+    printf("%u",TestInt(list, 6, 69));
+    printf("%u",TestInt(list, 7, 70));
+    printf("%u",TestInt(list, 8, 71));
+    printf("%u",TestInt(list, 9, 72));
+    printf("%u",TestInt(list, 10, 73));
+
+}

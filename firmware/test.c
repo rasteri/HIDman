@@ -110,8 +110,8 @@ bool TestDescriptors(
                 return 1;
             }
             
-            /*ParseReport(pInterface, 256, QMKKeyboardReportPressA);
-            ParseReport(pInterface, 256, QMKKeyboardReportReleaseA);*/
+            ParseReport(pInterface, 7 * 8, KeychronWirelessReportPressA);
+            ParseReport(pInterface, 7 * 8, KeychronWirelessReportReleaseA);
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -198,8 +198,10 @@ void main()
     andyclearmem();
     InitPresets();
 
+    testlinkedlist();
 
-    TestDescriptors (
+
+    /*TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
         PS4ReportDescriptor, 507,
@@ -231,6 +233,13 @@ void main()
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         CheapoKeyboardReportDescriptor, 54,
+        8
+    );*/
+
+    TestDescriptors (
+        CheapoGamepadDeviceDescriptor, 18,
+        CheapoGamepadConfigDescriptor, 34,
+        KeychronWirelessKeyboardReportDescriptor, 164,
         8
     );
 

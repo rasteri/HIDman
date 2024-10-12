@@ -35,6 +35,7 @@ $(OBJDIR)/amstrad.rel \
 $(OBJDIR)/usbll.rel \
 $(OBJDIR)/preset.rel \
 $(OBJDIR)/ps2mapping.rel \
+$(OBJDIR)/linkedlist.rel \
 $(OBJDIR)/xt.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)

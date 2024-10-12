@@ -17,7 +17,7 @@
 #include "preset.h"
 #include "test.h"
 #include "usbll.h"
-
+#include "linkedlist.h"
 #define TESTVERBOSE
 
 void UART_Init()
@@ -35,23 +35,26 @@ static USB_HUB_PORT __xdata TestPort;
 
 uint8_t DumpHID(INTERFACE *pInterface)
 {
-    HID_SEG *tmpseg;
+    LinkedList *tmpsegNode;
+    HID_SEG *tmpsegment;
     uint8_t count = 0;
     for (uint8_t x = 0; x < MAX_REPORTS; x++)
     {
-        if (pInterface->reports[x] != NULL)
+        HID_REPORT *tr = (HID_REPORT *)ListGetData(pInterface->Reports, x);
+        if (tr != NULL)
         {
-            tmpseg = pInterface->reports[x]->firstHidSeg;
+            tmpsegNode = tr->HidSegments;
 
             #ifdef TESTVERBOSE 
-                printf("Report %x, usage %x, length %u: \n", x, pInterface->reports[x]->appUsage, pInterface->reports[x]->length);
+                printf("Report %x, usage %x, length %u: \n", x, tr->appUsage, tr->length);
             #endif
-            while (tmpseg != NULL)
+            while (tmpsegNode != NULL)
             {
+                tmpsegment = (HID_SEG *)(tmpsegNode->data);
                 #ifdef TESTVERBOSE 
-                    printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpseg->startBit, tmpseg->InputType, tmpseg->InputParam, tmpseg->OutputChannel, tmpseg->OutputControl, tmpseg->reportSize, tmpseg->reportCount);
+                    printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpsegment->startBit, tmpsegment->InputType, tmpsegment->InputParam, tmpsegment->OutputChannel, tmpsegment->OutputControl, tmpsegment->reportSize, tmpsegment->reportCount);
                 #endif
-                tmpseg = tmpseg->next;
+                tmpsegNode = tmpsegNode->next;
                 count++;
             }
         }
@@ -65,11 +68,9 @@ bool TestDescriptors(
     uint8_t *Report, uint16_t ReportLen,
     uint8_t ExpectedSegments){
 
-    INTERFACE *pInterface;
+    static  INTERFACE * __xdata pInterface;
 
-
-
-    USB_HUB_PORT *pUsbDevice = &TestPort;
+    static USB_HUB_PORT *__xdata pUsbDevice = &TestPort;
     InitHubPortData(pUsbDevice);
 
     if (!ParseDeviceDescriptor((USB_DEV_DESCR *)Dev, DevLen, pUsbDevice)) {
@@ -89,7 +90,13 @@ bool TestDescriptors(
 
     for (uint8_t i = 0; i < pUsbDevice->InterfaceNum; i++)
     {
-        pInterface = &pUsbDevice->Interface[i];
+        pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
+
+        if (pInterface == NULL) {
+            printf("Interface %d not HID\n", i);
+            continue;
+        }
+
         #ifdef TESTVERBOSE 
             printf("\n\nInterface %d - ", i);
             printf("InterfaceClass=0x%02X - ", (UINT16)pInterface->InterfaceClass);
@@ -103,8 +110,8 @@ bool TestDescriptors(
                 return 1;
             }
             
-            ParseReport(pInterface, 168, KeychronWirelessReportPressA);
-            ParseReport(pInterface, 168, KeychronWirelessReportReleaseA);
+            ParseReport(pInterface, 7 * 8, KeychronWirelessReportPressA);
+            ParseReport(pInterface, 7 * 8, KeychronWirelessReportReleaseA);
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -190,43 +197,78 @@ void main()
 
     andyclearmem();
     InitPresets();
-	sInterfacePoolPos = 0;
 
-/*    TestDescriptors (
+    testlinkedlist();
+
+
+    /*TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
         PS4ReportDescriptor, 507,
         31
-    );*/
+    );
 
-    /*TestDescriptors (
+    TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
         CheapoGamepadReportDescriptor, 89,
         13
-    );*/
+    );
 
-    /*TestDescriptors (
+    TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         QMKKeyboardReportDescriptor, 109,
-        13
-    );*/
+        2
+    );
 
     TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,
         QMKKeyboardConfigDescriptor, 59,
         KeychronWirelessKeyboardReportDescriptor, 164,
-        13
+        10
     );
 
-    /*TestDescriptors (
+    TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         CheapoKeyboardReportDescriptor, 54,
-        13
+        8
     );*/
 
+    TestDescriptors (
+        CheapoGamepadDeviceDescriptor, 18,
+        CheapoGamepadConfigDescriptor, 34,
+        KeychronWirelessKeyboardReportDescriptor, 164,
+        8
+    );
+
+    printf("memused : %u\n", MemoryUsed());
+    printf("memfree : %u\n", MemoryFree());
+
+    /*Node *head = NULL;
+
+    head = ListAdd(head, sizeof(HID_SEG));
+    head->index = 1;
+    ((HID_SEG *)(head->data))->startBit=0x69;
+
+    head = ListAdd(head, sizeof(HID_SEG));
+    head->index = 2;
+    ((HID_SEG *)(head->data))->startBit=0x80;
+
+    head = ListAdd(head, sizeof(HID_SEG));
+    head->index = 3;
+    ((HID_SEG *)(head->data))->startBit=0x08;
+
+
+    if (
+            ((HID_SEG *)(ListGet(head, 3)->data))->startBit != 0x08 || 
+            ((HID_SEG *)(ListGet(head, 2)->data))->startBit != 0x80 || 
+            ((HID_SEG *)(ListGet(head, 1)->data))->startBit != 0x69
+        )
+        printf("list broken\n");
+    else printf("list passed\n");
+    //testlinkedlist();*/
 
     printf("Parser tests passed\n");
 

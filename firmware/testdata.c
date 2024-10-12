@@ -508,6 +508,8 @@ __code uint8_t PS4ConfigDescriptor[] = {
     // 225 bytes
 };
 
+
+
 __code uint8_t CheapoGamepadDeviceDescriptor[] = {
     0x12,        // bLength
     0x01,        // bDescriptorType (Device)
@@ -947,6 +949,7 @@ __code uint8_t CheapoKeyboardReportDescriptor[] = {
 
 };
 
+
 __code uint8_t KeychronWirelessKeyboardReportDescriptor[] = {
 0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
 0x09, 0x06,        // Usage (Keyboard)
@@ -1034,7 +1037,7 @@ __code uint8_t KeychronWirelessKeyboardReportDescriptor[] = {
 // 164 bytes
 };
 
-__code uint8_t KeychronWirelessReportPressA[] = {
+/*__code uint8_t KeychronWirelessReportPressA[] = {
 0x0C,        
 0x00,        
 0x10,
@@ -1046,4 +1049,14 @@ __code uint8_t KeychronWirelessReportReleaseA[] = {
 0x00,        
 0x00,
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};*/
+
+__code uint8_t KeychronWirelessReportPressA[] = {
+0x01,        
+0x00,0x00,0x04,0x00,0x00,0x00,0x00
+};
+
+__code uint8_t KeychronWirelessReportReleaseA[] = {
+0x01,        
+0x00,0x00,0x00,0x00,0x00,0x00,0x00
 };

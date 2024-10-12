@@ -24,7 +24,7 @@
 #include "andyalloc.h"
 #include "system.h"
 #include "preset.h"
-
+#include "linkedlist.h"
 
 
 
@@ -164,16 +164,18 @@ __xdata ParseState HIDParseState;
 
 
 
-BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegStruct)
+BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterface)
 {
 	static __xdata uint8_t i, k, collectionDepth;
 
-	static uint8_t *start, *end;
+	static uint8_t * __xdata start;
+	static uint8_t * __xdata end;
 
-	static __xdata HID_GLOBAL *hidGlobalPnt = &HIDParseState.hidGlobal;
+	static __xdata HID_GLOBAL * __xdata hidGlobalPnt = &HIDParseState.hidGlobal;
 	static __xdata HID_ITEM item;
 
-
+	static HID_REPORT * __xdata currHidReport;
+	currHidReport = NULL;
 	HIDParseState.startBit = 0;
 	HIDParseState.appUsage = 0;
 	HIDParseState.appUsagePage = 0;
@@ -203,43 +205,55 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 		case TYPE_MAIN:
 			if (item.tag == HID_MAIN_ITEM_TAG_INPUT)
 			{
-				if (pHidSegStruct->reports[hidGlobalPnt->reportID] == NULL)
-				{
-					pHidSegStruct->reports[hidGlobalPnt->reportID] = (HID_REPORT *)andyalloc(sizeof(HID_REPORT));
-					memset(pHidSegStruct->reports[hidGlobalPnt->reportID], 0x00, sizeof(HID_REPORT));
-
-					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsagePage = HIDParseState.appUsagePage;
-					pHidSegStruct->reports[hidGlobalPnt->reportID]->appUsage = HIDParseState.appUsage;
-
-					if (HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC && (HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || HIDParseState.appUsage == REPORT_USAGE_GAMEPAD))
-						HIDParseState.JoyNum++;
-				}
-
-				if (ItemUData(&item) & HID_INPUT_VARIABLE)
-				{
-					// we found some discrete usages, get to it
-					if (HIDParseState.usagePtr)
+				if (
+					HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC &&
+					(
+						HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || 
+						HIDParseState.appUsage == REPORT_USAGE_GAMEPAD ||
+						HIDParseState.appUsage == REPORT_USAGE_KEYBOARD ||
+						HIDParseState.appUsage == REPORT_USAGE_MOUSE
+						
+					)
+				
+				){
+					if (currHidReport == NULL)
 					{
-						CreateUsageMapping(pHidSegStruct);
+						pInterface->Reports = ListAdd(pInterface->Reports, sizeof(HID_REPORT), hidGlobalPnt->reportID);
+						currHidReport = (HID_REPORT *)(pInterface->Reports->data);
+
+						currHidReport->appUsagePage = HIDParseState.appUsagePage;
+						currHidReport->appUsage = HIDParseState.appUsage;
+
+						if ((HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || HIDParseState.appUsage == REPORT_USAGE_GAMEPAD))
+							HIDParseState.JoyNum++;
 					}
-					// if no usages found, maybe a bitfield
-					else if (HIDParseState.hidLocal.usageMin != 0xFFFF && HIDParseState.hidLocal.usageMax != 0xFFFF &&
-							 hidGlobalPnt->reportSize == 1)
+
+					if (ItemUData(&item) & HID_INPUT_VARIABLE)
 					{
-						CreateBitfieldMapping(pHidSegStruct);
+						// we found some discrete usages, get to it
+						if (HIDParseState.usagePtr)
+						{
+							CreateUsageMapping(pInterface);
+						}
+						// if no usages found, maybe a bitfield
+						else if (HIDParseState.hidLocal.usageMin != 0xFFFF && HIDParseState.hidLocal.usageMax != 0xFFFF &&
+								hidGlobalPnt->reportSize == 1)
+						{
+							CreateBitfieldMapping(pInterface);
+						}
+						else
+						{
+						}
 					}
+					// Item is array style, whole range appears in every segment
 					else
 					{
+						CreateArrayMapping(pInterface);
 					}
 				}
-				// Item is array style, whole range appears in every segment
-				else
-				{
-					CreateArrayMapping(pHidSegStruct);
-				}
-
 				HIDParseState.startBit += (uint16_t)hidGlobalPnt->reportSize * (uint16_t)hidGlobalPnt->reportCount;
-				pHidSegStruct->reports[hidGlobalPnt->reportID]->length = HIDParseState.startBit;
+
+				if (currHidReport != NULL) currHidReport->length = HIDParseState.startBit;
 			}
 			else if (item.tag == HID_MAIN_ITEM_TAG_COLLECTION_START)
 			{
@@ -276,12 +290,13 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegS
 			switch (item.tag)
 			{
 			case HID_GLOBAL_ITEM_TAG_REPORT_ID:
-				pHidSegStruct->usesReports = 1;
+				pInterface->usesReports = 1;
 				// report id
 				HIDParseState.startBit = 0;
 				HIDParseState.startBit += item.size * 8;
 				//JoyNum++;
 				hidGlobalPnt->reportID = ItemUData(&item);
+				currHidReport = NULL;
 				break;
 
 			case HID_GLOBAL_ITEM_TAG_LOGICAL_MINIMUM:
@@ -377,11 +392,12 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 {
 	int index;
 
-	UINT8 *pDescr;
-	DESCR_HEADER *pDescrHeader;
-	USB_ITF_DESCR *pItfDescr = NULL;
-	USB_HID_DESCR *pHidDescr;
-	USB_ENDP_DESCR *pEdpDescr;
+	static  UINT8 * __xdata pDescr;
+	static DESCR_HEADER * __xdata pDescrHeader;
+	static USB_ITF_DESCR * __xdata pItfDescr = NULL;
+	static USB_HID_DESCR * __xdata pHidDescr;
+	static USB_ENDP_DESCR * __xdata pEdpDescr;
+	static INTERFACE * __xdata currInt;
 
 	UINT8 descrType;
 	int endpointIndex;
@@ -397,8 +413,6 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 	{
 		pUsbDevice->InterfaceNum = MAX_INTERFACE_NUM;
 	}
-
-	pUsbDevice->Interface = AllocInterface(pUsbDevice->InterfaceNum);
 
 	pDescr = (UINT8 *)pCfgDescr;
 
@@ -420,13 +434,21 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 				break;
 			}
 
-			if (pItfDescr->bAlternateSetting == 0)
+			if (pItfDescr->bInterfaceClass == USB_DEV_CLASS_HID)
 			{
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum = 0;
+			
+				pUsbDevice->Interfaces = ListAdd(pUsbDevice->Interfaces, sizeof(INTERFACE), pItfDescr->bInterfaceNumber);
+				currInt = (INTERFACE*)(pUsbDevice->Interfaces->data);
+				InitInterface(currInt);
 
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceClass = pItfDescr->bInterfaceClass;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceProtocol = pItfDescr->bInterfaceProtocol;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].InterfaceSubClass = pItfDescr->bInterfaceSubClass;
+				if (pItfDescr->bAlternateSetting == 0)
+				{
+					currInt->EndpointNum = 0;
+
+					currInt->InterfaceClass = pItfDescr->bInterfaceClass;
+					currInt->InterfaceProtocol = pItfDescr->bInterfaceProtocol;
+					currInt->InterfaceSubClass = pItfDescr->bInterfaceSubClass;
+				}
 			}
 		}
 		else if (descrType == USB_DESCR_TYP_HID)
@@ -435,7 +457,7 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 			pHidDescr = (USB_HID_DESCR *)pDescr;
 			if (pHidDescr->bDescriptorTypeX == USB_DESCR_TYP_REPORT)
 			{
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].ReportSize = pHidDescr->wDescriptorLengthL | (pHidDescr->wDescriptorLengthH << 8);
+				currInt->ReportSize = pHidDescr->wDescriptorLengthL | (pHidDescr->wDescriptorLengthH << 8);
 			}
 		}
 		else if (descrType == USB_DESCR_TYP_ENDP)
@@ -443,26 +465,26 @@ BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *p
 			//endpoint descriptor
 			pEdpDescr = (USB_ENDP_DESCR *)pDescr;
 
-			if (pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum >= MAX_ENDPOINT_NUM)
+			if (currInt->EndpointNum >= MAX_ENDPOINT_NUM)
 			{
 				goto ONE_FINISH;
 			}
 
 			if (pItfDescr->bAlternateSetting == 0)
 			{
-				endpointIndex = pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].EndpointNum++;
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointAddr = pEdpDescr->bEndpointAddress & 0x7f;
+				endpointIndex = currInt->EndpointNum;
+				currInt->EndpointNum++;
+				currInt->Endpoint[endpointIndex].EndpointAddr = pEdpDescr->bEndpointAddress & 0x7f;
 				if (pEdpDescr->bEndpointAddress & 0x80)
 				{
-					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_IN;
+					currInt->Endpoint[endpointIndex].EndpointDir = ENDPOINT_IN;
 				}
 				else
 				{
-					pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].EndpointDir = ENDPOINT_OUT;
+					currInt->Endpoint[endpointIndex].EndpointDir = ENDPOINT_OUT;
 				}
 
-				pUsbDevice->Interface[pItfDescr->bInterfaceNumber].Endpoint[endpointIndex].MaxPacketSize = pEdpDescr->wMaxPacketSizeL | (pEdpDescr->wMaxPacketSizeH << 8);
+				currInt->Endpoint[endpointIndex].MaxPacketSize = pEdpDescr->wMaxPacketSizeL | (pEdpDescr->wMaxPacketSizeH << 8);
 			}
 		}
 	ONE_FINISH:

@@ -2,7 +2,10 @@
 #define __DEFS_H__
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "type.h"
+#include "andyalloc.h"
+#include "linkedlist.h"
 
 #if defined(BOARD_AXP)
 	#define OPT_SERIAL_MOUSE
@@ -215,7 +218,7 @@ typedef struct JoyPreset
 
 	uint8_t InputUsagePage;
 
-	uint8_t InputUsage;
+	uint32_t InputUsage;
 
 	// Mouse or keyboard
 	uint8_t OutputChannel;
@@ -234,10 +237,11 @@ typedef struct JoyPreset
 	struct JoyPreset *next;
 } JoyPreset;
 
-
 // defines a mapping between a HID segment and a PS/2 event
 typedef struct HID_SEG
 {
+	uint8_t index;
+
 	uint16_t startBit;
 
 	// Mouse or keyboard
@@ -277,7 +281,7 @@ typedef struct _HID_REPORT
 	uint8_t KeyboardKeyMap[32];
 	uint8_t oldKeyboardKeyMap[32];
 
-	HID_SEG *firstHidSeg;
+	LinkedList *HidSegments;
 } HID_REPORT;
 
 

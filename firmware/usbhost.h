@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include "defs.h"
+#include "linkedlist.h"
 
 // ���ӳ��򷵻�״̬��
 #define ERR_SUCCESS         0x00    // �����ɹ�
@@ -151,10 +152,10 @@ typedef struct _INTERFACE
 	ENDPOINT  Endpoint[MAX_ENDPOINT_NUM]; //endpoints
 	
 	bool usesReports;
-	HID_REPORT *reports[MAX_REPORTS];
+	LinkedList *Reports;
 
 } INTERFACE, *PINTERFACE;
-
+void InitInterface(INTERFACE* Interface);
 
 //hub struct
 #define  PORT_DEVICE_NONE         0
@@ -179,7 +180,7 @@ typedef struct _USB_HUB_PORT
 	UINT8       DeviceAddress;
 	UINT8       DeviceSpeed;
 	UINT8       InterfaceNum;
-	INTERFACE*  Interface;
+	LinkedList*  Interfaces;
 	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 

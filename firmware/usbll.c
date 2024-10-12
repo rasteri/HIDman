@@ -120,7 +120,7 @@ void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 	pUsbHubPort->DeviceAddress = 0;
 	pUsbHubPort->DeviceSpeed = FULL_SPEED;
 	pUsbHubPort->InterfaceNum = 0;
-	pUsbHubPort->Interface = NULL;
+	pUsbHubPort->Interfaces = NULL;
 
 	pUsbHubPort->HubPortNum = 0;
 }

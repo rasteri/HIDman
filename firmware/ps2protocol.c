@@ -22,6 +22,7 @@
 #include "xt.h"
 #include "settings.h"
 #include "system.h"
+#include "scancodes.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative

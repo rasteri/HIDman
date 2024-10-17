@@ -10,6 +10,7 @@
 #include "ps2protocol.h"
 #include "defs.h"
 #include "xt.h"
+#include "scancodes.h"
 
 uint8_t amsoldstate = 0;
 void AmstradProcessPort(void)

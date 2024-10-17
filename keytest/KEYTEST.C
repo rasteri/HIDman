@@ -80,8 +80,6 @@ int CompareScanCode(unsigned char *array, unsigned char *s2, unsigned int length
 
     //now compare actual codes
     for (index = 0; index < length; index++) {
-        gotoxy(1, 1);
-        printf("%d %d", length);
         if (array[index + 1] != s2[index])
             return 0;
     }
@@ -130,25 +128,22 @@ static void interrupt keyb_int()
     // single E0 scancode ignore
     if (scanbufindex == 1 && scancodebuf[0] == 0xE0) goto endage;
 
+    gotoxy(1, 23);
+    printf("Scancode :                                ");
+    gotoxy(11, 23);
+    for (cunt = 0; cunt < scanbufindex; cunt++)
+        printf("%02x ", scancodebuf[cunt]);
+
     foundkey = FindXTKey(&outtype, scancodebuf, scanbufindex);
+
     if (foundkey == NULL) {
-        gotoxy(14, 23);
-        printf("Unknown Scancode :                                ");
-        gotoxy(34, 23);
-        for (cunt = 0; cunt < scanbufindex; cunt++)
-            printf("%02x", scancodebuf[cunt]);
+        printf("(Unknown)");
     }
     else {
 
         // always clear count
         gotoxy(14, 25);
         printf("       ");
-
-            gotoxy(14, 23);
-            printf("        Scancode :                                ");
-            gotoxy(34, 23);
-            for (cunt = 0; cunt < scanbufindex; cunt++)
-            printf("%02x", scancodebuf[cunt]);
 
         // if same key as last time, just increment counter and display on screen
         if (foundkey == PrevHighlightKey && outtype == PrevOutType){

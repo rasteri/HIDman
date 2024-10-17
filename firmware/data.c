@@ -13,7 +13,7 @@
 #include "defs.h"
 #include "usbhidkeys.h"
 #include "data.h"
-#include "scancodes.h"
+#include "scancode.h"
 
 // configuration for when game controller mouse emulation is enabled
 // buttons 5 and 6 mapped to mouse buttons

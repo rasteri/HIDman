@@ -20,7 +20,7 @@
 #include "usbhidkeys.h"
 #include "system.h"
 #include "andyalloc.h"
-#include "scancodes.h"
+#include "scancode.h"
 
 __xdata char SendBuffer[255];
 

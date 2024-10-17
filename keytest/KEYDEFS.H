@@ -16,3 +16,4 @@ typedef struct KD {
 } KeyDef;
 
 extern KeyDef KeyDefs[];
+extern KeyDef KEYDEF_EURO1;

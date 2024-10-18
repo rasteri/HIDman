@@ -2,8 +2,8 @@
 #include <conio.h>
 #include <bios.h>
 #include <dos.h>
+#include <string.h>
 #include "keydefs.h"
-
 
 /*
 Really good stuff here - https://github.com/Halicery/8042/blob/main/8042_INTERN.TXT
@@ -20,6 +20,8 @@ Options :
 
 */
 
+//char SafeWord = {}
+
 char ScreenBuf[0x781];
 
 #define TYPE_MAKE 0
@@ -35,23 +37,77 @@ KeyDef *PrevHighlightKey;
 unsigned char PrevOutType;
 unsigned int NumDupHighlights;
 
+KeyDef *codecache[256];
+KeyDef *e0codecache[256];
+
+const unsigned char far *text_mem = (unsigned char far *)0xB8000000;
+
+void BuildCodeCache()
+{
+    unsigned char cunt;
+
+    KeyDef *currdef;
+
+    memset(codecache, 0x00, sizeof(KeyDef) * 256);
+    memset(e0codecache, 0x00, sizeof(KeyDef) * 256);
+
+    for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    {
+
+        currdef = &KeyDefs[cunt];
+
+        if (currdef->XTMake[0] == 1)
+            codecache[currdef->XTMake[1]] = currdef;
+
+        if (currdef->XTBreak[0] == 1)
+            codecache[currdef->XTBreak[1]] = currdef;
+
+        if (currdef->XTMake[0] == 2 && currdef->XTMake[1] == 0xE0)
+            e0codecache[currdef->XTMake[2]] = currdef;
+
+        if (currdef->XTBreak[0] == 2 && currdef->XTBreak[1] == 0xE0)
+            e0codecache[currdef->XTBreak[2]] = currdef;
+    }
+}
+
+unsigned char TextClearPattern[] = {
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F,
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F,
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F,
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F,
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F,
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F,
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F,
+    0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F, 0x20, 0x0F};
+
+// fast clearline function
+void ClearText(unsigned int x, unsigned int y, unsigned int length)
+{
+
+    _fmemcpy(text_mem + (y * 160) + (2 * x), TextClearPattern, length * 2);
+}
+
 void HighlightKey(KeyDef *Key, unsigned char outtype)
 {
     char x, y;
 
-    gotoxy(14, 24);
-    printf("                                                  ");
-
-    gotoxy(14, 24);
     if (outtype == TYPE_MAKE)
     {
-        printf("Pressed %s", Key->Name);
+        ClearText(22, 23, 54);
+        gotoxy(14, 24);
+        fputs("Pressed  ", stdout);
+        fputs(Key->Name, stdout);
         textcolor(WHITE);
         textbackground(LIGHTGRAY);
     }
     else if (outtype == TYPE_BREAK)
     {
-        printf("Released %s", Key->Name);
+        //_fmemset(text_mem + 3680, 0x61, 160);
+
+        ClearText(22, 23, 54);
+        gotoxy(14, 24);
+        fputs("Released ", stdout);
+        fputs(Key->Name, stdout);
         textcolor(BLACK);
         textbackground(LIGHTGRAY);
     }
@@ -85,46 +141,85 @@ int CompareScanCode(unsigned char *array, unsigned char *s2, unsigned int length
 
 char LastFewMakes[4];
 
-KeyDef *FindXTKey(unsigned char *OutType, unsigned char *Scancode, unsigned int length)
+KeyDef *SearchList(unsigned char *OutType, KeyDef *list, unsigned int listLength, unsigned char *scancode, unsigned int length)
 {
+
     unsigned int cunt = 0;
-    unsigned int index = 0;
 
     KeyDef *currkeydef;
 
-    for (cunt = 0; cunt < 110; cunt++)
+    for (cunt = 0; cunt < listLength; cunt++)
     {
-        currkeydef = &KeyDefs[cunt];
+        currkeydef = &list[cunt];
 
-        if (CompareScanCode(currkeydef->XTMake, Scancode, length))
+        if (CompareScanCode(currkeydef->XTMake, scancode, length))
         {
             *OutType = TYPE_MAKE;
             return currkeydef;
         }
-        if (!biosmode && CompareScanCode(currkeydef->XTBreak, Scancode, length))
+        if (!biosmode && CompareScanCode(currkeydef->XTBreak, scancode, length))
         {
             *OutType = TYPE_BREAK;
             return currkeydef;
         }
     }
+
+    return NULL;
+}
+
+KeyDef *FindXTKey(unsigned char *OutType, unsigned char *Scancode, unsigned int length)
+{
+
+    unsigned int index = 0;
+
+    KeyDef *retval;
+
+    // hack if we're in BIOS mode, check for F11/F12 because they reuse other scancodes
+    if (biosmode)
+    {
+        retval = SearchList(OutType, BIOSKeyDefs, BIOSKeyDefsSize, Scancode, length);
+        if (retval != NULL)
+            return retval;
+    }
+
+    // search the cache first
+    if ((length == 1) && (codecache[Scancode[0]] != NULL))
+    {
+        /*gotoxy(40, 1);
+        printf("%X", Scancode[0]);*/
+        *OutType = (Scancode[0] & 0x80) ? TYPE_BREAK : TYPE_MAKE;
+        return codecache[Scancode[0]];
+    }
+    if (
+        (length == 2) &&
+        Scancode[0] == 0xE0 &&
+        (codecache[Scancode[1]] != NULL))
+    {
+        /*gotoxy(40, 1);
+        printf("%X", Scancode[0]);*/
+        *OutType = (Scancode[1] & 0x80) ? TYPE_BREAK : TYPE_MAKE;
+        return e0codecache[Scancode[1]];
+    }
+
+    // finally search the whole list
+    return SearchList(OutType, KeyDefs, KeyDefsSize, Scancode, length);
+
     return NULL;
 }
 
 volatile unsigned char scanbufindex = 0;
 volatile unsigned char scancodebuf[16];
 
-
-
-void ProcessScancode (unsigned char code) {
+void ProcessScancode(unsigned char code)
+{
 
     unsigned char cunt;
     unsigned char outtype;
 
     KeyDef *foundkey;
 
-
     scancodebuf[scanbufindex++] = code;
-    
+
     if (scanbufindex >= 16)
         scanbufindex = 0;
 
@@ -132,35 +227,34 @@ void ProcessScancode (unsigned char code) {
     if (scanbufindex == 1 && scancodebuf[0] == 0xE0)
         return;
 
-    gotoxy(1, 23);
-    printf("Scancode :                                ");
-    gotoxy(11, 23);
+    ClearText(11, 22, 60);
+    gotoxy(12, 23);
     for (cunt = 0; cunt < scanbufindex; cunt++)
-        printf("%02x ", scancodebuf[cunt]);
+        printf("%02X", scancodebuf[cunt]);
 
     foundkey = FindXTKey(&outtype, scancodebuf, scanbufindex);
 
     if (foundkey == NULL)
     {
-        printf("(Unknown)");
+        fputs("(Unknown)", stdout);
     }
     else
     {
 
         // always clear count
+        ClearText(13, 24, 10);
         gotoxy(14, 25);
-        printf("       ");
 
         // if same key as last time, just increment counter and display on screen
         if (foundkey == PrevHighlightKey && outtype == PrevOutType)
         {
             gotoxy(14, 25);
-            printf("(x%u)", NumDupHighlights++);
+            printf("(x%u)", ++NumDupHighlights);
         }
         else
         {
 
-            NumDupHighlights = 0;
+            NumDupHighlights = 1;
             HighlightKey(foundkey, outtype);
 
             // special case for 2B, also light up Euro1 key (since keycodes are the same)
@@ -173,16 +267,26 @@ void ProcessScancode (unsigned char code) {
 
         scanbufindex = 0;
     }
-
 }
+
+unsigned int cleartimer = 0;
 
 static void interrupt keyb_int()
 {
 
     unsigned char sixone;
 
-    ProcessScancode(inp(0x60));   
+    // if this is last code in a while,
+    // this must be a new scancode
+    if (cleartimer > 10)
+    {
+        scanbufindex = 0;
+        cleartimer = 0;
+    }
 
+    ProcessScancode(inp(0x60));
+
+    // for XT, need to strobe bit7 of 0x61 to acknowledge
     sixone = inp(0x61);
     sixone |= 0x80;
     outp(0x61, sixone);
@@ -190,40 +294,6 @@ static void interrupt keyb_int()
     outp(0x61, sixone);
 
     outp(0x20, 0x20);
-
-    /*
-    static unsigned char buffer;
-    unsigned char rawcode;
-    unsigned char make_break;
-    int scancode;
-
-
-    make_break = !(rawcode & 0x80); // bit 7: 0 = make, 1 = break
-    scancode = rawcode & 0x7F;
-
-    if (buffer == 0xE0)
-    { // second byte of an extended key
-        if (scancode < 0x60)
-        {
-            extended_keys[scancode] = make_break;
-        }
-        buffer = 0;
-    }
-    else if (buffer >= 0xE1 && buffer <= 0xE2)
-    {
-        buffer = 0; // ingore these extended keys
-    }
-    else if (rawcode >= 0xE0 && rawcode <= 0xE2)
-    {
-        buffer = rawcode; // first byte of an extended key
-    }
-    else if (scancode < 0x60)
-    {
-        normal_keys[scancode] = make_break;
-    }
-
-    outp(0x20, 0x20); // must send EOI to finish interrupt
-    */
 }
 
 static void interrupt (*old_keyb_int)();
@@ -250,8 +320,7 @@ int ctrlbrk_handler(void)
     return 0;
 }
 
-
-
+unsigned char XT_KEY_FWSLASH_TEST[] = {0x35};
 
 int main(int argc, char *argv[])
 {
@@ -263,24 +332,23 @@ int main(int argc, char *argv[])
 
     int grabbed;
 
-    if (argc == 2){
+    if (argc == 2)
+    {
 
         errno = 0;
 
         conv = strtol(argv[1], NULL, 10);
 
-        if (errno == 0) {
+        if (errno == 0)
+        {
             // No error
             biosmode = conv;
         }
     }
 
-
-
     ctrlbrk(ctrlbrk_handler);
 
-    if (!biosmode)
-        hook_keyb_int();
+    BuildCodeCache();
 
     _setcursortype(_NOCURSOR);
     clrscr();
@@ -295,41 +363,62 @@ int main(int argc, char *argv[])
 
     printf("%s", ScreenBuf);
 
-    oldscanbufindex = scanbufindex;
+    gotoxy(1, 23);
+    fputs("Scancode : ", stdout);
+
+    /*for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    {
+
+        if (KeyDefs[cunt].XTMake[0] == 1)
+            ProcessScancode(KeyDefs[cunt].XTMake[1]);
+
+        if (KeyDefs[cunt].XTBreak[0] == 1)
+            ProcessScancode(KeyDefs[cunt].XTBreak[1]);
+    }
+*/
+    if (!biosmode)
+        hook_keyb_int();
 
     while (1)
     {
-        if (!biosmode){
-            scanbufindex = oldscanbufindex;
-            delay(100);
-            if (scanbufindex == oldscanbufindex)
-                scanbufindex = 0;
-            delay(100);
-        }
-        else {
-            r.h.ah=0x00;
-            if (biosmode == MODE_BIOS_ENHANCED)
-                r.h.ah=0x10;
-
+        if (biosmode)
+        {
+            // see if there's a character waiting
+            r.h.ah = 0x01;
             grabbed = int86(0x16, &r, &r);
-            gotoxy(1,1);
-            printf("%04X", grabbed);
+            if (!(r.x.flags & 0x0040))
+            {
+                r.h.ah = 0x00;
+                if (biosmode == MODE_BIOS_ENHANCED)
+                    r.h.ah = 0x10;
 
-            // if LSB is E0, it's extended char, push that first
-            if ((grabbed & 0x00FF) == 0x00E0) {
-                ProcessScancode(0xE0);
-                ProcessScancode(grabbed >> 8);
-            }
-            // If MSB is E0, push the LSB also (dumb hack, to avoid a dumb hack in the bios)
-            else if ((grabbed & 0xFF00) == 0xE000) {
-                ProcessScancode(0xE0);
-                ProcessScancode(grabbed & 0x00FF);
-            }
-            else {
-                ProcessScancode(grabbed >> 8);
-            }
+                grabbed = int86(0x16, &r, &r);
 
+                // if LSB is E0, it's extended char, push that first
+                if ((grabbed & 0x00FF) == 0x00E0)
+                {
+                    ProcessScancode(0xE0);
+                    ProcessScancode(grabbed >> 8);
+                }
+                // If MSB is E0, push the LSB also (dumb hack, to avoid a dumb hack in the bios)
+                else if ((grabbed & 0xFF00) == 0xE000)
+                {
+                    ProcessScancode(0xE0);
+                    ProcessScancode(grabbed & 0x00FF);
+                }
+                else
+                {
+                    ProcessScancode(grabbed >> 8);
+                }
+            }
             
+        }
+        else
+        {
+            unhook_keyb_int();
+            cleartimer++;
+            hook_keyb_int();
+            delay(100);
         }
     }
 
@@ -337,7 +426,8 @@ ehoh:
 
     gotoxy(1, 6);
     _setcursortype(_NORMALCURSOR);
-    if (!biosmode) unhook_keyb_int();
+    if (!biosmode)
+        unhook_keyb_int();
     return 0;
 }
 
@@ -348,3 +438,5 @@ ASDFGHJJKL
  ZXCVBNM
 
 */
+
+// todo : 4&5 triggering F11/F12

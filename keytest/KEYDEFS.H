@@ -15,5 +15,13 @@ typedef struct KD {
 
 } KeyDef;
 
+extern KeyDef BIOSKeyDefs[];
+#define BIOSKeyDefsSize 2
+
 extern KeyDef KeyDefs[];
+#define KeyDefsSize 109
+
 extern KeyDef KEYDEF_EURO1;
+extern KeyDef KEYDEF_BIOS_F11_MAKE;
+extern KeyDef KEYDEF_BIOS_F11_MAKE;
+

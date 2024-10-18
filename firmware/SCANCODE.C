@@ -112,6 +112,13 @@ __code unsigned char XT_KEY_FWSLASH_MAKE[] = {1, 0x35};
 __code unsigned char XT_KEY_EURO1_MAKE[] = {1, 0x2B};
 __code unsigned char XT_KEY_EURO2_MAKE[] = {1, 0x56};
 
+// weird amstrad keys
+__code unsigned char XT_KEY_AMSTRAD_RDEL_MAKE[] = {1, 0x70};
+__code unsigned char XT_KEY_AMSTRAD_PADEN_MAKE[] = {1, 0x74};
+
+__code unsigned char XT_KEY_AMSTRAD_RDEL_BREAK[] = {1, 0xF0};
+__code unsigned char XT_KEY_AMSTRAD_PADEN_BREAK[] = {1, 0xF4};
+
 // for some reason the bios does weird things here
 __code unsigned char XT_KEY_BIOS_F11_MAKE[] = {1, 0x85};
 __code unsigned char XT_KEY_BIOS_F12_MAKE[] = {1, 0x86};
@@ -920,3 +927,4 @@ const unsigned char *const HIDtoXT_Break[] =
         XT_KEY_APPS_BREAK,
         NULL,
         XT_KEY_EQUAL_BREAK};
+

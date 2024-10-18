@@ -108,6 +108,10 @@ char NAME_PERIOD[] = "Period/Right Angle Bracket";
 char NAME_FWSLASH[] = "Forward Slash/Question Mark";
 char NAME_EURO1[] = "Backslash/Pipe (US), or Hash/Tilde (Europe)";
 char NAME_EURO2[] = "Backslash/Pipe (Europe)";
+char NAME_BIOS_F11[] = "F11 (BIOS)";
+char NAME_BIOS_F12[] = "F12 (BIOS)";
+char NAME_BIOS_PADEN[] = "Enter (Keypad, BIOS)";
+char NAME_BIOS_PADFWSLASH[] = "Forward Slash (Keypad, BIOS)";
 
 #define CNCAT2(a,b) a##b
 #define CNCAT3(a,b,c) a##b##c
@@ -223,4 +227,9 @@ DEFINEKEY(COMMA, 21, 13, 1, 2 ),
 DEFINEKEY(PERIOD, 23, 13, 1, 2 ),
 DEFINEKEY(FWSLASH, 25, 13, 1, 2 ),
 DEFINEKEY(EURO2, 5, 13, 1, 2 ),
+DEFINEKEY(EURO2, 5, 13, 1, 2 ),
+{XT_KEY_BIOS_F11_MAKE, NULL, NULL, NULL, NAME_BIOS_F11, 46, 1, 3, 1 },
+{XT_KEY_BIOS_F12_MAKE, NULL, NULL, NULL, NAME_BIOS_F12, 50, 1, 3, 1 },
+{XT_KEY_BIOS_PADEN_MAKE, NULL, NULL, NULL, NAME_BIOS_PADEN, 57, 12, 2, 5 },
+{XT_KEY_BIOS_PADFWSLASH_MAKE, NULL, NULL, NULL, NAME_BIOS_PADFWSLASH, 51, 4, 2, 1 }
 };

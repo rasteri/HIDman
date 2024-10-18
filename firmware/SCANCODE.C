@@ -112,6 +112,12 @@ __code unsigned char XT_KEY_FWSLASH_MAKE[] = {1, 0x35};
 __code unsigned char XT_KEY_EURO1_MAKE[] = {1, 0x2B};
 __code unsigned char XT_KEY_EURO2_MAKE[] = {1, 0x56};
 
+// for some reason the bios does weird things here
+__code unsigned char XT_KEY_BIOS_F11_MAKE[] = {1, 0x85};
+__code unsigned char XT_KEY_BIOS_F12_MAKE[] = {1, 0x86};
+__code unsigned char XT_KEY_BIOS_PADEN_MAKE[] = {2, 0xE0, 0x0D };
+__code unsigned char XT_KEY_BIOS_PADFWSLASH_MAKE[] = {2, 0xE0, 0x2F };
+
 __code unsigned char XT_KEY_A_BREAK[] = {1, 0x9E};
 __code unsigned char XT_KEY_B_BREAK[] = {1, 0xB0};
 __code unsigned char XT_KEY_C_BREAK[] = {1, 0xAE};

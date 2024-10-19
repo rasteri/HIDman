@@ -3,6 +3,7 @@
 #include <bios.h>
 #include <dos.h>
 #include <string.h>
+#include <time.h>
 #include "keydefs.h"
 
 /*
@@ -20,7 +21,7 @@ Options :
 
 */
 
-//char SafeWord = {}
+// char SafeWord = {}
 
 char ScreenBuf[0x781];
 
@@ -39,6 +40,7 @@ unsigned int NumDupHighlights;
 
 KeyDef *codecache[256];
 KeyDef *e0codecache[256];
+clock_t NextThink = 0;
 
 const unsigned char far *text_mem = (unsigned char far *)0xB8000000;
 
@@ -87,27 +89,31 @@ void ClearText(unsigned int x, unsigned int y, unsigned int length)
     _fmemcpy(text_mem + (y * 160) + (2 * x), TextClearPattern, length * 2);
 }
 
-void HighlightKey(KeyDef *Key, unsigned char outtype)
+void HighlightKey(KeyDef *Key, unsigned char outtype, char silent)
 {
     char x, y;
 
     if (outtype == TYPE_MAKE)
     {
-        ClearText(22, 23, 54);
-        gotoxy(14, 24);
-        fputs("Pressed  ", stdout);
-        fputs(Key->Name, stdout);
+        if (!silent)
+        {
+            ClearText(22, 24, 54);
+            gotoxy(14, 25);
+            fputs("Pressed  ", stdout);
+            fputs(Key->Name, stdout);
+        }
         textcolor(WHITE);
         textbackground(LIGHTGRAY);
     }
     else if (outtype == TYPE_BREAK)
     {
-        //_fmemset(text_mem + 3680, 0x61, 160);
-
-        ClearText(22, 23, 54);
-        gotoxy(14, 24);
-        fputs("Released ", stdout);
-        fputs(Key->Name, stdout);
+        if (!silent)
+        {
+            ClearText(22, 24, 54);
+            gotoxy(14, 25);
+            fputs("Released ", stdout);
+            fputs(Key->Name, stdout);
+        }
         textcolor(BLACK);
         textbackground(LIGHTGRAY);
     }
@@ -210,13 +216,27 @@ KeyDef *FindXTKey(unsigned char *OutType, unsigned char *Scancode, unsigned int 
 volatile unsigned char scanbufindex = 0;
 volatile unsigned char scancodebuf[16];
 
+KeyDef *HeldKeys[256];
+int HeldKeyIndex = 0;
+
+char exiting = 0;
+
 void ProcessScancode(unsigned char code)
 {
 
     unsigned char cunt;
     unsigned char outtype;
+    char sameaslast = 0;
 
     KeyDef *foundkey;
+
+    // if this is last code in a while,
+    // this must be a new scancode
+    if (clock() > NextThink)
+    {
+        //scanbufindex = 0;
+        //NextThink = clock() + (CLK_TCK);
+    }
 
     scancodebuf[scanbufindex++] = code;
 
@@ -227,8 +247,8 @@ void ProcessScancode(unsigned char code)
     if (scanbufindex == 1 && scancodebuf[0] == 0xE0)
         return;
 
-    ClearText(11, 22, 60);
-    gotoxy(12, 23);
+    ClearText(11, 23, 60);
+    gotoxy(12, 24);
     for (cunt = 0; cunt < scanbufindex; cunt++)
         printf("%02X", scancodebuf[cunt]);
 
@@ -240,27 +260,37 @@ void ProcessScancode(unsigned char code)
     }
     else
     {
-
         // always clear count
-        ClearText(13, 24, 10);
+        ClearText(13, 25, 10);
         gotoxy(14, 25);
 
-        // if same key as last time, just increment counter and display on screen
+        if (biosmode)
+            HeldKeys[HeldKeyIndex++] = foundkey;
+
+        // if same key as last time, increment counter and display on screen
         if (foundkey == PrevHighlightKey && outtype == PrevOutType)
         {
+            sameaslast = 1;
             gotoxy(14, 25);
             printf("(x%u)", ++NumDupHighlights);
+
+            if (NumDupHighlights > 10 && code == 0x01)
+            {
+                // 10 ESCs in a row, exit
+                exiting = 1;
+            }
         }
         else
         {
-
+            sameaslast = 0;
             NumDupHighlights = 1;
-            HighlightKey(foundkey, outtype);
-
-            // special case for 2B, also light up Euro1 key (since keycodes are the same)
-            if (foundkey->XTMake[1] == 0x2B)
-                HighlightKey(&KEYDEF_EURO1, outtype);
         }
+
+        HighlightKey(foundkey, outtype, sameaslast);
+
+        // special case for 2B, also light up Euro1 key (since keycodes are the same)
+        if (foundkey->XTMake[1] == 0x2B)
+            HighlightKey(&KEYDEF_EURO1, outtype, sameaslast);
 
         PrevHighlightKey = foundkey;
         PrevOutType = outtype;
@@ -269,20 +299,9 @@ void ProcessScancode(unsigned char code)
     }
 }
 
-unsigned int cleartimer = 0;
-
 static void interrupt keyb_int()
 {
-
     unsigned char sixone;
-
-    // if this is last code in a while,
-    // this must be a new scancode
-    if (cleartimer > 10)
-    {
-        scanbufindex = 0;
-        cleartimer = 0;
-    }
 
     ProcessScancode(inp(0x60));
 
@@ -322,15 +341,30 @@ int ctrlbrk_handler(void)
 
 unsigned char XT_KEY_FWSLASH_TEST[] = {0x35};
 
+#define MOD_RSH 0x01
+#define MOD_LSH 0x02
+#define MOD_CTRL 0x04
+#define MOD_ALT 0x08
+#define MOD_SCR 0x10
+#define MOD_NUM 0x20
+#define MOD_CAPS 0x40
+#define MOD_INS 0x80
+
 int main(int argc, char *argv[])
 {
     union REGS r;
     FILE *keyfile;
     unsigned char oldscanbufindex = 0;
-    unsigned char cunt = 0;
+    unsigned char cunt = 0, shit = 0;
     long conv;
 
+    unsigned char Modifyers = 0, OldModifyers = 0;
+
     int grabbed;
+    unsigned char mask;
+
+    ctrlbrk(ctrlbrk_handler);
+    _setcursortype(_NOCURSOR);
 
     if (argc == 2)
     {
@@ -345,13 +379,43 @@ int main(int argc, char *argv[])
             biosmode = conv;
         }
     }
+    else
+    {
+        textcolor(WHITE);
+        textbackground(BLACK);
+        clrscr();
+        gotoxy(1, 3);
+        cputs("MashPipe v0.0.1\r\n");
+        textcolor(LIGHTGRAY);
+        cputs("---------------\r\n\r\n");
 
-    ctrlbrk(ctrlbrk_handler);
+        cputs("Modes (and what PCs support them)\r\n\r\n");
+
+        textcolor(WHITE);
+        cputs("0. Raw Mode (all PCs)\r\n");
+        textcolor(LIGHTGRAY);
+        cputs("   Reads directly from the keyboard controller at 0x60.\r\n");
+        cputs("   Supports all keys/features\r\n\r\n");
+
+        textcolor(WHITE);
+        cputs("1. Standard BIOS Mode (all PCs)\r\n");
+        textcolor(LIGHTGRAY);
+        cputs("   Uses BIOS routines (int16h 00h/01h) to read keyboard.\r\n");
+        cputs("   Can't read all keys, or detect when keys released\r\n\r\n");
+
+        textcolor(WHITE);
+        cputs("2. Extended BIOS Mode (BIOSes newer than 1985ish)\r\n");
+        textcolor(LIGHTGRAY);
+        cputs("   Use advanced BIOS routines (int16h 10h/11h) to read keyboard.\r\n");
+        cputs("   Reads most keys but still can't detect when released.\r\n\r\n");
+
+        cputs("Not all keys are present on all keyboards.");
+
+        biosmode = getch() - '0';
+    }
+    clrscr();
 
     BuildCodeCache();
-
-    _setcursortype(_NOCURSOR);
-    clrscr();
 
     keyfile = fopen("keyboard.ans", "r");
 
@@ -361,31 +425,42 @@ int main(int argc, char *argv[])
         goto ehoh;
     }
 
-    printf("%s", ScreenBuf);
-
-    gotoxy(1, 23);
+    fputs(ScreenBuf, stdout);
+    gotoxy(1, 24);
     fputs("Scancode : ", stdout);
+    gotoxy(1, 25);
+    fputs("Last Action : ", stdout);
 
-    /*for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    
+    // TOP SECRET TEST MODE
+    // Lights up all keys
+    if (biosmode == 4)
     {
+        biosmode = 0;
+        for (cunt = 0; cunt < KeyDefsSize; cunt++)
+        {
+            if (KeyDefs[cunt].XTMake != NULL) 
+                for (shit = 0; shit < KeyDefs[cunt].XTMake[0]; shit++)
+                    ProcessScancode(KeyDefs[cunt].XTMake[shit + 1]);
 
-        if (KeyDefs[cunt].XTMake[0] == 1)
-            ProcessScancode(KeyDefs[cunt].XTMake[1]);
-
-        if (KeyDefs[cunt].XTBreak[0] == 1)
-            ProcessScancode(KeyDefs[cunt].XTBreak[1]);
+            if (KeyDefs[cunt].XTBreak != NULL) 
+                for (shit = 0; shit < KeyDefs[cunt].XTBreak[0]; shit++)
+                    ProcessScancode(KeyDefs[cunt].XTBreak[shit + 1]);
+        }
+        getch();
+        goto ehoh;
     }
-*/
+
     if (!biosmode)
         hook_keyb_int();
 
-    while (1)
+    while (!exiting)
     {
         if (biosmode)
         {
             // see if there's a character waiting
             r.h.ah = 0x01;
-            grabbed = int86(0x16, &r, &r);
+            int86(0x16, &r, &r);
             if (!(r.x.flags & 0x0040))
             {
                 r.h.ah = 0x00;
@@ -410,20 +485,51 @@ int main(int argc, char *argv[])
                 {
                     ProcessScancode(grabbed >> 8);
                 }
+                NextThink = clock() + (CLK_TCK / 5);
             }
-            
+
+            // now check modifyer keys
+            r.h.ah = 0x02;
+            Modifyers = int86(0x16, &r, &r) & 0xFF;
+
+            // XOR to find different bits
+            mask = Modifyers ^ OldModifyers;
+
+#define HIGHLIGHTMODIFYER(bit, equivalentscancode) \
+    if (mask & bit)                                \
+        HighlightKey(codecache[equivalentscancode], Modifyers &bit ? TYPE_MAKE : TYPE_BREAK, 0);
+
+            HIGHLIGHTMODIFYER(MOD_RSH, 0x36);
+            HIGHLIGHTMODIFYER(MOD_LSH, 0x2A);
+            HIGHLIGHTMODIFYER(MOD_CTRL, 0x1D);
+            HIGHLIGHTMODIFYER(MOD_ALT, 0x38);
+            HIGHLIGHTMODIFYER(MOD_SCR, 0x46);
+            HIGHLIGHTMODIFYER(MOD_NUM, 0x45);
+            HIGHLIGHTMODIFYER(MOD_CAPS, 0x3A);
+            HIGHLIGHTMODIFYER(MOD_INS, 0x52);
+
+            OldModifyers = Modifyers;
+
+            if (clock() > NextThink)
+            {
+                for (cunt = 0; cunt < HeldKeyIndex; cunt++)
+                {
+                    HighlightKey(HeldKeys[cunt], TYPE_BREAK, 1);
+                }
+
+                HeldKeyIndex = 0;
+                NextThink = 0xFFFFFFFF;
+            }
         }
         else
         {
-            unhook_keyb_int();
-            cleartimer++;
-            hook_keyb_int();
-            delay(100);
         }
     }
 
 ehoh:
-
+    textcolor(LIGHTGRAY);
+    textbackground(BLACK);
+    clrscr();
     gotoxy(1, 6);
     _setcursortype(_NORMALCURSOR);
     if (!biosmode)

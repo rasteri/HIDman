@@ -19,7 +19,7 @@ extern KeyDef BIOSKeyDefs[];
 #define BIOSKeyDefsSize 2
 
 extern KeyDef KeyDefs[];
-#define KeyDefsSize 109
+#define KeyDefsSize 155
 
 extern KeyDef KEYDEF_EURO1;
 extern KeyDef KEYDEF_BIOS_F11_MAKE;

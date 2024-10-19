@@ -112,6 +112,54 @@ __code unsigned char XT_KEY_FWSLASH_MAKE[] = {1, 0x35};
 __code unsigned char XT_KEY_EURO1_MAKE[] = {1, 0x2B};
 __code unsigned char XT_KEY_EURO2_MAKE[] = {1, 0x56};
 
+__code unsigned char XT_KEY_SYSPOWER_MAKE[] = {2, 0xE0, 0x5E};
+__code unsigned char XT_KEY_SYSSLEEP_MAKE[] = {2, 0xE0, 0x5F};
+__code unsigned char XT_KEY_SYSWAKE_MAKE[] = {2, 0xE0, 0x6E};
+
+__code unsigned char XT_KEY_PADEQUAL_MAKE[] = {1, 0x59};
+__code unsigned char XT_KEY_PADCOMMA_MAKE[] = {1, 0x7E};
+__code unsigned char XT_KEY_F13_MAKE[] = {1, 0x5B};
+__code unsigned char XT_KEY_F14_MAKE[] = {1, 0x5C};
+__code unsigned char XT_KEY_F15_MAKE[] = {1, 0x5D};
+__code unsigned char XT_KEY_F16_MAKE[] = {1, 0x63};
+__code unsigned char XT_KEY_F17_MAKE[] = {1, 0x64};
+__code unsigned char XT_KEY_F18_MAKE[] = {1, 0x65};
+__code unsigned char XT_KEY_F19_MAKE[] = {1, 0x66};
+__code unsigned char XT_KEY_F20_MAKE[] = {1, 0x67};
+__code unsigned char XT_KEY_F21_MAKE[] = {1, 0x68};
+__code unsigned char XT_KEY_F22_MAKE[] = {1, 0x69};
+__code unsigned char XT_KEY_F23_MAKE[] = {1, 0x6A};
+__code unsigned char XT_KEY_F24_MAKE[] = {1, 0x6B};
+__code unsigned char XT_KEY_INTL1_MAKE[] = {1, 0x73};
+__code unsigned char XT_KEY_INTL2_MAKE[] = {1, 0x70};
+__code unsigned char XT_KEY_INTL3_MAKE[] = {1, 0x7d};
+__code unsigned char XT_KEY_INTL4_MAKE[] = {1, 0x79};
+__code unsigned char XT_KEY_INTL5_MAKE[] = {1, 0x7b};
+__code unsigned char XT_KEY_INTL6_MAKE[] = {1, 0x5c};
+__code unsigned char XT_KEY_LANG1_MAKE[] = {1, 0xf2};
+__code unsigned char XT_KEY_LANG2_MAKE[] = {1, 0xf1};
+__code unsigned char XT_KEY_LANG3_MAKE[] = {1, 0x78};
+__code unsigned char XT_KEY_LANG4_MAKE[] = {1, 0x77};
+__code unsigned char XT_KEY_LANG5_MAKE[] = {1, 0x76};
+__code unsigned char XT_KEY_MEDIANEXT_MAKE[] = {2, 0xE0, 0x19};
+__code unsigned char XT_KEY_MEDIAPREV_MAKE[] = {2, 0xE0, 0x10};
+__code unsigned char XT_KEY_MEDIASTOP_MAKE[] = {2, 0xE0, 0x24};
+__code unsigned char XT_KEY_MEDIAPLAY_MAKE[] = {2, 0xE0, 0x22};
+__code unsigned char XT_KEY_MEDIAMUTE_MAKE[] = {2, 0xE0, 0x20};
+__code unsigned char XT_KEY_MEDIAVOLUP_MAKE[] = {2, 0xE0, 0x30};
+__code unsigned char XT_KEY_MEDIAVOLDN_MAKE[] = {2, 0xE0, 0x2e};
+__code unsigned char XT_KEY_MEDIASEL_MAKE[] = {2, 0xE0, 0x6d};
+__code unsigned char XT_KEY_MEDIAMAIL_MAKE[] = {2, 0xE0, 0x6c};
+__code unsigned char XT_KEY_MEDIACALC_MAKE[] = {2, 0xE0, 0x21};
+__code unsigned char XT_KEY_MEDIACOMP_MAKE[] = {2, 0xE0, 0x6b};
+__code unsigned char XT_KEY_WWWSEARCH_MAKE[] = {2, 0xE0, 0x65};
+__code unsigned char XT_KEY_WWWHOME_MAKE[] = {2, 0xE0, 0x32};
+__code unsigned char XT_KEY_WWWBACK_MAKE[] = {2, 0xE0, 0x6a};
+__code unsigned char XT_KEY_WWWFORWARD_MAKE[] = {2, 0xE0, 0x69};
+__code unsigned char XT_KEY_WWWSTOP_MAKE[] = {2, 0xE0, 0x68};
+__code unsigned char XT_KEY_WWWREFRESH_MAKE[] = {2, 0xE0, 0x67};
+__code unsigned char XT_KEY_WWWFAV_MAKE[] = {2, 0xE0, 0x66};
+
 // weird amstrad keys
 __code unsigned char XT_KEY_AMSTRAD_RDEL_MAKE[] = {1, 0x70};
 __code unsigned char XT_KEY_AMSTRAD_PADEN_MAKE[] = {1, 0x74};
@@ -122,8 +170,8 @@ __code unsigned char XT_KEY_AMSTRAD_PADEN_BREAK[] = {1, 0xF4};
 // for some reason the bios does weird things here
 __code unsigned char XT_KEY_BIOS_F11_MAKE[] = {1, 0x85};
 __code unsigned char XT_KEY_BIOS_F12_MAKE[] = {1, 0x86};
-__code unsigned char XT_KEY_BIOS_PADEN_MAKE[] = {2, 0xE0, 0x0D };
-__code unsigned char XT_KEY_BIOS_PADFWSLASH_MAKE[] = {2, 0xE0, 0x2F };
+__code unsigned char XT_KEY_BIOS_PADEN_MAKE[] = {2, 0xE0, 0x0D};
+__code unsigned char XT_KEY_BIOS_PADFWSLASH_MAKE[] = {2, 0xE0, 0x2F};
 
 __code unsigned char XT_KEY_A_BREAK[] = {1, 0x9E};
 __code unsigned char XT_KEY_B_BREAK[] = {1, 0xB0};
@@ -194,7 +242,6 @@ __code unsigned char XT_KEY_F11_BREAK[] = {1, 0xD7};
 __code unsigned char XT_KEY_F12_BREAK[] = {1, 0xD8};
 __code unsigned char XT_KEY_PRTSC_BREAK[] = {4, 0xE0, 0xAA, 0xE0, 0xB7 };
 __code unsigned char XT_KEY_SCROLL_BREAK[] = {1, 0xC6};
-__code unsigned char XT_KEY_PAUSE_BREAK[] = {69, 0x69};
 __code unsigned char XT_KEY_LEFTSQB_BREAK[] = {1, 0X9A};
 __code unsigned char XT_KEY_INSERT_BREAK[] = {2, 0XE0, 0XD2};
 __code unsigned char XT_KEY_HOME_BREAK[] = {2, 0XE0, 0XC7};
@@ -231,6 +278,54 @@ __code unsigned char XT_KEY_PERIOD_BREAK[] = {1, 0xB4};
 __code unsigned char XT_KEY_FWSLASH_BREAK[] = {1, 0xB5};
 __code unsigned char XT_KEY_EURO1_BREAK[] = {1, 0xAB};
 __code unsigned char XT_KEY_EURO2_BREAK[] = {1, 0xD6};
+
+__code unsigned char XT_KEY_SYSPOWER_BREAK[] = {2, 0xE0, 0xDE};
+__code unsigned char XT_KEY_SYSSLEEP_BREAK[] = {2, 0xE0, 0xDF};
+__code unsigned char XT_KEY_SYSWAKE_BREAK[] = {2, 0xE0, 0xEE};
+
+__code unsigned char XT_KEY_PADEQUAL_BREAK[] = {1, 0xD9};
+__code unsigned char XT_KEY_PADCOMMA_BREAK[] = {1, 0xFE};
+__code unsigned char XT_KEY_F13_BREAK[] = {1, 0xDB};
+__code unsigned char XT_KEY_F14_BREAK[] = {1, 0xDC};
+__code unsigned char XT_KEY_F15_BREAK[] = {1, 0xDD};
+__code unsigned char XT_KEY_F16_BREAK[] = {1, 0xE3};
+__code unsigned char XT_KEY_F17_BREAK[] = {1, 0xE4};
+__code unsigned char XT_KEY_F18_BREAK[] = {1, 0xE5};
+__code unsigned char XT_KEY_F19_BREAK[] = {1, 0xE6};
+__code unsigned char XT_KEY_F20_BREAK[] = {1, 0xE7};
+__code unsigned char XT_KEY_F21_BREAK[] = {1, 0xE8};
+__code unsigned char XT_KEY_F22_BREAK[] = {1, 0xE9};
+__code unsigned char XT_KEY_F23_BREAK[] = {1, 0xEA};
+__code unsigned char XT_KEY_F24_BREAK[] = {1, 0xEB};
+__code unsigned char XT_KEY_INTL1_BREAK[] = {1, 0xf3};
+__code unsigned char XT_KEY_INTL2_BREAK[] = {1, 0xf0};
+__code unsigned char XT_KEY_INTL3_BREAK[] = {1, 0xfd};
+__code unsigned char XT_KEY_INTL4_BREAK[] = {1, 0xf9};
+__code unsigned char XT_KEY_INTL5_BREAK[] = {1, 0xfb};
+__code unsigned char XT_KEY_INTL6_BREAK[] = {1, 0x5c};
+__code unsigned char XT_KEY_LANG1_BREAK[] = {1, 0xf2};
+__code unsigned char XT_KEY_LANG2_BREAK[] = {1, 0xf1};
+__code unsigned char XT_KEY_LANG3_BREAK[] = {1, 0xf8};
+__code unsigned char XT_KEY_LANG4_BREAK[] = {1, 0xf7};
+__code unsigned char XT_KEY_LANG5_BREAK[] = {1, 0xf6};
+__code unsigned char XT_KEY_MEDIANEXT_BREAK[] = {2, 0xE0, 0x99};
+__code unsigned char XT_KEY_MEDIAPREV_BREAK[] = {2, 0xE0, 0x90};
+__code unsigned char XT_KEY_MEDIASTOP_BREAK[] = {2, 0xE0, 0xa4};
+__code unsigned char XT_KEY_MEDIAPLAY_BREAK[] = {2, 0xE0, 0xa2};
+__code unsigned char XT_KEY_MEDIAMUTE_BREAK[] = {2, 0xE0, 0xa0};
+__code unsigned char XT_KEY_MEDIAVOLUP_BREAK[] = {2, 0xE0, 0xB0};
+__code unsigned char XT_KEY_MEDIAVOLDN_BREAK[] = {2, 0xE0, 0xae};
+__code unsigned char XT_KEY_MEDIASEL_BREAK[] = {2, 0xE0, 0xEd};
+__code unsigned char XT_KEY_MEDIAMAIL_BREAK[] = {2, 0xE0, 0xEc};
+__code unsigned char XT_KEY_MEDIACALC_BREAK[] = {2, 0xE0, 0xA1};
+__code unsigned char XT_KEY_MEDIACOMP_BREAK[] = {2, 0xE0, 0xEb};
+__code unsigned char XT_KEY_WWWSEARCH_BREAK[] = {2, 0xE0, 0xE5};
+__code unsigned char XT_KEY_WWWHOME_BREAK[] = {2, 0xE0, 0xB2};
+__code unsigned char XT_KEY_WWWBACK_BREAK[] = {2, 0xE0, 0xEa};
+__code unsigned char XT_KEY_WWWFORWARD_BREAK[] = {2, 0xE0, 0xE9};
+__code unsigned char XT_KEY_WWWSTOP_BREAK[] = {2, 0xE0, 0xE8};
+__code unsigned char XT_KEY_WWWREFRESH_BREAK[] = {2, 0xE0, 0xE7};
+__code unsigned char XT_KEY_WWWFAV_BREAK[] = {2, 0xE0, 0xE6};
 
 __code unsigned char KEY_A_MAKE[] = {1, 0x1C};
 __code unsigned char KEY_B_MAKE[] = {1, 0x32};
@@ -819,7 +914,52 @@ const unsigned char *const HIDtoXT_Make[] =
         XT_KEY_EURO2_MAKE,
         XT_KEY_APPS_MAKE,
         NULL,
-        XT_KEY_EQUAL_MAKE};
+        XT_KEY_PADEQUAL_MAKE,
+        XT_KEY_F13_MAKE,
+        XT_KEY_F14_MAKE,
+        XT_KEY_F15_MAKE,
+        XT_KEY_F16_MAKE,
+        XT_KEY_F17_MAKE,
+        XT_KEY_F18_MAKE,
+        XT_KEY_F19_MAKE,
+        XT_KEY_F20_MAKE,
+        XT_KEY_F21_MAKE,       //70
+        XT_KEY_F22_MAKE,
+        XT_KEY_F23_MAKE,
+        XT_KEY_F24_MAKE,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,   //80
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        XT_KEY_PADCOMMA_MAKE,
+        NULL,
+        XT_KEY_INTL1_MAKE,
+        XT_KEY_INTL2_MAKE,
+        XT_KEY_INTL3_MAKE,
+        XT_KEY_INTL4_MAKE,
+        XT_KEY_INTL5_MAKE,
+        XT_KEY_INTL6_MAKE,
+        NULL,
+        NULL,
+        NULL,
+        XT_KEY_LANG1_MAKE,   //90
+        XT_KEY_LANG2_MAKE,
+        XT_KEY_LANG3_MAKE,
+        XT_KEY_LANG4_MAKE,
+        XT_KEY_LANG5_MAKE};
 
 const unsigned char *const HIDtoXT_Break[] =
     {
@@ -895,7 +1035,7 @@ const unsigned char *const HIDtoXT_Break[] =
         XT_KEY_F12_BREAK,    // = {1, 0x07};
         XT_KEY_PRTSC_BREAK,  // = {4, 0xE0, 0x12, 0xE0, 0x7C};
         XT_KEY_SCROLL_BREAK, // = {1, 0x7E};
-        XT_KEY_PAUSE_BREAK,  // = {8, 0xE1, 0x14, 0x77, 0xE1, 0xF0, 0x14, 0xF0, 0x77};
+        NULL,
         XT_KEY_INSERT_BREAK, // = {2, 0xE0, 0x70};
         XT_KEY_HOME_BREAK,   // = {2, 0xE0, 0x6C};
         XT_KEY_PGUP_BREAK,   // = {2, 0xE0, 0x7D};

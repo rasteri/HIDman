@@ -27,3 +27,4 @@ _autosave-*
 *-save.kicad_pcb
 fp-info-cache
 *.OBJ
+*.SWP

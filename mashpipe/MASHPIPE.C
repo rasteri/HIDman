@@ -1,3 +1,5 @@
+
+
 #include <stdio.h>
 #include <conio.h>
 #include <bios.h>
@@ -42,7 +44,7 @@ KeyDef *codecache[256];
 KeyDef *e0codecache[256];
 clock_t NextThink = 0;
 
-const unsigned char far *text_mem = (unsigned char far *)0xB8000000;
+unsigned char far *text_mem = MK_FP(0xB000, 0x8000);
 
 void BuildCodeCache()
 {
@@ -85,7 +87,7 @@ unsigned char TextClearPattern[] = {
 // fast clearline function
 void ClearText(unsigned int x, unsigned int y, unsigned int length)
 {
-
+   //_fmemset(text_mem + (y * 160) + (2 * x), 0xff, length * 2);
     _fmemcpy(text_mem + (y * 160) + (2 * x), TextClearPattern, length * 2);
 }
 
@@ -271,7 +273,7 @@ void ProcessScancode(unsigned char code)
         if (foundkey == PrevHighlightKey && outtype == PrevOutType)
         {
             sameaslast = 1;
-            gotoxy(14, 25);
+            gotoxy(70, 25);
             printf("(x%u)", ++NumDupHighlights);
 
             if (NumDupHighlights > 10 && code == 0x01)
@@ -366,6 +368,16 @@ int main(int argc, char *argv[])
     ctrlbrk(ctrlbrk_handler);
     _setcursortype(_NOCURSOR);
 
+    // see if we're on an mda/hercules
+    // need a different screen address in that case
+    r.h.ah = 0x0F;
+    grabbed = int86(0x10, &r, &r);
+    if ((grabbed & 0x00FF) == 0x07){
+        text_mem = MK_FP(0xB000, 0x0000);
+        //printf("MDA Detected %X\n", grabbed);
+        //getch();
+    }
+
     if (argc == 2)
     {
 
@@ -413,6 +425,9 @@ int main(int argc, char *argv[])
 
         biosmode = getch() - '0';
     }
+
+
+
     clrscr();
 
     BuildCodeCache();

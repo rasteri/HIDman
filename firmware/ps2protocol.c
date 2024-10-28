@@ -322,7 +322,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 
 	// Turn off LEDs for a while
 #if defined(BOARD_MICRO)
-	P2 &= ~0b00100000;
+	SetPWM2Dat(0x00);
 #elif defined(BOARD_PS2)
 	P0 |= 0b01110000;
 #else

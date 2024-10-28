@@ -113,8 +113,13 @@ void	mDelaymS( UINT16 n )                                                  // ï¿
 	SoftWatchdog = 0;
 }
 
-
-
+#if defined(BOARD_MICRO)
+// HIDman-micro doesn't have Serial port, so use dummy putchar function
+int putchar(int c)
+{
+    return c;
+}
+#endif
 
 
 void GPIOInit(void){
@@ -122,7 +127,7 @@ void GPIOInit(void){
 #if defined(BOARD_MICRO) // Pinouts for HIDman-micro
 	//port1 setup
 	P1_DIR = 0b11110000; // 0.4, 0.5, 0.6, 0.7 are keyboard/mouse outputs
-	PORT_CFG |= bP1_OC;	  // open collector
+	PORT_CFG = bP1_OC;	  // open collector
 	P1_PU = 0x00;		  // no pullups
 	P1 = 0b11110000;	  // default pin states
 
@@ -131,6 +136,11 @@ void GPIOInit(void){
 	PORT_CFG |= bP2_OC;	  // open collector
 	P2_PU = 0x00;		  // no pullups
 	P2 = 0b00100000;	  // LED off by default (i.e. high)
+
+	//port4 setup
+	P4_DIR = 0b00000000; // 4.6 is SWITCH
+	P4_PU = 0b01000000;	 // pullup on switch
+	P4_OUT = 0b00000000;
 
 #elif defined(BOARD_PS2) // Pinouts for old PS2 version
 

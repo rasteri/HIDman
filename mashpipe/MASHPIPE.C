@@ -1,4 +1,9 @@
+/*
+    MashPipe - Keyboard tester for 8088 + DOS
+    Supports all Set 1 scancodes
 
+
+*/
 
 #include <stdio.h>
 #include <conio.h>
@@ -13,9 +18,8 @@ Really good stuff here - https://github.com/Halicery/8042/blob/main/8042_INTERN.
 https://github.com/Halicery/8042/blob/main/8042_1503033.TXT
 http://vitaly_filatov.tripod.com/ng/asm/asm_027.1.html
 
-Options :
+Future expansion :
 
-* BIOS or direct
 * If AT or better, option to read translated scancode set 1 (XLAT = ON) or direct scancode set 2 (XLAT=OFF)
 * % coverage of each keyboard type
 * media keys - https://github.com/tmk/tmk_keyboard/wiki/IBM-PC-AT-Keyboard-Protocol#media-keys
@@ -352,6 +356,17 @@ unsigned char XT_KEY_FWSLASH_TEST[] = {0x35};
 #define MOD_CAPS 0x40
 #define MOD_INS 0x80
 
+char NAME_BIOS_CAPSLOCK[] = "Caps Lock (BIOS)";
+char NAME_BIOS_SCROLLLOCK[] = "Scroll Lock (BIOS)";
+char NAME_BIOS_NUMLOCK[] = "Num Lock (BIOS)";
+char NAME_BIOS_INSLOCK[] = "Insert (BIOS)";
+
+KeyDef KEY_BIOS_CAPSLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_CAPSLOCK, 65, 1, 4, 1};
+KeyDef KEY_BIOS_SCROLLLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_SCROLLLOCK, 70, 1, 4, 1};
+KeyDef KEY_BIOS_NUMLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_NUMLOCK, 61, 1, 3, 1};
+KeyDef KEY_BIOS_INSLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_INSLOCK, 75, 1, 3, 1};
+
+
 int main(int argc, char *argv[])
 {
     union REGS r;
@@ -518,10 +533,15 @@ int main(int argc, char *argv[])
             HIGHLIGHTMODIFYER(MOD_LSH, 0x2A);
             HIGHLIGHTMODIFYER(MOD_CTRL, 0x1D);
             HIGHLIGHTMODIFYER(MOD_ALT, 0x38);
-            HIGHLIGHTMODIFYER(MOD_SCR, 0x46);
-            HIGHLIGHTMODIFYER(MOD_NUM, 0x45);
-            HIGHLIGHTMODIFYER(MOD_CAPS, 0x3A);
-            HIGHLIGHTMODIFYER(MOD_INS, 0x52);
+
+#define HIGHLIGHTLOCK(bit, keyd) \
+    if (mask & bit)                                \
+        HighlightKey(keyd, Modifyers &bit ? TYPE_MAKE : TYPE_BREAK, 0);
+
+            HIGHLIGHTLOCK(MOD_SCR, &KEY_BIOS_SCROLLLOCK);
+            HIGHLIGHTLOCK(MOD_NUM, &KEY_BIOS_NUMLOCK);
+            HIGHLIGHTLOCK(MOD_CAPS, &KEY_BIOS_CAPSLOCK);
+            HIGHLIGHTLOCK(MOD_INS, &KEY_BIOS_INSLOCK);
 
             OldModifyers = Modifyers;
 

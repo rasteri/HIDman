@@ -161,6 +161,8 @@ char NAME_WWWFAV[] = "WWW Favorites";
 char NAME_AMSTRAD_PADEN[] = "Enter (Keypad, Amstrad)";
 char NAME_AMSTRAD_RDEL[] = "Forwardspace (Amstrad)";
 
+
+
 #define CNCAT2(a,b) a##b
 #define CNCAT3(a,b,c) a##b##c
 

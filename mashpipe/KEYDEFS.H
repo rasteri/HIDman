@@ -8,6 +8,7 @@ typedef struct KD {
     unsigned char *ATBreak;
     
     char *Name;
+    char *Legend;
 
     // graphical attrs
     unsigned char XPos, YPos;

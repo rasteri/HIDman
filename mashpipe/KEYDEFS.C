@@ -100,7 +100,7 @@ char NAME_PAD7[] = "Seven/Home (Keypad)";
 char NAME_PAD8[] = "Eight/Up Arrow (Keypad)";
 char NAME_PAD9[] = "Nine/Page Up (Keypad)";
 char NAME_PADCOMMA[] = "Comma (Keypad)";
-char NAME_RIGHTSQB[] = "Left Square/Curly Bracket";
+char NAME_RIGHTSQB[] = "Right Square/Curly Bracket";
 char NAME_SEMICOLON[] = "Semicolon/Colon";
 char NAME_APOSTROPHE[] = "Apostrophe/At Symbol";
 char NAME_COMMA[] = "Comma/Left Angle Bracket";
@@ -162,17 +162,169 @@ char NAME_AMSTRAD_PADEN[] = "Enter (Keypad, Amstrad)";
 char NAME_AMSTRAD_RDEL[] = "Forwardspace (Amstrad)";
 
 
+char LEGEND_A[] = "A";
+char LEGEND_B[] = "B";
+char LEGEND_C[] = "C";
+char LEGEND_D[] = "D";
+char LEGEND_E[] = "E";
+char LEGEND_F[] = "F";
+char LEGEND_G[] = "G";
+char LEGEND_H[] = "H";
+char LEGEND_I[] = "I";
+char LEGEND_J[] = "J";
+char LEGEND_K[] = "K";
+char LEGEND_L[] = "L";
+char LEGEND_M[] = "M";
+char LEGEND_N[] = "N";
+char LEGEND_O[] = "O";
+char LEGEND_P[] = "P";
+char LEGEND_Q[] = "Q";
+char LEGEND_R[] = "R";
+char LEGEND_S[] = "S";
+char LEGEND_T[] = "T";
+char LEGEND_U[] = "U";
+char LEGEND_V[] = "V";
+char LEGEND_W[] = "W";
+char LEGEND_X[] = "X";
+char LEGEND_Y[] = "Y";
+char LEGEND_Z[] = "Z";
+char LEGEND_0[] = ")\n0";
+char LEGEND_1[] = "!\n1";
+char LEGEND_2[] = "@\n2";
+char LEGEND_3[] = "#\n3";
+char LEGEND_4[] = "$\n4";
+char LEGEND_5[] = "%\n5";
+char LEGEND_6[] = "^\n6";
+char LEGEND_7[] = "&\n7";
+char LEGEND_8[] = "*\n8";
+char LEGEND_9[] = "(\n9)";
+char LEGEND_TILDE[] = {0x7E, '\n', 0x60, 0x7C, 0x00};
+char LEGEND_DASH[] = "_\n-";
+char LEGEND_EQUAL[] = "+\n=";
+char LEGEND_BKSLASH[] = "|\\";
+char LEGEND_BKSPACE[] = "BKS\n <-";
+char LEGEND_SPACE[] = "SPC";
+char LEGEND_TAB[] = "TAB";
+char LEGEND_CAPS[] = "CAPS\nLOCK";
+char LEGEND_LSHIFT[] = "SHI\n^";
+char LEGEND_LCTRL[] = "CTL";
+char LEGEND_LGUI[] = "GUI";
+char LEGEND_LALT[] = "ALT";
+char LEGEND_RSHIFT[] = "SHI\n^";
+char LEGEND_RCTRL[] = "CTRL";
+char LEGEND_RGUI[] = "GUI";
+char LEGEND_RALT[] = "ALT";
+char LEGEND_APPS[] = "MNU";
+char LEGEND_ENTER[] = {'E','N','T','\n', 0x11, 0xC4, 0xD9, 0x00};
+char LEGEND_ESC[] = "ESC";
+char LEGEND_F1[] = "F1";
+char LEGEND_F2[] = "F2";
+char LEGEND_F3[] = "F3";
+char LEGEND_F4[] = "F4";
+char LEGEND_F5[] = "F5";
+char LEGEND_F6[] = "F6";
+char LEGEND_F7[] = "F7";
+char LEGEND_F8[] = "F8";
+char LEGEND_F9[] = "F9";
+char LEGEND_F10[] = "F10";
+char LEGEND_F11[] = "F11";
+char LEGEND_F12[] = "F12";
+char LEGEND_PRTSC[] = "PRT\nSCR";
+char LEGEND_SCROLL[] = "SCR\nLCK";
+char LEGEND_PAUSE[] = "PSE\nBRK";
+char LEGEND_LEFTSQB[] = "{\n[";
+char LEGEND_INSERT[] = "INS";
+char LEGEND_HOME[] = "HOM";
+char LEGEND_PGUP[] = "PG\nUP";
+char LEGEND_DELETE[] = "DEL";
+char LEGEND_END[] = "END";
+char LEGEND_PGDN[] = "PG\nDN";
+char LEGEND_UP[] = {0x1E, 0x00};
+char LEGEND_LEFT[] = {0x11, 0x00};
+char LEGEND_DOWN[] = {0x1F, 0x00};
+char LEGEND_RIGHT[] = {0x10, 0x00};
+char LEGEND_NUM[] = "NL";
+char LEGEND_PADFWSLASH[] = "/";
+char LEGEND_PADASTERISK[] = "*";
+char LEGEND_PADMINUS[] = "-";
+char LEGEND_PADPLUS[] = "+";
+char LEGEND_PADEN[] = "EN\nTR";
+char LEGEND_PADDOT[] = ".\nDL";
+char LEGEND_PAD0[] = "0\nINS";
+char LEGEND_PAD1[] = "1\nEN";
+char LEGEND_PAD2[] = {'2', '\n', 0x1F, 0x00};
+char LEGEND_PAD3[] = "3\nPD";
+char LEGEND_PAD4[] = {'4', '\n', 0x11, 0x00};
+char LEGEND_PAD5[] = "5";
+char LEGEND_PAD6[] = {'6', '\n', 0x10, 0x00};
+char LEGEND_PAD7[] = "7\nHM";
+char LEGEND_PAD8[] = {'8', '\n', 0x1E, 0x00};
+char LEGEND_PAD9[] = "9\nPU";
+char LEGEND_PADCOMMA[] = ",";
+char LEGEND_RIGHTSQB[] = "}\n]";
+char LEGEND_SEMICOLON[] = ":\n;";
+char LEGEND_APOSTROPHE[] = "@\n'";
+char LEGEND_COMMA[] = "<\n,";
+char LEGEND_PERIOD[] = ">\n.";
+char LEGEND_FWSLASH[] = "?\n/";
+char LEGEND_EURO1[] = "~\n#";
+char LEGEND_EURO2[] = "|\n\\";
+char LEGEND_SYSPOWER[] = "PWR";
+char LEGEND_SYSSLEEP[] = "SLEP";
+char LEGEND_SYSWAKE[] = "WAKE";
+char LEGEND_PADEQUAL[] = "=";
+char LEGEND_F13[] = "F13";
+char LEGEND_F14[] = "F14";
+char LEGEND_F15[] = "F15";
+char LEGEND_F16[] = "F16";
+char LEGEND_F17[] = "F17";
+char LEGEND_F18[] = "F18";
+char LEGEND_F19[] = "F19";
+char LEGEND_F20[] = "F20";
+char LEGEND_F21[] = "F21";
+char LEGEND_F22[] = "F22";
+char LEGEND_F23[] = "F23";
+char LEGEND_F24[] = "F24";
+char LEGEND_INTL1[] = "Ro";
+char LEGEND_INTL2[] = "KAT/HIR";
+char LEGEND_INTL3[] = {0x7C, 0x0a, 0x9D, 0x00};
+char LEGEND_INTL4[] = "HENKAN";
+char LEGEND_INTL5[] = "MUHENKAN";
+char LEGEND_INTL6[] = ",";
+char LEGEND_LANG1[] = "HAN/YEO";
+char LEGEND_LANG2[] = "HANJA";
+char LEGEND_LANG3[] = "KATA";
+char LEGEND_LANG4[] = "HIRA";
+char LEGEND_LANG5[] = "HZK";
+char LEGEND_MEDIANEXT[] = {0x10, 0x10, 0x00};
+char LEGEND_MEDIAPREV[] = {0x11, 0x11, 0x00};
+char LEGEND_MEDIASTOP[] = "S";
+char LEGEND_MEDIAPLAY[] = {0x10, 0xDE, 0x00};
+char LEGEND_MEDIAMUTE[] = "M";
+char LEGEND_MEDIAVOLUP[] = {0x1E, 0x00};
+char LEGEND_MEDIAVOLDN[] = {0x1F, 0x00};
+char LEGEND_MEDIASEL[] = "SEL";
+char LEGEND_MEDIAMAIL[] = "MAIL";
+char LEGEND_MEDIACALC[] = "CALC";
+char LEGEND_MEDIACOMP[] = "MC";
+char LEGEND_WWWSEARCH[] = "SEARCH";
+char LEGEND_WWWHOME[] = "HOME";
+char LEGEND_WWWBACK[] = {0x11, 0x11, 0x00};
+char LEGEND_WWWFORWARD[] = {0x10, 0x10, 0x00};
+char LEGEND_WWWSTOP[] = "STOP";
+char LEGEND_WWWREFRESH[] = "RFRESH";
+char LEGEND_WWWFAV[] = "FAVE";
 
 #define CNCAT2(a,b) a##b
 #define CNCAT3(a,b,c) a##b##c
 
-#define DEFINEKEY(keyname,x,y,sx,sy) { CNCAT3(XT_KEY_,keyname,_MAKE), CNCAT3(XT_KEY_,keyname,_BREAK), CNCAT3(KEY_,keyname,_MAKE), CNCAT3(KEY_,keyname,_BREAK), CNCAT3(NAME_,keyname,),x,y,sx,sy}
-#define DEFINEXTKEY(keyname,x,y,sx,sy) { CNCAT3(XT_KEY_,keyname,_MAKE), CNCAT3(XT_KEY_,keyname,_BREAK), NULL, NULL, CNCAT3(NAME_,keyname,),x,y,sx,sy}
+#define DEFINEKEY(keyname,x,y,sx,sy) { CNCAT3(XT_KEY_,keyname,_MAKE), CNCAT3(XT_KEY_,keyname,_BREAK), CNCAT3(KEY_,keyname,_MAKE), CNCAT3(KEY_,keyname,_BREAK), CNCAT3(NAME_,keyname,), CNCAT3(LEGEND_,keyname,),x,y,sx,sy}
+#define DEFINEXTKEY(keyname,x,y,sx,sy) { CNCAT3(XT_KEY_,keyname,_MAKE), CNCAT3(XT_KEY_,keyname,_BREAK), NULL, NULL, CNCAT3(NAME_,keyname,), CNCAT3(LEGEND_,keyname,),x,y,sx,sy}
 KeyDef KEYDEF_EURO1 = DEFINEKEY(EURO1, 28, 12, 1, 2);
 
 KeyDef BIOSKeyDefs[] = {
-    {XT_KEY_BIOS_F11_MAKE, NULL, NULL, NULL, NAME_BIOS_F11, 46, 1, 3, 1 },
-    {XT_KEY_BIOS_F12_MAKE, NULL, NULL, NULL, NAME_BIOS_F12, 50, 1, 3, 1 }
+    {XT_KEY_BIOS_F11_MAKE, NULL, NULL, NULL, NAME_BIOS_F11,NULL, 46, 1, 3, 1 },
+    {XT_KEY_BIOS_F12_MAKE, NULL, NULL, NULL, NAME_BIOS_F12,NULL, 50, 1, 3, 1 }
 };
 
 
@@ -248,7 +400,7 @@ DEFINEKEY(F11, 48, 3, 3, 1 ),
 DEFINEKEY(F12, 52, 3, 3, 1 ),
 DEFINEKEY(PRTSC, 35, 6, 3, 2),
 DEFINEKEY(SCROLL, 39, 6, 3, 2 ),
-{XT_KEY_PAUSE_MAKE, NULL, NULL, NULL, NAME_PAUSE, 43, 6, 3, 2 },
+{XT_KEY_PAUSE_MAKE, NULL, NULL, NULL, NAME_PAUSE, LEGEND_PAUSE, 43, 6, 3, 2 },
 DEFINEKEY(LEFTSQB, 25, 9, 1, 2 ),
 DEFINEKEY(INSERT, 35, 9, 3, 2 ),
 DEFINEKEY(HOME, 39, 9, 3, 2 ),
@@ -284,10 +436,10 @@ DEFINEKEY(COMMA, 21, 15, 1, 2 ),
 DEFINEKEY(PERIOD, 23, 15, 1, 2 ),
 DEFINEKEY(FWSLASH, 25, 15, 1, 2 ),
 DEFINEKEY(EURO2, 5, 15, 1, 2 ),
-{XT_KEY_BIOS_PADEN_MAKE, NULL, NULL, NULL, NAME_BIOS_PADEN, 57, 17, 2, 2 },
-{XT_KEY_BIOS_PADFWSLASH_MAKE, NULL, NULL, NULL, NAME_BIOS_PADFWSLASH, 51, 6, 2, 1 },
-{XT_KEY_AMSTRAD_PADEN_MAKE, XT_KEY_AMSTRAD_PADEN_BREAK, NULL, NULL, NAME_AMSTRAD_PADEN, 57, 17, 2, 2 },
-{XT_KEY_AMSTRAD_RDEL_MAKE, XT_KEY_AMSTRAD_RDEL_BREAK, NULL, NULL, NAME_AMSTRAD_RDEL,  35, 12, 3, 2 },
+{XT_KEY_BIOS_PADEN_MAKE, NULL, NULL, NULL, NAME_BIOS_PADEN, LEGEND_PADEN, 57, 17, 2, 2 },
+{XT_KEY_BIOS_PADFWSLASH_MAKE, NULL, NULL, NULL, NAME_BIOS_PADFWSLASH, LEGEND_PADFWSLASH, 51, 6, 2, 1 },
+{XT_KEY_AMSTRAD_PADEN_MAKE, XT_KEY_AMSTRAD_PADEN_BREAK, NULL, NULL, NAME_AMSTRAD_PADEN, LEGEND_PADEN, 57, 17, 2, 2 },
+{XT_KEY_AMSTRAD_RDEL_MAKE, XT_KEY_AMSTRAD_RDEL_BREAK, NULL, NULL, NAME_AMSTRAD_RDEL, LEGEND_DELETE, 35, 12, 3, 2 },
 DEFINEXTKEY(PADEQUAL, 57, 14, 2, 2 ),
 DEFINEXTKEY(PADCOMMA, 57, 11, 2, 2),
 DEFINEXTKEY(F13, 6, 1, 3, 1),

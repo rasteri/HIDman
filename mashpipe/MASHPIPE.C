@@ -91,13 +91,106 @@ unsigned char TextClearPattern[] = {
 // fast clearline function
 void ClearText(unsigned int x, unsigned int y, unsigned int length)
 {
-   //_fmemset(text_mem + (y * 160) + (2 * x), 0xff, length * 2);
+    //_fmemset(text_mem + (y * 160) + (2 * x), 0xff, length * 2);
     _fmemcpy(text_mem + (y * 160) + (2 * x), TextClearPattern, length * 2);
+}
+
+/*
+│ B3
+┤ b4
+┐ BF
+└ C0
+┴ C1
+┬ C2
+├ C3
+─ C4
+┼ C5
+┘ D9
+┌ DA
+
+4bits
+
+LURD
+0000 space
+0001
+0010
+0011 ┌ DA
+0100
+0101 │ B3
+0110 └ C0
+0111 ├ C3
+1000
+1001 ┐ BF
+1010 ─ C4
+1011 ┬ C2
+1100 ┘ D9
+1101 ┤ b4
+1110 ┴ C1
+1111 ┼ C5
+*/
+
+unsigned char BoxLookup[] = {0x20, NULL, NULL, 0xDA, NULL, 0xB3, 0xC0, 0xC3, NULL, 0xBF, 0xC4, 0xC2, 0xD9, 0xB4, 0xC1, 0xC5};
+
+void DrawBoxChar(unsigned int x, unsigned int y, unsigned char sects)
+{
+    unsigned char far *screenpt;
+    unsigned char far *bufpt;
+    unsigned char bitfield;
+
+    x--; y--;
+
+    screenpt = text_mem + (y * 160) + (2 * x);
+    bufpt = ScreenBuf + (y * 80) + x;
+    
+    *bufpt |= sects;
+    *screenpt = BoxLookup[*bufpt];
+}
+
+void DrawBox(int ax, int ay, int bx, int by)
+{
+    int tmp;
+
+    // top left corner
+    DrawBoxChar(ax, ay, 3);
+
+    // top right corner
+    DrawBoxChar(bx, ay, 9);
+
+    // bottom left corner
+    DrawBoxChar(ax, by, 6);
+
+    // bottom right corner
+    DrawBoxChar(bx, by, 12);
+
+    // top and bottom
+    for (tmp = ax+1; tmp < bx; tmp++)
+    {
+        DrawBoxChar(tmp, ay, 10);
+        DrawBoxChar(tmp, by, 10);
+    }
+
+    // right and left
+    for (tmp = ay+1; tmp < by; tmp++)
+    {
+        DrawBoxChar(ax, tmp, 5);
+        DrawBoxChar(bx, tmp, 5);
+    }
+}
+
+void SetCharAttrs(unsigned int x, unsigned int y, unsigned char attr){
+    unsigned char far *screenpt;
+
+    //x--; y--;
+
+    screenpt = text_mem + (y * 160) + (2 * x) + 1;
+
+    *screenpt = attr;
 }
 
 void HighlightKey(KeyDef *Key, unsigned char outtype, char silent)
 {
     char x, y;
+    unsigned char attr;
 
     if (outtype == TYPE_MAKE)
     {
@@ -108,8 +201,9 @@ void HighlightKey(KeyDef *Key, unsigned char outtype, char silent)
             fputs("Pressed  ", stdout);
             fputs(Key->Name, stdout);
         }
-        textcolor(WHITE);
-        textbackground(LIGHTGRAY);
+        //textcolor(WHITE);
+        //textbackground(LIGHTGRAY);
+        attr = 0x7F;
     }
     else if (outtype == TYPE_BREAK)
     {
@@ -120,16 +214,17 @@ void HighlightKey(KeyDef *Key, unsigned char outtype, char silent)
             fputs("Released ", stdout);
             fputs(Key->Name, stdout);
         }
-        textcolor(BLACK);
-        textbackground(LIGHTGRAY);
+        /*textcolor(BLACK);
+        textbackground(LIGHTGRAY);*/
+
+        attr = 0x70;
     }
 
     for (x = Key->XPos; x < Key->XPos + Key->Xsize; x++)
     {
         for (y = Key->YPos; y < Key->YPos + Key->Ysize; y++)
         {
-            gotoxy(x + 1, y + 1);
-            putch(ScreenBuf[(y * 80) + x]);
+            SetCharAttrs(x, y, attr);
         }
     }
 }
@@ -240,8 +335,8 @@ void ProcessScancode(unsigned char code)
     // this must be a new scancode
     if (clock() > NextThink)
     {
-        //scanbufindex = 0;
-        //NextThink = clock() + (CLK_TCK);
+        // scanbufindex = 0;
+        // NextThink = clock() + (CLK_TCK);
     }
 
     scancodebuf[scanbufindex++] = code;
@@ -361,11 +456,10 @@ char NAME_BIOS_SCROLLLOCK[] = "Scroll Lock (BIOS)";
 char NAME_BIOS_NUMLOCK[] = "Num Lock (BIOS)";
 char NAME_BIOS_INSLOCK[] = "Insert (BIOS)";
 
-KeyDef KEY_BIOS_CAPSLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_CAPSLOCK, 65, 1, 4, 1};
-KeyDef KEY_BIOS_SCROLLLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_SCROLLLOCK, 70, 1, 4, 1};
-KeyDef KEY_BIOS_NUMLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_NUMLOCK, 61, 1, 3, 1};
-KeyDef KEY_BIOS_INSLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_INSLOCK, 75, 1, 3, 1};
-
+KeyDef KEY_BIOS_CAPSLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_CAPSLOCK, NULL, 65, 1, 4, 1};
+KeyDef KEY_BIOS_SCROLLLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_SCROLLLOCK, NULL, 70, 1, 4, 1};
+KeyDef KEY_BIOS_NUMLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_NUMLOCK, NULL, 61, 1, 3, 1};
+KeyDef KEY_BIOS_INSLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_INSLOCK, NULL, 75, 1, 3, 1};
 
 int main(int argc, char *argv[])
 {
@@ -374,6 +468,8 @@ int main(int argc, char *argv[])
     unsigned char oldscanbufindex = 0;
     unsigned char cunt = 0, shit = 0;
     long conv;
+
+    char *pnt;
 
     unsigned char Modifyers = 0, OldModifyers = 0;
 
@@ -387,11 +483,17 @@ int main(int argc, char *argv[])
     // need a different screen address in that case
     r.h.ah = 0x0F;
     grabbed = int86(0x10, &r, &r);
-    if ((grabbed & 0x00FF) == 0x07){
+    if ((grabbed & 0x00FF) == 0x07)
+    {
         text_mem = MK_FP(0xB000, 0x0000);
-        //printf("MDA Detected %X\n", grabbed);
-        //getch();
+        // printf("MDA Detected %X\n", grabbed);
+        // getch();
     }
+
+    clrscr();
+
+    _fmemset(ScreenBuf, 0x00, 0x781);
+
 
     if (argc == 2)
     {
@@ -441,27 +543,49 @@ int main(int argc, char *argv[])
         biosmode = getch() - '0';
     }
 
-
-
     clrscr();
+
 
     BuildCodeCache();
 
-    keyfile = fopen("keyboard.ans", "r");
+    /*keyfile = fopen("keyboard.ans", "r");
 
     if (fread(ScreenBuf, 0x781, 1, keyfile) != 1)
     {
         printf("Bugger2\n");
         goto ehoh;
     }
+*/
 
-    fputs(ScreenBuf, stdout);
+
+    _fmemset(ScreenBuf, 0x00, 0x781);
+
+    // Draw the keys
+    for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    {
+        shit = 0;
+        DrawBox(KeyDefs[cunt].XPos, KeyDefs[cunt].YPos, KeyDefs[cunt].XPos + KeyDefs[cunt].Xsize+1, KeyDefs[cunt].YPos + KeyDefs[cunt].Ysize+1);
+        pnt = &(KeyDefs[cunt].Legend[0]);
+
+        gotoxy(KeyDefs[cunt].XPos+1, KeyDefs[cunt].YPos+1);
+
+        while (*pnt != '\0') {
+            if (*pnt == '\n'){
+                gotoxy(KeyDefs[cunt].XPos+1, KeyDefs[cunt].YPos + (++shit) + 1);
+            }
+            else
+                putchar(*pnt);
+            pnt++;
+        }
+    }
+
     gotoxy(1, 24);
     fputs("Scancode : ", stdout);
     gotoxy(1, 25);
     fputs("Last Action : ", stdout);
 
-    
+
+
     // TOP SECRET TEST MODE
     // Lights up all keys
     if (biosmode == 4)
@@ -469,11 +593,11 @@ int main(int argc, char *argv[])
         biosmode = 0;
         for (cunt = 0; cunt < KeyDefsSize; cunt++)
         {
-            if (KeyDefs[cunt].XTMake != NULL) 
+            if (KeyDefs[cunt].XTMake != NULL)
                 for (shit = 0; shit < KeyDefs[cunt].XTMake[0]; shit++)
                     ProcessScancode(KeyDefs[cunt].XTMake[shit + 1]);
 
-            if (KeyDefs[cunt].XTBreak != NULL) 
+            if (KeyDefs[cunt].XTBreak != NULL)
                 for (shit = 0; shit < KeyDefs[cunt].XTBreak[0]; shit++)
                     ProcessScancode(KeyDefs[cunt].XTBreak[shit + 1]);
         }
@@ -535,7 +659,7 @@ int main(int argc, char *argv[])
             HIGHLIGHTMODIFYER(MOD_ALT, 0x38);
 
 #define HIGHLIGHTLOCK(bit, keyd) \
-    if (mask & bit)                                \
+    if (mask & bit)              \
         HighlightKey(keyd, Modifyers &bit ? TYPE_MAKE : TYPE_BREAK, 0);
 
             HIGHLIGHTLOCK(MOD_SCR, &KEY_BIOS_SCROLLLOCK);

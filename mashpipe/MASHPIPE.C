@@ -545,18 +545,7 @@ int main(int argc, char *argv[])
 
     clrscr();
 
-
     BuildCodeCache();
-
-    /*keyfile = fopen("keyboard.ans", "r");
-
-    if (fread(ScreenBuf, 0x781, 1, keyfile) != 1)
-    {
-        printf("Bugger2\n");
-        goto ehoh;
-    }
-*/
-
 
     _fmemset(ScreenBuf, 0x00, 0x781);
 
@@ -579,10 +568,31 @@ int main(int argc, char *argv[])
         }
     }
 
+    gotoxy(59, 1);
+    fputs("Locks:", stdout);
+
+    gotoxy(62, 2);
+    fputs("NUM CAPS SCRL INS", stdout);
+
+    gotoxy(57, 5);
+    fputs("Media:", stdout);
+
+    gotoxy(62, 11);
+    fputs("WWW:", stdout);
+
+    gotoxy(62, 18);
+    fputs("Sys:", stdout);
+
+    gotoxy(64, 21);
+    fputs("Hold ESC to exit", stdout);
+
     gotoxy(1, 24);
     fputs("Scancode : ", stdout);
+
     gotoxy(1, 25);
     fputs("Last Action : ", stdout);
+
+
 
 
 

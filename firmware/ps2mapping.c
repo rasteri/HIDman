@@ -27,8 +27,6 @@ HID_SEG *currSegPnt = 0;
 // running startbit that increments as segments get matched
 uint16_t tempSB = 0;
 
-//search though preset to see if this matches a mapping
-
 void CreateSeg(INTERFACE *pInterface)                                                                                       
 {                                 
 	static HID_REPORT * __xdata rep;
@@ -42,6 +40,7 @@ void CreateSeg(INTERFACE *pInterface)
 	currSegPnt->reportSize = HIDParseState.hidGlobal.reportSize;                                       
 }
 
+//search though preset to see if this matches a mapping
 void CreateMapping(INTERFACE *pInterface)                                                        
 {                                                                          
 	currPreset = JoyPresets;		

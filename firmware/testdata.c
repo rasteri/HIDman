@@ -949,6 +949,122 @@ __code uint8_t CheapoKeyboardReportDescriptor[] = {
 
 };
 
+__code uint8_t KeychronWirelessKeyboardDeviceDescriptor[] = {
+0x12,        // bLength
+0x01,        // bDescriptorType (Device)
+0x10, 0x01,  // bcdUSB 1.10
+0x00,        // bDeviceClass (Use class information in the Interface Descriptors)
+0x00,        // bDeviceSubClass 
+0x00,        // bDeviceProtocol 
+0x08,        // bMaxPacketSize0 8
+0x34, 0x34,  // idVendor 0x3434
+0x30, 0xD0,  // idProduct 0xD030
+0x04, 0xD2,  // bcdDevice 342.04
+0x01,        // iManufacturer (String Index)
+0x02,        // iProduct (String Index)
+0x00,        // iSerialNumber (String Index)
+0x01,        // bNumConfigurations 1
+
+// 18 bytes
+
+};
+
+__code uint8_t KeychronWirelessKeyboardConfigDescriptor[] = {
+0x09,        //     bLength
+0x02,        //     bDescriptorType (Configuration)
+0x5B, 0x00,  //     wTotalLength 91
+0x03,        //     bNumInterfaces 3
+0x01,        //     bConfigurationValue
+0x00,        //     iConfiguration (String Index)
+0xA0,        //     bmAttributes Remote Wakeup
+0x32,        //     bMaxPower 100mA
+
+0x09,        //     bLength
+0x04,        //     bDescriptorType (Interface)
+0x00,        //     bInterfaceNumber 0
+0x00,        //     bAlternateSetting
+0x01,        //     bNumEndpoints 1
+0x03,        //     bInterfaceClass
+0x01,        //     bInterfaceSubClass
+0x02,        //     bInterfaceProtocol
+0x00,        //     iInterface (String Index)
+
+0x09,        //     bLength
+0x21,        //     bDescriptorType (HID)
+0x11, 0x01,  //     bcdHID 1.11
+0x21,        //     bCountryCode
+0x01,        //     bNumDescriptors
+0x22,        //     bDescriptorType[0] (HID)
+0x51, 0x00,  //     wDescriptorLength[0] 81
+
+0x07,        //     bLength
+0x05,        //     bDescriptorType (Endpoint)
+0x82,        //     bEndpointAddress (IN/D2H)
+0x03,        //     bmAttributes (Interrupt)
+0x40, 0x00,  //     wMaxPacketSize 64
+0x01,        //     bInterval 1 (unit depends on device speed)
+
+0x09,        //     bLength
+0x04,        //     bDescriptorType (Interface)
+0x01,        //     bInterfaceNumber 1
+0x00,        //     bAlternateSetting
+0x02,        //     bNumEndpoints 2
+0x03,        //     bInterfaceClass
+0x00,        //     bInterfaceSubClass
+0x00,        //     bInterfaceProtocol
+0x00,        //     iInterface (String Index)
+
+0x09,        //     bLength
+0x21,        //     bDescriptorType (HID)
+0x11, 0x01,  //     bcdHID 1.11
+0x21,        //     bCountryCode
+0x01,        //     bNumDescriptors
+0x22,        //     bDescriptorType[0] (HID)
+0x73, 0x00,  //     wDescriptorLength[0] 115
+
+0x07,        //     bLength
+0x05,        //     bDescriptorType (Endpoint)
+0x84,        //     bEndpointAddress (IN/D2H)
+0x03,        //     bmAttributes (Interrupt)
+0x40, 0x00,  //     wMaxPacketSize 64
+0x01,        //     bInterval 1 (unit depends on device speed)
+
+0x07,        //     bLength
+0x05,        //     bDescriptorType (Endpoint)
+0x05,        //     bEndpointAddress (OUT/H2D)
+0x03,        //     bmAttributes (Interrupt)
+0x40, 0x00,  //     wMaxPacketSize 64
+0x01,        //     bInterval 1 (unit depends on device speed)
+
+0x09,        //     bLength
+0x04,        //     bDescriptorType (Interface)
+0x02,        //     bInterfaceNumber 2
+0x00,        //     bAlternateSetting
+0x01,        //     bNumEndpoints 1
+0x03,        //     bInterfaceClass
+0x01,        //     bInterfaceSubClass
+0x01,        //     bInterfaceProtocol
+0x00,        //     iInterface (String Index)
+
+0x09,        //     bLength
+0x21,        //     bDescriptorType (HID)
+0x11, 0x01,  //     bcdHID 1.11
+0x21,        //     bCountryCode
+0x01,        //     bNumDescriptors
+0x22,        //     bDescriptorType[0] (HID)
+0xA4, 0x00,  //     wDescriptorLength[0] 164
+
+0x07,        //     bLength
+0x05,        //     bDescriptorType (Endpoint)
+0x81,        //     bEndpointAddress (IN/D2H)
+0x03,        //     bmAttributes (Interrupt)
+0x20, 0x00,  //     wMaxPacketSize 32
+0x01,        //     bInterval 1 (unit depends on device speed)
+
+// 91 bytes
+
+// best guess: USB Standard Descriptor
+};
 
 __code uint8_t KeychronWirelessKeyboardReportDescriptor[] = {
 0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
@@ -1059,4 +1175,154 @@ __code uint8_t KeychronWirelessReportPressA[] = {
 __code uint8_t KeychronWirelessReportReleaseA[] = {
 0x01,        
 0x00,0x00,0x00,0x00,0x00,0x00,0x00
+};
+
+
+__code uint8_t MiniKeyboardTouchpadDeviceDescriptor[] = {
+0x12,        // bLength
+0x01,        // bDescriptorType (Device)
+0x10, 0x01,  // bcdUSB 1.10
+0x00,        // bDeviceClass (Use class information in the Interface Descriptors)
+0x00,        // bDeviceSubClass 
+0x00,        // bDeviceProtocol 
+0x08,        // bMaxPacketSize0 8
+0x0C, 0x40,  // idVendor 0x400C
+0x7A, 0x10,  // idProduct 0x107A
+0x10, 0x01,  // bcdDevice 2.10
+0x00,        // iManufacturer (String Index)
+0x01,        // iProduct (String Index)
+0x00,        // iSerialNumber (String Index)
+0x01,        // bNumConfigurations 1
+
+// 18 bytes
+};
+
+__code uint8_t MiniKeyboardTouchpadConfigDescriptor[] = {
+0x09,        //   bLength
+0x02,        //   bDescriptorType (Configuration)
+0x3B, 0x00,  //   wTotalLength 59
+0x02,        //   bNumInterfaces 2
+0x01,        //   bConfigurationValue
+0x00,        //   iConfiguration (String Index)
+0xA0,        //   bmAttributes Remote Wakeup
+0x19,        //   bMaxPower 50mA
+
+0x09,        //   bLength
+0x04,        //   bDescriptorType (Interface)
+0x00,        //   bInterfaceNumber 0
+0x00,        //   bAlternateSetting
+0x01,        //   bNumEndpoints 1
+0x03,        //   bInterfaceClass
+0x01,        //   bInterfaceSubClass
+0x01,        //   bInterfaceProtocol
+0x00,        //   iInterface (String Index)
+
+0x09,        //   bLength
+0x21,        //   bDescriptorType (HID)
+0x10, 0x01,  //   bcdHID 1.10
+0x00,        //   bCountryCode
+0x01,        //   bNumDescriptors
+0x22,        //   bDescriptorType[0] (HID)
+0x41, 0x00,  //   wDescriptorLength[0] 65
+
+0x07,        //   bLength
+0x05,        //   bDescriptorType (Endpoint)
+0x81,        //   bEndpointAddress (IN/D2H)
+0x03,        //   bmAttributes (Interrupt)
+0x08, 0x00,  //   wMaxPacketSize 8
+0x08,        //   bInterval 8 (unit depends on device speed)
+
+0x09,        //   bLength
+0x04,        //   bDescriptorType (Interface)
+0x01,        //   bInterfaceNumber 1
+0x00,        //   bAlternateSetting
+0x01,        //   bNumEndpoints 1
+0x03,        //   bInterfaceClass
+0x01,        //   bInterfaceSubClass
+0x02,        //   bInterfaceProtocol
+0x00,        //   iInterface (String Index)
+
+0x09,        //   bLength
+0x21,        //   bDescriptorType (HID)
+0x10, 0x01,  //   bcdHID 1.10
+0x00,        //   bCountryCode
+0x01,        //   bNumDescriptors
+0x22,        //   bDescriptorType[0] (HID)
+0x77, 0x00,  //   wDescriptorLength[0] 119
+
+0x07,        //   bLength
+0x05,        //   bDescriptorType (Endpoint)
+0x82,        //   bEndpointAddress (IN/D2H)
+0x03,        //   bmAttributes (Interrupt)
+0x08, 0x00,  //   wMaxPacketSize 8
+0x08,        //   bInterval 8 (unit depends on device speed)
+
+// 59 bytes
+};
+
+
+__code uint8_t MiniKeyboardTouchpadReportDescriptor[] = {
+0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+0x09, 0x02,        // Usage (Mouse)
+0xA1, 0x01,        // Collection (Application)
+0x85, 0x02,        //   Report ID (2)
+0x09, 0x01,        //   Usage (Pointer)
+0xA1, 0x00,        //   Collection (Physical)
+0x05, 0x09,        //     Usage Page (Button)
+0x19, 0x01,        //     Usage Minimum (0x01)
+0x29, 0x05,        //     Usage Maximum (0x05)
+0x15, 0x00,        //     Logical Minimum (0)
+0x25, 0x01,        //     Logical Maximum (1)
+0x95, 0x05,        //     Report Count (5)
+0x75, 0x01,        //     Report Size (1)
+0x81, 0x02,        //     Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+0x95, 0x01,        //     Report Count (1)
+0x75, 0x03,        //     Report Size (3)
+0x81, 0x01,        //     Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+0x05, 0x01,        //     Usage Page (Generic Desktop Ctrls)
+0x09, 0x30,        //     Usage (X)
+0x09, 0x31,        //     Usage (Y)
+0x09, 0x38,        //     Usage (Wheel)
+0x15, 0x80,        //     Logical Minimum (-128)
+0x25, 0x7F,        //     Logical Maximum (127)
+0x75, 0x08,        //     Report Size (8)
+0x95, 0x03,        //     Report Count (3)
+0x81, 0x06,        //     Input (Data,Var,Rel,No Wrap,Linear,Preferred State,No Null Position)
+0x05, 0x0C,        //     Usage Page (Consumer)
+0x0A, 0x38, 0x02,  //     Usage (AC Pan)
+0x95, 0x01,        //     Report Count (1)
+0x81, 0x06,        //     Input (Data,Var,Rel,No Wrap,Linear,Preferred State,No Null Position)
+0xC0,              //   End Collection
+0xC0,              // End Collection
+0x05, 0x0C,        // Usage Page (Consumer)
+0x09, 0x01,        // Usage (Consumer Control)
+0xA1, 0x01,        // Collection (Application)
+0x85, 0x01,        //   Report ID (1)
+0x15, 0x00,        //   Logical Minimum (0)
+0x26, 0x3C, 0x04,  //   Logical Maximum (1084)
+0x19, 0x00,        //   Usage Minimum (Unassigned)
+0x2A, 0x3C, 0x04,  //   Usage Maximum (0x043C)
+0x95, 0x01,        //   Report Count (1)
+0x75, 0x10,        //   Report Size (16)
+0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+0xC0,              // End Collection
+0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+0x09, 0x80,        // Usage (Sys Control)
+0xA1, 0x01,        // Collection (Application)
+0x85, 0x03,        //   Report ID (3)
+0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
+0x19, 0x81,        //   Usage Minimum (Sys Power Down)
+0x29, 0x83,        //   Usage Maximum (Sys Wake Up)
+0x15, 0x00,        //   Logical Minimum (0)
+0x25, 0x01,        //   Logical Maximum (1)
+0x95, 0x03,        //   Report Count (3)
+0x75, 0x01,        //   Report Size (1)
+0x81, 0x06,        //   Input (Data,Var,Rel,No Wrap,Linear,Preferred State,No Null Position)
+0x95, 0x01,        //   Report Count (1)
+0x75, 0x05,        //   Report Size (5)
+0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+0xC0,              // End Collection
+
+// 119 bytes
+
 };

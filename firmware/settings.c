@@ -38,7 +38,9 @@ void InitSettings(bool SafeMode){
         memset(&HMSettings, 0x00, sizeof(Settings));
         HMSettings.Magic = 0x54178008;
 
-        if (!SafeMode) HMSettings.Intellimouse = 1;
+        //if (!SafeMode) HMSettings.Intellimouse = 1;
+        HMSettings.Intellimouse = 1;
+        HMSettings.MouseReportMode = 1;
         
         if (SyncSettings()) {
             DEBUG_OUT("Writin failed\n");

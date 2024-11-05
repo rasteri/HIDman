@@ -21,3 +21,7 @@ extern __code uint8_t KeychronWirelessReportReleaseA[];
 extern __code uint8_t CheapoKeyboardReportDescriptor[];
 extern __code uint8_t CheapoKeyboardDeviceDescriptor[];
 extern __code uint8_t CheapoKeyboardConfigDescriptor[];
+
+extern __code uint8_t MiniKeyboardTouchpadDeviceDescriptor[];
+extern __code uint8_t MiniKeyboardTouchpadConfigDescriptor[];
+extern __code uint8_t MiniKeyboardTouchpadReportDescriptor[];

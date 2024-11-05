@@ -104,22 +104,3 @@ void CH559UART0SendData(UINT8 *pData, UINT8 len)
 		while (!s_sent);
 	}
 }
-
-/**
- * stdio printf directed to UART0 using putchar and getchar
- */
-
-int putchar(int c)
-{
-    while (!TI);
-    TI = 0;
-    SBUF = c & 0xFF;
-    return c;
-}
-
-int getchar(void) 
-{
-    while(!RI);
-    RI = 0;
-    return SBUF;
-}

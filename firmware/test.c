@@ -33,34 +33,7 @@ void UART_Init()
 
 static USB_HUB_PORT __xdata TestPort;
 
-uint8_t DumpHID(INTERFACE *pInterface)
-{
-    LinkedList *tmpsegNode;
-    HID_SEG *tmpsegment;
-    uint8_t count = 0;
-    for (uint8_t x = 0; x < MAX_REPORTS; x++)
-    {
-        HID_REPORT *tr = (HID_REPORT *)ListGetData(pInterface->Reports, x);
-        if (tr != NULL)
-        {
-            tmpsegNode = tr->HidSegments;
 
-            #ifdef TESTVERBOSE 
-                printf("Report %x, usage %x, length %u: \n", x, tr->appUsage, tr->length);
-            #endif
-            while (tmpsegNode != NULL)
-            {
-                tmpsegment = (HID_SEG *)(tmpsegNode->data);
-                #ifdef TESTVERBOSE 
-                    printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpsegment->startBit, tmpsegment->InputType, tmpsegment->InputParam, tmpsegment->OutputChannel, tmpsegment->OutputControl, tmpsegment->reportSize, tmpsegment->reportCount);
-                #endif
-                tmpsegNode = tmpsegNode->next;
-                count++;
-            }
-        }
-    }
-    return count;
-}
 
 bool TestDescriptors(
     uint8_t *Dev, uint16_t DevLen, 
@@ -236,12 +209,19 @@ void main()
         8
     );*/
 
-    TestDescriptors (
+   /* TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,
         CheapoGamepadConfigDescriptor, 34,
         KeychronWirelessKeyboardReportDescriptor, 164,
         8
-    );
+    );*/
+
+    /*TestDescriptors (
+        MiniKeyboardTouchpadDeviceDescriptor, 18,
+        MiniKeyboardTouchpadConfigDescriptor, 59,
+        MiniKeyboardTouchpadReportDescriptor, 119,
+        8
+    );*/
 
     printf("memused : %u\n", MemoryUsed());
     printf("memfree : %u\n", MemoryFree());

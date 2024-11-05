@@ -49,7 +49,7 @@ void mDelaymS(UINT16 n);              // ��mSΪ��λ��ʱ
 void initClock(void);
 unsigned char UART0Receive(void);
 void UART0Send(unsigned char b);
-
+int putcharserial(int c);
 
 #define DYNAMIC_MEMORY_SIZE 0x400
 extern unsigned char __xdata dynamic_memory_pool[DYNAMIC_MEMORY_SIZE];

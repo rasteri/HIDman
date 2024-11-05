@@ -15,7 +15,7 @@ typedef struct ParseState {
 } ParseState;
 
 extern __xdata ParseState HIDParseState;
-
+uint8_t DumpHID(INTERFACE *pInterface);
 extern BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_HUB_PORT *pUsbDevice);
 extern BOOL ParseConfigDescriptor(USB_CFG_DESCR *pCfgDescr, UINT16 len, USB_HUB_PORT *pUsbDevice);
 BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pHidSegStruct);

@@ -23,6 +23,13 @@ void SendKeyboardBuffer(void);
 void Menu_Task(void);
 extern uint8_t menuState;
 void inputProcess(void);
+#define DEBUGOUT(...) { printf(__VA_ARGS__);}
+//#define DEBUGOUT(...) 
+
 #define SendKeyboardString(...) {sprintf(SendBuffer, __VA_ARGS__); SendKeyboardBuffer();}
+
+
+extern bool KeyboardDebugOutput;
+extern bool SerialDebugOutput;
 extern uint8_t LEDStatus;
 #endif

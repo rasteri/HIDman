@@ -24,8 +24,8 @@
 
 __xdata char SendBuffer[255];
 
-bool DumpReport = 0;
-
+bool SerialDebugOutput = 1;
+bool KeyboardDebugOutput = 0;
 __xdata bool MenuActive = 0;
 
 #define SEND_STATE_IDLE 0
@@ -36,19 +36,7 @@ __xdata bool MenuActive = 0;
 
 uint8_t sendBufferState = SEND_STATE_IDLE;
 
-void PressKey(uint8_t currchar)
-{
-    while (!SendKeyboard(
-        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]))
-        ;
-}
 
-void ReleaseKey(uint8_t currchar)
-{
-    while (!SendKeyboard(
-        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]))
-        ;
-}
 
 void SendKeyboardBuffer(void)
 {
@@ -127,7 +115,7 @@ void Menu_Task(void)
         case MENU_STATE_MAIN:
             if (lastMenuState != MENU_STATE_MAIN)
             {
-                SendKeyboardString("\n\nHIDman v1.1.4beta2\n\n");
+                SendKeyboardString("\n\nHIDman v1.1.4beta3\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");
@@ -237,7 +225,7 @@ void Menu_Task(void)
                 break;
             case KEY_3:
                 SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
-                DumpReport = 1;
+                KeyboardDebugOutput = 1;
                 menuState = MENU_STATE_DUMPING;
                 break;
             case KEY_4:
@@ -274,7 +262,7 @@ void Menu_Task(void)
             if (menuKey == 0x29)
             {
                 menuState = MENU_STATE_INIT;
-                DumpReport = 0;
+                KeyboardDebugOutput = 0;
                 break;
             }
             break;

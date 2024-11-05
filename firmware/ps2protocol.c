@@ -316,9 +316,9 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
  
 bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 {
-	HID_REPORT *descReport;
-	LinkedList *currSegNode;
-	HID_SEG *currSegment;
+	static HID_REPORT *descReport;
+	static LinkedList *currSegNode;
+	static HID_SEG *currSegment;
 
 	// Turn off LEDs for a while
 #if defined(BOARD_MICRO)
@@ -333,6 +333,8 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 #endif
 	LEDDelayMs = 33;
 
+
+
 	if (interface->usesReports)
 	{
 		// first byte of report will be the report number
@@ -343,11 +345,15 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 	{
 		descReport = (HID_REPORT *)ListGetData(interface->Reports, 0);
 	}
+	if (descReport == NULL){
+		DEBUGOUT("Invalid report\n");
+		return 0;
+	}
 
 	// sanity check length - smaller is no good
 	if (len < descReport->length)
 	{
-		ANDYS_DEBUG_OUT("report too short - %lu < %u\n", len, descReport->length);
+		DEBUGOUT("report too short - %lu < %u\n", len, descReport->length);
 		return 0;
 	}
 

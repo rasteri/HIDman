@@ -105,7 +105,8 @@ bool SendKeyboard(const uint8_t *chunk);
 
 void SimonSaysSendKeyboard(const uint8_t *chunk);
 void SimonSaysSendMouse(void);
-
+void PressKey(uint8_t currchar);
+void ReleaseKey(uint8_t currchar);
 void PS2ProcessPort(uint8_t port);
 
 #define SimonSaysSendMouse1(one)                                                    \

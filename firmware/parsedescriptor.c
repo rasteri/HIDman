@@ -162,7 +162,31 @@ static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 
 __xdata ParseState HIDParseState;
 
+uint8_t DumpHID(INTERFACE *pInterface)
+{
+    LinkedList *tmpsegNode;
+    HID_SEG *tmpsegment;
+    uint8_t count = 0;
+    for (uint8_t x = 0; x < MAX_REPORTS; x++)
+    {
+        HID_REPORT *tr = (HID_REPORT *)ListGetData(pInterface->Reports, x);
+        if (tr != NULL)
+        {
+            tmpsegNode = tr->HidSegments;
 
+            printf("Report %x, usage %x, length %u: \n", x, tr->appUsage, tr->length);
+
+            while (tmpsegNode != NULL)
+            {
+                tmpsegment = (HID_SEG *)(tmpsegNode->data);
+                printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpsegment->startBit, tmpsegment->InputType, tmpsegment->InputParam, tmpsegment->OutputChannel, tmpsegment->OutputControl, tmpsegment->reportSize, tmpsegment->reportCount);
+                tmpsegNode = tmpsegNode->next;
+                count++;
+            }
+        }
+    }
+    return count;
+}
 
 BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterface)
 {

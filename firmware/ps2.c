@@ -17,6 +17,7 @@
 #include "ps2protocol.h"
 #include "settings.h"
 #include "system.h"
+#include "scancode.h"
 
 __xdata ps2port ports[2];
 
@@ -67,21 +68,25 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 	}
 }
 
+char buf[100];
+
 bool SendKeyboard(const uint8_t *chunk)
 {
 	// reset watchdog timer, this routine blocks. It shouldn't really
 	SoftWatchdog = 0;
-
-	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
+	// chunk is null, pretend we sent it
+	if (chunk == NULL)
+		return 1;
 
 	// If we're emulating an 81-key keyboard, don't send keycodes starting with E0
 	if (FlashSettings->XT81Keys && chunk[1] == 0xE0) {
 		TR0 = 1; 
 		return 1; // just pretend we sent it
 	}
+	
+	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 
 	if (!ports[PORT_KEY].sendDisabled &&										 // send disabled by timer task, better not step on its toes
-		chunk != NULL &&														 // chunk is valid
 		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
 	{
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
@@ -89,11 +94,25 @@ bool SendKeyboard(const uint8_t *chunk)
 		TR0 = 1; // re-enable timer interrupt
 		return 1;
 	}
-	
+
 	TR0 = 1; // re-enable timer interrupt
 	return 0;
 }
 
+
+void PressKey(uint8_t currchar)
+{
+    while (!SendKeyboard(
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]))
+        ;
+}
+
+void ReleaseKey(uint8_t currchar)
+{
+    while (!SendKeyboard(
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]))
+        ;
+}
 
 uint8_t GlobalSendBuff[8];
 

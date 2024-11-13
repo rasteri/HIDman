@@ -22,6 +22,13 @@ Peripherals that support legacy PCs are becoming hard to find, especially for th
   * PS/2 Mouse (with optional Intellipoint-style scroll wheel and up to 5 buttons)
 * Driverless configuration menu - change settings just by opening a text editor
 
+# How to get one
+
+* Grab an assembled PCB from PCBway : https://www.pcbway.com/project/shareproject/HIDman_USB_to_Retro_PC_Adapter_3b4fb5d5.html
+* Also grab the front plate : https://www.pcbway.com/project/shareproject/Front_enclosure_plate_for_HIDman_0aec2ae9.html
+* And the rear plate : https://www.pcbway.com/project/shareproject/Rear_Enclosure_for_HIDman_c0ff0b8a.html
+* And the enclosure : https://lincolnbinns.com/e-case-a-black-40mm.html
+* Don't forget 8x screws : https://lincolnbinns.com/e-case-screws.html (I suggest the thread former ones)
 
 # Quickstart Guide
 

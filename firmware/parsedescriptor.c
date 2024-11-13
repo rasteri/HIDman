@@ -179,7 +179,7 @@ uint8_t DumpHID(INTERFACE *pInterface)
             while (tmpsegNode != NULL)
             {
                 tmpsegment = (HID_SEG *)(tmpsegNode->data);
-                printf("  startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpsegment->startBit, tmpsegment->InputType, tmpsegment->InputParam, tmpsegment->OutputChannel, tmpsegment->OutputControl, tmpsegment->reportSize, tmpsegment->reportCount);
+                printf("startbit %u, it %hx, ip %x, chan %hx, cont %hx, size %hx, count %hx\n", tmpsegment->startBit, tmpsegment->InputType, tmpsegment->InputParam, tmpsegment->OutputChannel, tmpsegment->OutputControl, tmpsegment->reportSize, tmpsegment->reportCount);
                 tmpsegNode = tmpsegNode->next;
                 count++;
             }

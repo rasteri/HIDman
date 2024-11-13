@@ -346,10 +346,9 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 						//TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
+						ParseReport(pInterface, len * 8, ReceiveDataBuffer);
 						DEBUGOUT("I%hX L%X- ", i, len);
 						DumpHex(ReceiveDataBuffer, len);
-						ParseReport(pInterface, len * 8, ReceiveDataBuffer);
-
 					}
 				}
 			}

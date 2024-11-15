@@ -24,7 +24,6 @@
 
 __xdata char SendBuffer[255];
 
-bool SerialDebugOutput = 1;
 bool KeyboardDebugOutput = 0;
 __xdata bool MenuActive = 0;
 
@@ -115,7 +114,7 @@ void Menu_Task(void)
         case MENU_STATE_MAIN:
             if (lastMenuState != MENU_STATE_MAIN)
             {
-                SendKeyboardString("\n\nHIDman v1.1.4beta3\n\n");
+                SendKeyboardString("\n\nHIDman v1.1.4\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");
@@ -205,56 +204,60 @@ void Menu_Task(void)
         case MENU_STATE_DEBUG:
             if (lastMenuState != MENU_STATE_DEBUG)
             {
-                SendKeyboardString("\n\nAdvanced\n\n");
-                SendKeyboardString("1. Hard Factory Reset\n");
-                SendKeyboardString("2. Soft Factory Reset\n");
-                SendKeyboardString("3. Log HID Data\n");
-                SendKeyboardString("4. Dump PS2 mouse status\n\n");
+                SendKeyboardString("\n\n--\nAdvanced\n\n");
+                SendKeyboardString("1. Factory Reset\n");
+                SendKeyboardString("2. Log HID Data\n");
+                SendKeyboardString("3. PS2 mouse status\n");
+                SendKeyboardString("4. Serial Log - ");
+                YesNo(FlashSettings->SerialDebugOutput);
+
                 //SendKeyboardString("5. Memory Test\n\n");
-                SendKeyboardString("ESC main menu\n");
+                SendKeyboardString("\nESC main menu\n");
                 lastMenuState = menuState;
             }
             switch (menuKey)
             {
-            case KEY_1:
-                // stop timer0 resetting watchdog
-                ET0 = 0;
-            case KEY_2:
-                // trigger a watchdog reset by hanging around
-                while (1);
-                break;
-            case KEY_3:
-                SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
-                KeyboardDebugOutput = 1;
-                menuState = MENU_STATE_DUMPING;
-                break;
-            case KEY_4:
-                SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
-                SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
-                SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
-                SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
-                SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
-                SendKeyboardString("\nCommand buffer\n");
-                for (UINT8 i = 0; i < MOUSE_BUFFER_SIZE; i++)
-                {
-                    if (!(i & 0x000F))
-                        SendKeyboardString("\n");
-                    SendKeyboardString("%02X ", MouseBuffer[i]);
-                }
-                menuState = MENU_STATE_INIT;
-                break;
+                case KEY_1:
+                    // stop timer0 resetting watchdog
+                    ET0 = 0;
+                    while(1);
+                    break;
 
-            case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
+                case KEY_2:
+                    SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
+                    KeyboardDebugOutput = 1;
+                    menuState = MENU_STATE_DUMPING;
+                    break;
 
-            /*case KEY_5:
-                SendKeyboardString("Used %lx, free %lx\n", MemoryUsed(), MemoryFree());
-                SendKeyboardString("Testing allocator, will reset when complete\n");
-                for (int i = 0; i < 128; i++) {
-                    andyalloc(256);
-                }
-                DumpReport = 1;
-                menuState = MENU_STATE_DUMPING;
-                break;*/
+                case KEY_3:
+                    SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
+                    SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
+                    SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
+                    SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
+                    SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
+                    SendKeyboardString("\nCommand buffer\n");
+                    for (UINT8 i = 0; i < MOUSE_BUFFER_SIZE; i++)
+                    {
+                        if (!(i & 0x000F))
+                            SendKeyboardString("\n");
+                        SendKeyboardString("%02X ", MouseBuffer[i]);
+                    }
+                    menuState = MENU_STATE_INIT;
+                    break;
+
+                case KEY_4:     HMSettings.SerialDebugOutput ^= 1;        SyncSettings(); lastMenuState = 0; break;
+
+                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
+
+                /*case KEY_5:
+                    SendKeyboardString("Used %lx, free %lx\n", MemoryUsed(), MemoryFree());
+                    SendKeyboardString("Testing allocator, will reset when complete\n");
+                    for (int i = 0; i < 128; i++) {
+                        andyalloc(256);
+                    }
+                    DumpReport = 1;
+                    menuState = MENU_STATE_DUMPING;
+                    break;*/
             }
             break;
 

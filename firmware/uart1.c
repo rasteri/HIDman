@@ -29,23 +29,6 @@ UINT8 CH559UART1_FIFO_CNT = 0;
 #endif
 
 /************************************************* ******************************
-* Function Name: UART1RegCfgValue()
-* Description: CH559UART1 readable register value after correct configuration
-* Input: None
-* Output: None
-* Return: None
-************************************************** *****************************/
-void UART1RegCfgValue(void)
-{
-    DEBUG_OUT("SER1_IER %02X\n",(UINT16)SER1_IER); //0x27/0x17/0x37 are all possible
-    DEBUG_OUT("SER1_IIR %02X\n",(UINT16)SER1_IIR); //0xc1/0xC2 no interrupt or empty interrupt, "C" means FIFO is on
-    DEBUG_OUT("SER1_LCR %02X\n",(UINT16)SER1_LCR); //0x03 data format configuration, indicating wireless path interval, no parity, 1 stop bit, 8 data bits
-    DEBUG_OUT("SER1_MCR %02X\n",(UINT16)SER1_MCR); //0x08 interrupt output enable, excluding other functions such as flow control on
-    DEBUG_OUT("SER1_LSR %02X\n",(UINT16)SER1_LSR); //0x60, FIFO and line status
-    DEBUG_OUT("SER1_MSR %02X\n",(UINT16)SER1_MSR);
-}
-
-/************************************************* ******************************
 * Function Name: ResetUART1()
 * Description: CH559UART1 port soft reset
 * Input: None
@@ -231,29 +214,3 @@ void CH559UART1SendStr(PUINT8 SendStr)
     }
 #endif
 }
-/*
-main()
-{
-   UINT8 i;
-   UINT8 buffer[20];
-// CfgFsys( ); //Clock configuration
-// mDelaymS(5); //Wait for the external crystal oscillator to stabilize
-
-    mInitSTDIO( ); //Serial port 0, can be used for debugging
-    DEBUG_OUT("start ...\n");
-To
-    CH559UART1Init(13,1,2);
-    UART1RegCfgValue( ); //UART1 register configuration
-    P4_DIR |= 0x10; //When using P4 port, you must set the direction, TXD1 is set as output
-
-//inquiry mode
-    while(1)
-    {
-// CH559UART1SendStr(Str);
-       CH559UART1Rcv(buffer,7);
-       for(i = 0;i <7;i++)
-       {
-           CH559UART1SendByte(buffer[i]);
-       }
-    }
-}*/

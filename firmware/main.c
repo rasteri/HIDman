@@ -27,7 +27,7 @@ void EveryMillisecond(void) {
 	SoftWatchdog++;
 	if (SoftWatchdog > 5000) {
 		// if soft watchdog overflows, just go into an infinite loop and we'll trigger the real watchdog
-		ANDYS_DEBUG_OUT("Soft overflow\n");
+		DEBUGOUT("Soft overflow\n");
 		while(1);
 	}
 
@@ -223,7 +223,7 @@ int main(void)
 	memset(SendBuffer, 0, 255);
 	memset(MouseBuffer, 0, MOUSE_BUFFER_SIZE);
 
-	if (WatchdogReset) DEBUG_OUT("Watchdog reset detected (%x), entering safemode\n", PCON);
+	if (WatchdogReset) DEBUGOUT("Watchdog reset detected (%x), entering safemode\n", PCON);
 
 	InitSettings(WatchdogReset);
 
@@ -239,7 +239,7 @@ int main(void)
 
 	OutputsEnabled = 1;
 
-	ANDYS_DEBUG_OUT("ok\n");
+	DEBUGOUT("ok\n");
 
 	// main loop
 	while (1)

@@ -379,7 +379,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 					Menu_Press_Key(c);
 				else
 				{
-					ANDYS_DEBUG_OUT("\nSendn %x\n", c);
+					//DEBUGOUT("\nSendn %x\n", c);
 					// Make
 					if (c <= 0x67)
 					{
@@ -400,7 +400,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 					// break
 					if (c <= 0x67)
 					{
-						ANDYS_DEBUG_OUT("\nBreakn %x\n", c);
+						//DEBUGOUT("\nBreakn %x\n", c);
 						// if the key we just released is the one that's repeating then stop
 						if (c == RepeatKey)
 						{

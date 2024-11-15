@@ -1,21 +1,6 @@
 #ifndef	__SYSTEM_H__
 #define __SYSTEM_H__
 
-//���庯������ֵ
-#ifndef  SUCCESS
-#define  SUCCESS  1
-#endif
-#ifndef  FAIL
-#define  FAIL    0
-#endif
-
-//���嶨ʱ����ʼ
-#ifndef  START
-#define  START  1
-#endif
-#ifndef  STOP
-#define  STOP    0
-#endif
 
 //#define	 FREQ_SYS	48000000ul	  //ϵͳ��Ƶ48MHz
 
@@ -33,26 +18,11 @@ void mDelaymS(UINT16 n);              // ��mSΪ��λ��ʱ
 
 #include <stdio.h>
 
-#if 0
-    #define ANDYS_DEBUG_OUT(...) printf(__VA_ARGS__);
-#else
-    #define ANDYS_DEBUG_OUT(...) (void)0;
-#endif
-
-
-#if 0
-    #define DEBUG_OUT(...) printf(__VA_ARGS__);
-#else
-    #define DEBUG_OUT(...) (void)0;
-#endif
 
 void initClock(void);
 unsigned char UART0Receive(void);
 void UART0Send(unsigned char b);
 int putcharserial(int c);
-
-#define DYNAMIC_MEMORY_SIZE 0x400
-extern unsigned char __xdata dynamic_memory_pool[DYNAMIC_MEMORY_SIZE];
 
 #define st(x)      do { x } while (__LINE__ == -1)
 
@@ -74,6 +44,6 @@ void ClockInit(void);
 
 extern volatile uint16_t SoftWatchdog;
 extern volatile bool OutputsEnabled;
-
+#define DEBUGOUT(...) { printf(__VA_ARGS__);}
 #endif
 

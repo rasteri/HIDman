@@ -174,7 +174,7 @@ void main()
     testlinkedlist();
 
 
-    /*TestDescriptors (
+    TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
         PS4ReportDescriptor, 507,
@@ -207,7 +207,7 @@ void main()
         CheapoKeyboardConfigDescriptor, 59,
         CheapoKeyboardReportDescriptor, 54,
         8
-    );*/
+    );
 
    /* TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,

@@ -5,6 +5,7 @@
     can be used as a sparse array
     kinda based on https://www.geeksforgeeks.org/generic-linked-list-in-c-2/
 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

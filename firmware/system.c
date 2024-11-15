@@ -134,14 +134,15 @@ int putcharserial(int c)
 
 int putchar(int c)
 {
-#if !defined(BOARD_MICRO)
-if (SerialDebugOutput){
-	while (!TI)
-		;
-	TI = 0;
-	SBUF = c & 0xFF;
-}
-#endif
+	#if !defined(BOARD_MICRO)
+	if (FlashSettings->SerialDebugOutput){
+		while (!TI)
+			;
+		TI = 0;
+		SBUF = c & 0xFF;
+	}
+	#endif
+	
 	if (KeyboardDebugOutput)
 	{
 		// capitals, hold shift first

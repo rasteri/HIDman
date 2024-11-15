@@ -43,7 +43,7 @@ void DumpPresets(void){
 
 	while (currPreset != NULL)
 	{
-        DEBUG_OUT("%x ", currPreset->InputUsage);
+        DEBUGOUT("%x ", currPreset->InputUsage);
 		currPreset = currPreset->next;
 	}
 }

@@ -27,6 +27,9 @@ typedef struct Settings {
     // Use game controller to control mouse
     bool GameControllerAsMouse;
 
+    // Output debug info to serial port
+    bool SerialDebugOutput;
+
     // What type of computer the keyboard is plugged into (i.e. PS2 or XT)
     uint8_t KeyboardMode;
 

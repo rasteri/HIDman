@@ -23,8 +23,8 @@ uint8_t SyncSettings(void) {
     if(EraseDataFlash(0xF000) == 0){
         if (WriteDataFlash(0xF000, (uint8_t *)&HMSettings, sizeof(Settings)) == 0)
             return 0;
-        else DEBUG_OUT("Cant Write\n");
-    }else DEBUG_OUT("Cant Erase\n");
+        else DEBUGOUT("Cant Write\n");
+    }else DEBUGOUT("Cant Erase\n");
     return 1;
 }
 
@@ -33,24 +33,23 @@ void InitSettings(bool SafeMode){
     // magic value not present (or we're in safe mode), initialize flash data
     if (SafeMode || FlashSettings->Magic != 0x54178008) {
 
-        DEBUG_OUT("Magic Missing\n");
+        DEBUGOUT("Magic Missing\n");
 
         memset(&HMSettings, 0x00, sizeof(Settings));
         HMSettings.Magic = 0x54178008;
 
         //if (!SafeMode) HMSettings.Intellimouse = 1;
         HMSettings.Intellimouse = 1;
-        HMSettings.MouseReportMode = 1;
         
         if (SyncSettings()) {
-            DEBUG_OUT("Writin failed\n");
+            DEBUGOUT("Writin failed\n");
         }
     }
     memcpy(&HMSettings, FlashSettings, sizeof(Settings));
 
     if (HMSettings.Magic != 0x54178008){
         // failed, do something bad
-        DEBUG_OUT("Initing settings failed\n");
+        DEBUGOUT("Initing settings failed\n");
     }
 }
 

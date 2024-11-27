@@ -50,6 +50,7 @@ clock_t NextThink = 0;
 
 unsigned char far *text_mem = MK_FP(0xB000, 0x8000);
 
+
 void BuildCodeCache()
 {
     unsigned char cunt;
@@ -177,6 +178,30 @@ void DrawBox(int ax, int ay, int bx, int by)
     }
 }
 
+
+void DrawKey(KeyDef *key)
+{
+    unsigned char shit = 0;
+    char *pnt;
+
+    DrawBox(key->XPos, key->YPos, key->XPos + key->Xsize + 1, key->YPos + key->Ysize + 1);
+
+    pnt = &(key->Legend[0]);
+
+    gotoxy(key->XPos + 1, key->YPos + 1);
+
+    while (*pnt != '\0')
+    {
+        if (*pnt == '\n')
+        {
+            gotoxy(key->XPos + 1, key->YPos + (++shit) + 1);
+        }
+        else
+            putchar(*pnt);
+        pnt++;
+    }
+}
+
 void SetCharAttrs(unsigned int x, unsigned int y, unsigned char attr){
     unsigned char far *screenpt;
 
@@ -194,6 +219,7 @@ void HighlightKey(KeyDef *Key, unsigned char outtype, char silent)
 
     if (outtype == TYPE_MAKE)
     {
+        //DrawKey(Key);
         if (!silent)
         {
             ClearText(22, 24, 54);
@@ -461,6 +487,48 @@ KeyDef KEY_BIOS_SCROLLLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_SCROLLLOCK, NULL
 KeyDef KEY_BIOS_NUMLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_NUMLOCK, NULL, 61, 1, 3, 1};
 KeyDef KEY_BIOS_INSLOCK = {NULL, NULL, NULL, NULL, NAME_BIOS_INSLOCK, NULL, 75, 1, 3, 1};
 
+clock_t lastmouseread = 0;
+float velx, vely;
+
+#define FILTERALPHA 0.2
+
+void ReadMouse() {
+    union REGS r;
+    int grabbed;
+    clock_t currtime;
+    int clockvelx, clockvely;
+
+
+
+    currtime = clock();
+
+    if (currtime > lastmouseread) {
+        //read buttons
+        r.x.ax = 0x03;
+        grabbed = int86(0x33, &r, &r);
+        gotoxy(62, 23);
+        printf("%04X", r.x.bx);
+
+        // read relative mouse movement
+        r.x.ax = 0x0B;
+        grabbed = int86(0x33, &r, &r);
+
+        // reread clock so we're accurate
+        currtime = clock();
+
+        clockvelx = (int)r.x.cx;
+        clockvely = (int)r.x.dx;
+
+        velx = (FILTERALPHA * ((float)clockvelx / (float)(currtime - lastmouseread))) + ((1-FILTERALPHA) * velx);
+        vely = (FILTERALPHA * ((float)clockvely / (float)(currtime - lastmouseread))) + ((1-FILTERALPHA) * vely);
+
+        gotoxy(67, 23);
+        printf("%4.0f %4.0f  ", velx, vely);
+        lastmouseread = currtime;
+    }
+
+}
+
 int main(int argc, char *argv[])
 {
     union REGS r;
@@ -492,8 +560,27 @@ int main(int argc, char *argv[])
 
     clrscr();
 
+    for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    {
+        printf(KeyDefs[cunt].Name);
+        printf(",");
+        pnt = KeyDefs[cunt].Legend;
+        while (*pnt){
+            printf("%02X ", *pnt++);
+        }
+        printf(", %d, %d, %d, %d, ", KeyDefs[cunt].XPos, KeyDefs[cunt].YPos, KeyDefs[cunt].Xsize, KeyDefs[cunt].Ysize);
+        pnt = KeyDefs[cunt].Legend;
+        while (*pnt){
+            printf("%02X ", *pnt++);
+        }
+        printf("\n");
+
+    }
+    exit(0);
     _fmemset(ScreenBuf, 0x00, 0x781);
 
+    r.x.ax = 0x01;
+    grabbed = int86(0x33, &r, &r);
 
     if (argc == 2)
     {
@@ -552,20 +639,7 @@ int main(int argc, char *argv[])
     // Draw the keys
     for (cunt = 0; cunt < KeyDefsSize; cunt++)
     {
-        shit = 0;
-        DrawBox(KeyDefs[cunt].XPos, KeyDefs[cunt].YPos, KeyDefs[cunt].XPos + KeyDefs[cunt].Xsize+1, KeyDefs[cunt].YPos + KeyDefs[cunt].Ysize+1);
-        pnt = &(KeyDefs[cunt].Legend[0]);
-
-        gotoxy(KeyDefs[cunt].XPos+1, KeyDefs[cunt].YPos+1);
-
-        while (*pnt != '\0') {
-            if (*pnt == '\n'){
-                gotoxy(KeyDefs[cunt].XPos+1, KeyDefs[cunt].YPos + (++shit) + 1);
-            }
-            else
-                putchar(*pnt);
-            pnt++;
-        }
+        DrawKey(&KeyDefs[cunt]);
     }
 
     gotoxy(59, 1);
@@ -591,10 +665,6 @@ int main(int argc, char *argv[])
 
     gotoxy(1, 25);
     fputs("Last Action : ", stdout);
-
-
-
-
 
     // TOP SECRET TEST MODE
     // Lights up all keys
@@ -689,6 +759,8 @@ int main(int argc, char *argv[])
                 HeldKeyIndex = 0;
                 NextThink = 0xFFFFFFFF;
             }
+
+            ReadMouse();
         }
         else
         {
@@ -696,6 +768,10 @@ int main(int argc, char *argv[])
     }
 
 ehoh:
+    // Hide mouse cursor
+    r.x.ax = 0x02;
+    grabbed = int86(0x33, &r, &r);
+
     textcolor(LIGHTGRAY);
     textbackground(BLACK);
     clrscr();
@@ -705,13 +781,3 @@ ehoh:
         unhook_keyb_int();
     return 0;
 }
-
-/*
-1234567890
-QWERTYUIOP
-ASDFGHJJKL
- ZXCVBNM
-
-*/
-
-// todo : 4&5 triggering F11/F12

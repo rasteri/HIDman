@@ -40,7 +40,7 @@ char NAME_9[] = "Nine / Left Round Bracket (Main)";
 char NAME_TILDE[] = "Backquote/Tilde";
 char NAME_DASH[] = "Dash/Underscore";
 char NAME_EQUAL[] = "Equals/Plus (Main)";
-char NAME_BKSLASH[] = "Backslash/Pipe (US), or Hash/Tilde (Europe)";
+char NAME_BKSLASH[] = "Backslash/Pipe (US) or Hash/Tilde (Europe)";
 char NAME_BKSPACE[] = "Backspace";
 char NAME_SPACE[] = "Space";
 char NAME_TAB[] = "Tab";
@@ -106,12 +106,12 @@ char NAME_APOSTROPHE[] = "Apostrophe/At Symbol";
 char NAME_COMMA[] = "Comma/Left Angle Bracket";
 char NAME_PERIOD[] = "Period/Right Angle Bracket";
 char NAME_FWSLASH[] = "Forward Slash/Question Mark";
-char NAME_EURO1[] = "Backslash/Pipe (US), or Hash/Tilde (Europe)";
+char NAME_EURO1[] = "Backslash/Pipe (US) or Hash/Tilde (Europe)";
 char NAME_EURO2[] = "Backslash/Pipe (Europe)";
 char NAME_BIOS_F11[] = "F11 (BIOS)";
 char NAME_BIOS_F12[] = "F12 (BIOS)";
-char NAME_BIOS_PADEN[] = "Enter (Keypad, BIOS)";
-char NAME_BIOS_PADFWSLASH[] = "Forward Slash (Keypad, BIOS)";
+char NAME_BIOS_PADEN[] = "Enter (Keypad/BIOS)";
+char NAME_BIOS_PADFWSLASH[] = "Forward Slash (Keypad/BIOS)";
 char NAME_SYSPOWER[] = "System Power";
 char NAME_SYSSLEEP[] = "System Sleep";
 char NAME_SYSWAKE[] = "System Wake";
@@ -158,7 +158,7 @@ char NAME_WWWSTOP[] = "WWW Stop";
 char NAME_WWWREFRESH[] = "WWW Refresh";
 char NAME_WWWFAV[] = "WWW Favorites";
 
-char NAME_AMSTRAD_PADEN[] = "Enter (Keypad, Amstrad)";
+char NAME_AMSTRAD_PADEN[] = "Enter (Keypad/Amstrad)";
 char NAME_AMSTRAD_RDEL[] = "Forwardspace (Amstrad)";
 
 
@@ -239,10 +239,10 @@ char LEGEND_PGUP[] = "PG\nUP";
 char LEGEND_DELETE[] = "DEL";
 char LEGEND_END[] = "END";
 char LEGEND_PGDN[] = "PG\nDN";
-char LEGEND_UP[] = {0x1E, 0x00};
-char LEGEND_LEFT[] = {0x11, 0x00};
-char LEGEND_DOWN[] = {0x1F, 0x00};
-char LEGEND_RIGHT[] = {0x10, 0x00};
+char LEGEND_UP[] = {' ', 0x1E, ' ', 0x00};
+char LEGEND_LEFT[] = {' ', 0x11, ' ', 0x00};
+char LEGEND_DOWN[] = {' ', 0x1F, ' ', 0x00};
+char LEGEND_RIGHT[] = {' ', 0x10, ' ', 0x00};
 char LEGEND_NUM[] = "NL";
 char LEGEND_PADFWSLASH[] = "/";
 char LEGEND_PADASTERISK[] = "*";
@@ -455,15 +455,15 @@ DEFINEXTKEY(F22, 44, 1, 3, 1),
 DEFINEXTKEY(F23, 48, 1, 3, 1),
 DEFINEXTKEY(F24, 52, 1, 3, 1),
 DEFINEXTKEY(INTL1, 27, 15, 2, 2),
-DEFINEXTKEY(INTL2, 4, 21, 7, 1),
+DEFINEXTKEY(INTL2, 1, 21, 7, 1),
 DEFINEXTKEY(INTL3, 28, 6, 1, 2),
-DEFINEXTKEY(INTL4, 12, 21, 6, 1),
-DEFINEXTKEY(INTL5, 19, 21, 8, 1),
-DEFINEXTKEY(INTL6, 28, 21, 1, 1),
-DEFINEXTKEY(LANG1, 45, 21, 7, 1),
-DEFINEXTKEY(LANG2, 53, 21, 5, 1),
-DEFINEXTKEY(LANG3, 30, 21, 4, 1),
-DEFINEXTKEY(LANG4, 35, 21, 4, 1),
+DEFINEXTKEY(INTL4, 9, 21, 6, 1),
+DEFINEXTKEY(INTL5, 16, 21, 8, 1),
+DEFINEXTKEY(INTL6, 25, 21, 1, 1),
+DEFINEXTKEY(LANG1, 40, 21, 7, 1),
+DEFINEXTKEY(LANG2, 48, 21, 5, 1),
+DEFINEXTKEY(LANG3, 27, 21, 4, 1),
+DEFINEXTKEY(LANG4, 32, 21, 4, 1),
 DEFINEXTKEY(LANG5, 1, 4, 3, 1),
 DEFINEXTKEY(MEDIANEXT, 71, 5, 2, 1),
 DEFINEXTKEY(MEDIAPREV, 63, 5, 2, 1),

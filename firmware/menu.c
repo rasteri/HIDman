@@ -55,7 +55,7 @@ void SendKeyboardBuffer(void)
         // capitals, hold shift first
         if (currchar >= 0x41 && currchar <= 0x5A)
             while (!SendKeyboard(
-                (FlashSettings->KeyboardMode == MODE_PS2) ? KEY_LSHIFT_MAKE : XT_KEY_LSHIFT_MAKE))
+                (FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
                 ;
 
         // press the key
@@ -67,7 +67,7 @@ void SendKeyboardBuffer(void)
         // release shift
         if (currchar >= 0x41 && currchar <= 0x5A)
         {
-            while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_LSHIFT_BREAK : XT_KEY_LSHIFT_BREAK))
+            while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
                 ;
         }
         BufferIndex++;
@@ -146,15 +146,15 @@ void Menu_Task(void)
                 SendKeyboardString("1. Advanced USB - ");
                 YesNo(FlashSettings->KeyboardReportMode);
 
-                SendKeyboardString("2. 81 Key Mode - ");
-                YesNo(FlashSettings->XT81Keys);
+                SendKeyboardString("2. 83 Key Mode - ");
+                YesNo(FlashSettings->XT83Keys);
 
                 SendKeyboardString("\nESC. Main Menu\n");
                 lastMenuState = menuState;
             }
             switch (menuKey) {
                 case KEY_1:     HMSettings.KeyboardReportMode ^= 1;     SyncSettings(); lastMenuState = 0; break;
-                case KEY_2:     HMSettings.XT81Keys ^= 1;               SyncSettings(); lastMenuState = 0; break;
+                case KEY_2:     HMSettings.XT83Keys ^= 1;               SyncSettings(); lastMenuState = 0; break;
                 case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
             }
         break;

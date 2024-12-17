@@ -78,8 +78,8 @@ bool SendKeyboard(const uint8_t *chunk)
 	if (chunk == NULL)
 		return 1;
 
-	// If we're emulating an 81-key keyboard, don't send keycodes starting with E0
-	if (FlashSettings->XT81Keys && chunk[1] == 0xE0) {
+	// If we're emulating an 83-key keyboard, don't send keycodes starting with E0
+	if (FlashSettings->XT83Keys && chunk[1] == 0xE0) {
 		TR0 = 1; 
 		return 1; // just pretend we sent it
 	}
@@ -103,14 +103,14 @@ bool SendKeyboard(const uint8_t *chunk)
 void PressKey(uint8_t currchar)
 {
     while (!SendKeyboard(
-        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[ASCIItoHID[currchar]] : HIDtoXT_Make[ASCIItoHID[currchar]]))
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[ASCIItoHID[currchar]] : HIDtoSET1_Make[ASCIItoHID[currchar]]))
         ;
 }
 
 void ReleaseKey(uint8_t currchar)
 {
     while (!SendKeyboard(
-        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[ASCIItoHID[currchar]] : HIDtoXT_Break[ASCIItoHID[currchar]]))
+        FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[ASCIItoHID[currchar]] : HIDtoSET1_Break[ASCIItoHID[currchar]]))
         ;
 }
 

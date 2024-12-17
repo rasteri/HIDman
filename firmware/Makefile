@@ -10,6 +10,7 @@ BOARD_OPTIONS = OPT_DEFAULT
 #BOARD_OPTIONS = OPT_SWAP_KBD_MSC
 
 CC = sdcc
+GCC = gcc
 OBJCOPY = sdobjcopy
 PACK_HEX = packihx
 WCHISP = wchisptool
@@ -105,3 +106,7 @@ clean:
 test: $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel
 	$(CC) $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel $(LFLAGS) -o $(OBJDIR)/test.ihx
 	s51 -s - build/test 
+
+datagen:
+	$(GCC) ../data/datagen.c -o datagen
+	datagen

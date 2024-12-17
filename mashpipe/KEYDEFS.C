@@ -1,489 +1,617 @@
 #include "keydefs.h"
 #include "..\firmware\scancode.c"
+char NAME_PWR[] = "System Power";
+unsigned char LEGEND_PWR[] = {0x50, 0x57, 0x52, 0x00};
+
+char NAME_SLEP[] = "System Sleep";
+unsigned char LEGEND_SLEP[] = {0x53, 0x4C, 0x45, 0x50, 0x00};
+
+char NAME_WAKE[] = "System Wake";
+unsigned char LEGEND_WAKE[] = {0x57, 0x41, 0x4B, 0x45, 0x00};
 
 char NAME_A[] = "A";
+unsigned char LEGEND_A[] = {0x41, 0x00};
+
 char NAME_B[] = "B";
+unsigned char LEGEND_B[] = {0x42, 0x00};
+
 char NAME_C[] = "C";
+unsigned char LEGEND_C[] = {0x43, 0x00};
+
 char NAME_D[] = "D";
+unsigned char LEGEND_D[] = {0x44, 0x00};
+
 char NAME_E[] = "E";
+unsigned char LEGEND_E[] = {0x45, 0x00};
+
 char NAME_F[] = "F";
+unsigned char LEGEND_F[] = {0x46, 0x00};
+
 char NAME_G[] = "G";
+unsigned char LEGEND_G[] = {0x47, 0x00};
+
 char NAME_H[] = "H";
+unsigned char LEGEND_H[] = {0x48, 0x00};
+
 char NAME_I[] = "I";
+unsigned char LEGEND_I[] = {0x49, 0x00};
+
 char NAME_J[] = "J";
+unsigned char LEGEND_J[] = {0x4A, 0x00};
+
 char NAME_K[] = "K";
+unsigned char LEGEND_K[] = {0x4B, 0x00};
+
 char NAME_L[] = "L";
+unsigned char LEGEND_L[] = {0x4C, 0x00};
+
 char NAME_M[] = "M";
+unsigned char LEGEND_M[] = {0x4D, 0x00};
+
 char NAME_N[] = "N";
+unsigned char LEGEND_N[] = {0x4E, 0x00};
+
 char NAME_O[] = "O";
+unsigned char LEGEND_O[] = {0x4F, 0x00};
+
 char NAME_P[] = "P";
+unsigned char LEGEND_P[] = {0x50, 0x00};
+
 char NAME_Q[] = "Q";
+unsigned char LEGEND_Q[] = {0x51, 0x00};
+
 char NAME_R[] = "R";
+unsigned char LEGEND_R[] = {0x52, 0x00};
+
 char NAME_S[] = "S";
+unsigned char LEGEND_S[] = {0x53, 0x00};
+
 char NAME_T[] = "T";
+unsigned char LEGEND_T[] = {0x54, 0x00};
+
 char NAME_U[] = "U";
+unsigned char LEGEND_U[] = {0x55, 0x00};
+
 char NAME_V[] = "V";
+unsigned char LEGEND_V[] = {0x56, 0x00};
+
 char NAME_W[] = "W";
+unsigned char LEGEND_W[] = {0x57, 0x00};
+
 char NAME_X[] = "X";
+unsigned char LEGEND_X[] = {0x58, 0x00};
+
 char NAME_Y[] = "Y";
+unsigned char LEGEND_Y[] = {0x59, 0x00};
+
 char NAME_Z[] = "Z";
-char NAME_0[] = "Zero / Right Round Bracket (Main)";
+unsigned char LEGEND_Z[] = {0x5A, 0x00};
+
 char NAME_1[] = "One / Exclamation Mark (Main)";
+unsigned char LEGEND_1[] = {0x21, 0x0A, 0x31, 0x00};
+
 char NAME_2[] = "Two / At Symbol (Main)";
+unsigned char LEGEND_2[] = {0x40, 0x0A, 0x32, 0x00};
+
 char NAME_3[] = "Three / Hash (Main)";
+unsigned char LEGEND_3[] = {0x23, 0x0A, 0x33, 0x00};
+
 char NAME_4[] = "Four / Dollar Sign (Main)";
+unsigned char LEGEND_4[] = {0x24, 0x0A, 0x34, 0x00};
+
 char NAME_5[] = "Five / Percent Sign (Main)";
+unsigned char LEGEND_5[] = {0x25, 0x0A, 0x35, 0x00};
+
 char NAME_6[] = "Six / Caret (Main)";
+unsigned char LEGEND_6[] = {0x5E, 0x0A, 0x36, 0x00};
+
 char NAME_7[] = "Seven / Ampersand (Main)";
+unsigned char LEGEND_7[] = {0x26, 0x0A, 0x37, 0x00};
+
 char NAME_8[] = "Eight / Asterisk (Main)";
+unsigned char LEGEND_8[] = {0x2A, 0x0A, 0x38, 0x00};
+
 char NAME_9[] = "Nine / Left Round Bracket (Main)";
-char NAME_TILDE[] = "Backquote/Tilde";
-char NAME_DASH[] = "Dash/Underscore";
-char NAME_EQUAL[] = "Equals/Plus (Main)";
-char NAME_BKSLASH[] = "Backslash/Pipe (US) or Hash/Tilde (Europe)";
-char NAME_BKSPACE[] = "Backspace";
-char NAME_SPACE[] = "Space";
-char NAME_TAB[] = "Tab";
-char NAME_CAPS[] = "Caps Lock";
-char NAME_LSHIFT[] = "Shift (Left)";
-char NAME_LCTRL[] = "Control (Left)";
-char NAME_LGUI[] = "GUI (Left)";
-char NAME_LALT[] = "Alt (Left)";
-char NAME_RSHIFT[] = "Shift (Right)";
-char NAME_RCTRL[] = "Control (Right)";
-char NAME_RGUI[] = "GUI (Right)";
-char NAME_RALT[] = "Alt (Right)";
-char NAME_APPS[] = "Apps";
+unsigned char LEGEND_9[] = {0x28, 0x0A, 0x39, 0x29, 0x00};
+
+char NAME_0[] = "Zero / Right Round Bracket (Main)";
+unsigned char LEGEND_0[] = {0x29, 0x0A, 0x30, 0x00};
+
 char NAME_ENTER[] = "Enter (Main)";
-char NAME_ESC[] = "Escape";
-char NAME_F1[] = "F1";
-char NAME_F2[] = "F2";
-char NAME_F3[] = "F3";
-char NAME_F4[] = "F4";
-char NAME_F5[] = "F5";
-char NAME_F6[] = "F6";
-char NAME_F7[] = "F7";
-char NAME_F8[] = "F8";
-char NAME_F9[] = "F9";
-char NAME_F10[] = "F10";
-char NAME_F11[] = "F11";
-char NAME_F12[] = "F12";
-char NAME_PRTSC[] = "Print Screen/SysRq";
-char NAME_SCROLL[] = "Scroll Lock";
-char NAME_PAUSE[] = "Pause/Break";
+unsigned char LEGEND_ENTER[] = {0x45, 0x4E, 0x54, 0x0A, 0x11, 0xC4, 0xD9, 0x00};
+
+char NAME_ESCAPE[] = "Escape";
+unsigned char LEGEND_ESCAPE[] = {0x45, 0x53, 0x43, 0x00};
+
+char NAME_BKSPACE[] = "Backspace";
+unsigned char LEGEND_BKSPACE[] = {0x42, 0x4B, 0x53, 0x0A, 0x20, 0x3C, 0x2D, 0x00};
+
+char NAME_TAB[] = "Tab";
+unsigned char LEGEND_TAB[] = {0x54, 0x41, 0x42, 0x00};
+
+char NAME_SPACE[] = "Space";
+unsigned char LEGEND_SPACE[] = {0x53, 0x50, 0x43, 0x00};
+
+char NAME_DASH[] = "Dash/Underscore";
+unsigned char LEGEND_DASH[] = {0x5F, 0x0A, 0x2D, 0x00};
+
+char NAME_EQUALS[] = "Equals/Plus (Main)";
+unsigned char LEGEND_EQUALS[] = {0x2B, 0x0A, 0x3D, 0x00};
+
 char NAME_LEFTSQB[] = "Left Square/Curly Bracket";
-char NAME_INSERT[] = "Insert (Main)";
-char NAME_HOME[] = "Home (Main)";
-char NAME_PGUP[] = "Page Up (Main)";
-char NAME_DELETE[] = "Delete (Main)";
-char NAME_END[] = "End (Main)";
-char NAME_PGDN[] = "Page Down (Main)";
-char NAME_UP[] = "Up Arrow (Main)";
-char NAME_LEFT[] = "Left Arrow (Main)";
-char NAME_DOWN[] = "Down Arrow (Main)";
-char NAME_RIGHT[] = "Right Arrow (Main)";
-char NAME_NUM[] = "Num Lock";
-char NAME_PADFWSLASH[] = "Forward Slash (Keypad)";
-char NAME_PADASTERISK[] = "Asterisk (Keypad)";
-char NAME_PADMINUS[] = "Minus (Keypad)";
-char NAME_PADPLUS[] = "Plus (Keypad)";
-char NAME_PADEN[] = "Enter (Keypad)";
-char NAME_PADDOT[] = "Period/Delete (Keypad)";
-char NAME_PAD0[] = "Zero/Insert (Keypad)";
-char NAME_PAD1[] = "One/End (Keypad)";
-char NAME_PAD2[] = "Two/Downarrow (Keypad)";
-char NAME_PAD3[] = "Three/Page Down (Keypad)";
-char NAME_PAD4[] = "Four/Left Arrow (Keypad)";
-char NAME_PAD5[] = "Five (Keypad)";
-char NAME_PAD6[] = "Six/Right Arrow (Keypad)";
-char NAME_PAD7[] = "Seven/Home (Keypad)";
-char NAME_PAD8[] = "Eight/Up Arrow (Keypad)";
-char NAME_PAD9[] = "Nine/Page Up (Keypad)";
-char NAME_PADCOMMA[] = "Comma (Keypad)";
+unsigned char LEGEND_LEFTSQB[] = {0x7B, 0x0A, 0x5B, 0x00};
+
 char NAME_RIGHTSQB[] = "Right Square/Curly Bracket";
-char NAME_SEMICOLON[] = "Semicolon/Colon";
-char NAME_APOSTROPHE[] = "Apostrophe/At Symbol";
-char NAME_COMMA[] = "Comma/Left Angle Bracket";
-char NAME_PERIOD[] = "Period/Right Angle Bracket";
-char NAME_FWSLASH[] = "Forward Slash/Question Mark";
+unsigned char LEGEND_RIGHTSQB[] = {0x7D, 0x0A, 0x5D, 0x00};
+
+char NAME_BKSLASH[] = "Backslash/Pipe (US) or Hash/Tilde (Europe)";
+unsigned char LEGEND_BKSLASH[] = {0x7C, 0x5C, 0x00};
+
 char NAME_EURO1[] = "Backslash/Pipe (US) or Hash/Tilde (Europe)";
+unsigned char LEGEND_EURO1[] = {0x7C, 0x5C, 0x00};
+
+char NAME_SEMICOLON[] = "Semicolon/Colon";
+unsigned char LEGEND_SEMICOLON[] = {0x3A, 0x0A, 0x3B, 0x00};
+
+char NAME_APOSTROPHE[] = "Apostrophe / Quotation Mark (US) or At Symbol (Europe)";
+unsigned char LEGEND_APOSTROPHE[] = {0x40, 0x0A, 0x27, 0x00};
+
+char NAME_TILDE[] = "Backquote/Tilde";
+unsigned char LEGEND_TILDE[] = {0x7E, 0x0A, 0x60, 0x7C, 0x00};
+
+char NAME_COMMA[] = "Comma/Left Angle Bracket";
+unsigned char LEGEND_COMMA[] = {0x3C, 0x0A, 0x2C, 0x00};
+
+char NAME_PERIOD[] = "Period/Right Angle Bracket";
+unsigned char LEGEND_PERIOD[] = {0x3E, 0x0A, 0x2E, 0x00};
+
+char NAME_FWSLASH[] = "Forward Slash/Question Mark";
+unsigned char LEGEND_FWSLASH[] = {0x3F, 0x0A, 0x2F, 0x00};
+
+char NAME_CAPS[] = "Caps Lock";
+unsigned char LEGEND_CAPS[] = {0x43, 0x41, 0x50, 0x53, 0x0A, 0x4C, 0x4F, 0x43, 0x4B, 0x00};
+
+char NAME_F1[] = "F1";
+unsigned char LEGEND_F1[] = {0x46, 0x31, 0x00};
+
+char NAME_F2[] = "F2";
+unsigned char LEGEND_F2[] = {0x46, 0x32, 0x00};
+
+char NAME_F3[] = "F3";
+unsigned char LEGEND_F3[] = {0x46, 0x33, 0x00};
+
+char NAME_F4[] = "F4";
+unsigned char LEGEND_F4[] = {0x46, 0x34, 0x00};
+
+char NAME_F5[] = "F5";
+unsigned char LEGEND_F5[] = {0x46, 0x35, 0x00};
+
+char NAME_F6[] = "F6";
+unsigned char LEGEND_F6[] = {0x46, 0x36, 0x00};
+
+char NAME_F7[] = "F7";
+unsigned char LEGEND_F7[] = {0x46, 0x37, 0x00};
+
+char NAME_F8[] = "F8";
+unsigned char LEGEND_F8[] = {0x46, 0x38, 0x00};
+
+char NAME_F9[] = "F9";
+unsigned char LEGEND_F9[] = {0x46, 0x39, 0x00};
+
+char NAME_F10[] = "F10";
+unsigned char LEGEND_F10[] = {0x46, 0x31, 0x30, 0x00};
+
+char NAME_F11[] = "F11";
+unsigned char LEGEND_F11[] = {0x46, 0x31, 0x31, 0x00};
+
+char NAME_F12[] = "F12";
+unsigned char LEGEND_F12[] = {0x46, 0x31, 0x32, 0x00};
+
+char NAME_PRTSCR[] = "Print Screen/SysRq";
+unsigned char LEGEND_PRTSCR[] = {0x50, 0x52, 0x54, 0x0A, 0x53, 0x43, 0x52, 0x00};
+
+char NAME_SCRLOCK[] = "Scroll Lock";
+unsigned char LEGEND_SCRLOCK[] = {0x53, 0x43, 0x52, 0x0A, 0x4C, 0x43, 0x4B, 0x00};
+
+char NAME_PAUSE[] = "Pause/Break";
+unsigned char LEGEND_PAUSE[] = {0x50, 0x53, 0x45, 0x0A, 0x42, 0x52, 0x4B, 0x00};
+
+char NAME_INSERT[] = "Insert (Main)";
+unsigned char LEGEND_INSERT[] = {0x49, 0x4E, 0x53, 0x00};
+
+char NAME_HOME[] = "Home (Main)";
+unsigned char LEGEND_HOME[] = {0x48, 0x4F, 0x4D, 0x00};
+
+char NAME_PGUP[] = "Page Up (Main)";
+unsigned char LEGEND_PGUP[] = {0x50, 0x47, 0x0A, 0x55, 0x50, 0x00};
+
+char NAME_DELETE[] = "Delete (Main)";
+unsigned char LEGEND_DELETE[] = {0x44, 0x45, 0x4C, 0x00};
+
+char NAME_END[] = "End (Main)";
+unsigned char LEGEND_END[] = {0x45, 0x4E, 0x44, 0x00};
+
+char NAME_PGDN[] = "Page Down (Main)";
+unsigned char LEGEND_PGDN[] = {0x50, 0x47, 0x0A, 0x44, 0x4E, 0x00};
+
+char NAME_RIGHT[] = "Right Arrow (Main)";
+unsigned char LEGEND_RIGHT[] = {0x20, 0x10, 0x20, 0x00};
+
+char NAME_LEFT[] = "Left Arrow (Main)";
+unsigned char LEGEND_LEFT[] = {0x20, 0x11, 0x20, 0x00};
+
+char NAME_DOWN[] = "Down Arrow (Main)";
+unsigned char LEGEND_DOWN[] = {0x20, 0x1F, 0x20, 0x00};
+
+char NAME_UP[] = "Up Arrow (Main)";
+unsigned char LEGEND_UP[] = {0x20, 0x1E, 0x20, 0x00};
+
+char NAME_NUMLCK[] = "Num Lock";
+unsigned char LEGEND_NUMLCK[] = {0x4E, 0x4C, 0x00};
+
+char NAME_PADFWSLASH[] = "Forward Slash (Keypad)";
+unsigned char LEGEND_PADFWSLASH[] = {0x2F, 0x00};
+
+char NAME_PADASTERISK[] = "Asterisk (Keypad)";
+unsigned char LEGEND_PADASTERISK[] = {0x2A, 0x00};
+
+char NAME_PADMINUS[] = "Minus (Keypad)";
+unsigned char LEGEND_PADMINUS[] = {0x2D, 0x00};
+
+char NAME_PADPLUS[] = "Plus (Keypad)";
+unsigned char LEGEND_PADPLUS[] = {0x2B, 0x00};
+
+char NAME_PADENTER[] = "Enter (Keypad)";
+unsigned char LEGEND_PADENTER[] = {0x45, 0x4E, 0x0A, 0x54, 0x52, 0x00};
+
+char NAME_PAD1[] = "One/End (Keypad)";
+unsigned char LEGEND_PAD1[] = {0x31, 0x0A, 0x45, 0x4E, 0x00};
+
+char NAME_PAD2[] = "Two/Downarrow (Keypad)";
+unsigned char LEGEND_PAD2[] = {0x32, 0x0A, 0x1F, 0x00};
+
+char NAME_PAD3[] = "Three/Page Down (Keypad)";
+unsigned char LEGEND_PAD3[] = {0x33, 0x0A, 0x50, 0x44, 0x00};
+
+char NAME_PAD4[] = "Four/Left Arrow (Keypad)";
+unsigned char LEGEND_PAD4[] = {0x34, 0x0A, 0x11, 0x00};
+
+char NAME_PAD5[] = "Five (Keypad)";
+unsigned char LEGEND_PAD5[] = {0x35, 0x00};
+
+char NAME_PAD6[] = "Six/Right Arrow (Keypad)";
+unsigned char LEGEND_PAD6[] = {0x36, 0x0A, 0x10, 0x00};
+
+char NAME_PAD7[] = "Seven/Home (Keypad)";
+unsigned char LEGEND_PAD7[] = {0x37, 0x0A, 0x48, 0x4D, 0x00};
+
+char NAME_PAD8[] = "Eight/Up Arrow (Keypad)";
+unsigned char LEGEND_PAD8[] = {0x38, 0x0A, 0x1E, 0x00};
+
+char NAME_PAD9[] = "Nine/Page Up (Keypad)";
+unsigned char LEGEND_PAD9[] = {0x39, 0x0A, 0x50, 0x55, 0x00};
+
+char NAME_PAD0[] = "Zero/Insert (Keypad)";
+unsigned char LEGEND_PAD0[] = {0x30, 0x0A, 0x49, 0x4E, 0x53, 0x00};
+
+char NAME_PADPERIOD[] = "Period/Delete (Keypad)";
+unsigned char LEGEND_PADPERIOD[] = {0x2E, 0x0A, 0x44, 0x4C, 0x00};
+
 char NAME_EURO2[] = "Backslash/Pipe (Europe)";
-char NAME_BIOS_F11[] = "F11 (BIOS)";
-char NAME_BIOS_F12[] = "F12 (BIOS)";
-char NAME_BIOS_PADEN[] = "Enter (Keypad/BIOS)";
-char NAME_BIOS_PADFWSLASH[] = "Forward Slash (Keypad/BIOS)";
-char NAME_SYSPOWER[] = "System Power";
-char NAME_SYSSLEEP[] = "System Sleep";
-char NAME_SYSWAKE[] = "System Wake";
-char NAME_PADEQUAL[] = "Keypad Equals";
+unsigned char LEGEND_EURO2[] = {0x7C, 0x0A, 0x5C, 0x00};
+
+char NAME_APP[] = "App";
+unsigned char LEGEND_APP[] = {0x4D, 0x4E, 0x55, 0x00};
+
+char NAME_KEYPOWER[] = "Keyboard Power";
+unsigned char LEGEND_KEYPOWER[] = {0x00};
+
+char NAME_PADEQUALS[] = "Keypad Equals";
+unsigned char LEGEND_PADEQUALS[] = {0x3D, 0x00};
+
 char NAME_F13[] = "F13";
+unsigned char LEGEND_F13[] = {0x46, 0x31, 0x33, 0x00};
+
 char NAME_F14[] = "F14";
+unsigned char LEGEND_F14[] = {0x46, 0x31, 0x34, 0x00};
+
 char NAME_F15[] = "F15";
+unsigned char LEGEND_F15[] = {0x46, 0x31, 0x35, 0x00};
+
 char NAME_F16[] = "F16";
+unsigned char LEGEND_F16[] = {0x46, 0x31, 0x36, 0x00};
+
 char NAME_F17[] = "F17";
+unsigned char LEGEND_F17[] = {0x46, 0x31, 0x37, 0x00};
+
 char NAME_F18[] = "F18";
+unsigned char LEGEND_F18[] = {0x46, 0x31, 0x38, 0x00};
+
 char NAME_F19[] = "F19";
+unsigned char LEGEND_F19[] = {0x46, 0x31, 0x39, 0x00};
+
 char NAME_F20[] = "F20";
+unsigned char LEGEND_F20[] = {0x46, 0x32, 0x30, 0x00};
+
 char NAME_F21[] = "F21";
+unsigned char LEGEND_F21[] = {0x46, 0x32, 0x31, 0x00};
+
 char NAME_F22[] = "F22";
+unsigned char LEGEND_F22[] = {0x46, 0x32, 0x32, 0x00};
+
 char NAME_F23[] = "F23";
+unsigned char LEGEND_F23[] = {0x46, 0x32, 0x33, 0x00};
+
 char NAME_F24[] = "F24";
+unsigned char LEGEND_F24[] = {0x46, 0x32, 0x34, 0x00};
+
+char NAME_PADCOMMA[] = "Comma (Keypad)";
+unsigned char LEGEND_PADCOMMA[] = {0x2C, 0x00};
+
 char NAME_INTL1[] = "Ro";
+unsigned char LEGEND_INTL1[] = {0x52, 0x6F, 0x00};
+
 char NAME_INTL2[] = "Katakana/Hiragana OR Forwardspace (AMSTRAD)";
+unsigned char LEGEND_INTL2[] = {0x4B, 0x41, 0x54, 0x2F, 0x48, 0x49, 0x52, 0x00};
+
 char NAME_INTL3[] = "Yen";
+unsigned char LEGEND_INTL3[] = {0x7C, 0x0A, 0x9D, 0x00};
+
 char NAME_INTL4[] = "Henkan";
+unsigned char LEGEND_INTL4[] = {0x48, 0x45, 0x4E, 0x4B, 0x41, 0x4E, 0x00};
+
 char NAME_INTL5[] = "Muhenkan";
+unsigned char LEGEND_INTL5[] = {0x4D, 0x55, 0x48, 0x45, 0x4E, 0x4B, 0x41, 0x4E, 0x00};
+
 char NAME_INTL6[] = "PC9800 Comma";
+unsigned char LEGEND_INTL6[] = {0x2C, 0x00};
+
 char NAME_LANG1[] = "Hangul/Yeong";
+unsigned char LEGEND_LANG1[] = {0x48, 0x41, 0x4E, 0x2F, 0x59, 0x45, 0x4F, 0x00};
+
 char NAME_LANG2[] = "Hanja";
+unsigned char LEGEND_LANG2[] = {0x48, 0x41, 0x4E, 0x4A, 0x41, 0x00};
+
 char NAME_LANG3[] = "Katakana";
+unsigned char LEGEND_LANG3[] = {0x4B, 0x41, 0x54, 0x41, 0x00};
+
 char NAME_LANG4[] = "Hiragana";
+unsigned char LEGEND_LANG4[] = {0x48, 0x49, 0x52, 0x41, 0x00};
+
 char NAME_LANG5[] = "Zenkaku/Hankaku/Kanji";
+unsigned char LEGEND_LANG5[] = {0x48, 0x5A, 0x4B, 0x00};
+
+char NAME_LCTRL[] = "Control (Left)";
+unsigned char LEGEND_LCTRL[] = {0x43, 0x54, 0x4C, 0x00};
+
+char NAME_LSHIFT[] = "Shift (Left)";
+unsigned char LEGEND_LSHIFT[] = {0x53, 0x48, 0x49, 0x0A, 0x5E, 0x00};
+
+char NAME_LALT[] = "Alt (Left)";
+unsigned char LEGEND_LALT[] = {0x41, 0x4C, 0x54, 0x00};
+
+char NAME_LGUI[] = "GUI (Left)";
+unsigned char LEGEND_LGUI[] = {0x47, 0x55, 0x49, 0x00};
+
+char NAME_RCTRL[] = "Control (Right)";
+unsigned char LEGEND_RCTRL[] = {0x43, 0x54, 0x52, 0x4C, 0x00};
+
+char NAME_RSHIFT[] = "Shift (Right)";
+unsigned char LEGEND_RSHIFT[] = {0x53, 0x48, 0x49, 0x0A, 0x5E, 0x00};
+
+char NAME_RALT[] = "Alt (Right)";
+unsigned char LEGEND_RALT[] = {0x41, 0x4C, 0x54, 0x00};
+
+char NAME_RGUI[] = "GUI (Right)";
+unsigned char LEGEND_RGUI[] = {0x47, 0x55, 0x49, 0x00};
+
 char NAME_MEDIANEXT[] = "Media Next Track";
+unsigned char LEGEND_MEDIANEXT[] = {0x10, 0x10, 0x00};
+
 char NAME_MEDIAPREV[] = "Media Previous Track";
+unsigned char LEGEND_MEDIAPREV[] = {0x11, 0x11, 0x00};
+
 char NAME_MEDIASTOP[] = "Media Stop";
-char NAME_MEDIAPLAY[] = "Media Play/Pause";
+unsigned char LEGEND_MEDIASTOP[] = {0x53, 0x00};
+
+char NAME_MEDIANPLAY[] = "Media Play/Pause";
+unsigned char LEGEND_MEDIANPLAY[] = {0x10, 0xDE, 0x00};
+
 char NAME_MEDIAMUTE[] = "Media Mute";
-char NAME_MEDIAVOLUP[] = "Media Volume Up";
-char NAME_MEDIAVOLDN[] = "Media Volume Down";
-char NAME_MEDIASEL[] = "Media Select";
-char NAME_MEDIAMAIL[] = "App Mail";
-char NAME_MEDIACALC[] = "App Calculator";
-char NAME_MEDIACOMP[] = "App My Computer";
+unsigned char LEGEND_MEDIAMUTE[] = {0x4D, 0x00};
+
+char NAME_VOLUP[] = "Media Volume Up";
+unsigned char LEGEND_VOLUP[] = {0x1E, 0x00};
+
+char NAME_VOLDN[] = "Media Volume Down";
+unsigned char LEGEND_VOLDN[] = {0x1F, 0x00};
+
+char NAME_MEDSELECT[] = "Media Select";
+unsigned char LEGEND_MEDSELECT[] = {0x53, 0x45, 0x4C, 0x00};
+
+char NAME_APPMAIL[] = "App Mail";
+unsigned char LEGEND_APPMAIL[] = {0x4D, 0x41, 0x49, 0x4C, 0x00};
+
+char NAME_APPCALC[] = "App Calculator";
+unsigned char LEGEND_APPCALC[] = {0x43, 0x41, 0x4C, 0x43, 0x00};
+
+char NAME_APPMYCOMP[] = "App My Computer";
+unsigned char LEGEND_APPMYCOMP[] = {0x4D, 0x43, 0x00};
+
 char NAME_WWWSEARCH[] = "WWW Search";
+unsigned char LEGEND_WWWSEARCH[] = {0x53, 0x45, 0x41, 0x52, 0x43, 0x48, 0x00};
+
 char NAME_WWWHOME[] = "WWW Home";
+unsigned char LEGEND_WWWHOME[] = {0x48, 0x4F, 0x4D, 0x45, 0x00};
+
 char NAME_WWWBACK[] = "WWW Back";
+unsigned char LEGEND_WWWBACK[] = {0x11, 0x11, 0x00};
+
 char NAME_WWWFORWARD[] = "WWW Forward";
+unsigned char LEGEND_WWWFORWARD[] = {0x10, 0x10, 0x00};
+
 char NAME_WWWSTOP[] = "WWW Stop";
+unsigned char LEGEND_WWWSTOP[] = {0x53, 0x54, 0x4F, 0x50, 0x00};
+
 char NAME_WWWREFRESH[] = "WWW Refresh";
-char NAME_WWWFAV[] = "WWW Favorites";
+unsigned char LEGEND_WWWREFRESH[] = {0x52, 0x46, 0x52, 0x45, 0x53, 0x48, 0x00};
 
-char NAME_AMSTRAD_PADEN[] = "Enter (Keypad/Amstrad)";
-char NAME_AMSTRAD_RDEL[] = "Forwardspace (Amstrad)";
-
-
-char LEGEND_A[] = "A";
-char LEGEND_B[] = "B";
-char LEGEND_C[] = "C";
-char LEGEND_D[] = "D";
-char LEGEND_E[] = "E";
-char LEGEND_F[] = "F";
-char LEGEND_G[] = "G";
-char LEGEND_H[] = "H";
-char LEGEND_I[] = "I";
-char LEGEND_J[] = "J";
-char LEGEND_K[] = "K";
-char LEGEND_L[] = "L";
-char LEGEND_M[] = "M";
-char LEGEND_N[] = "N";
-char LEGEND_O[] = "O";
-char LEGEND_P[] = "P";
-char LEGEND_Q[] = "Q";
-char LEGEND_R[] = "R";
-char LEGEND_S[] = "S";
-char LEGEND_T[] = "T";
-char LEGEND_U[] = "U";
-char LEGEND_V[] = "V";
-char LEGEND_W[] = "W";
-char LEGEND_X[] = "X";
-char LEGEND_Y[] = "Y";
-char LEGEND_Z[] = "Z";
-char LEGEND_0[] = ")\n0";
-char LEGEND_1[] = "!\n1";
-char LEGEND_2[] = "@\n2";
-char LEGEND_3[] = "#\n3";
-char LEGEND_4[] = "$\n4";
-char LEGEND_5[] = "%\n5";
-char LEGEND_6[] = "^\n6";
-char LEGEND_7[] = "&\n7";
-char LEGEND_8[] = "*\n8";
-char LEGEND_9[] = "(\n9)";
-char LEGEND_TILDE[] = {0x7E, '\n', 0x60, 0x7C, 0x00};
-char LEGEND_DASH[] = "_\n-";
-char LEGEND_EQUAL[] = "+\n=";
-char LEGEND_BKSLASH[] = "|\\";
-char LEGEND_BKSPACE[] = "BKS\n <-";
-char LEGEND_SPACE[] = "SPC";
-char LEGEND_TAB[] = "TAB";
-char LEGEND_CAPS[] = "CAPS\nLOCK";
-char LEGEND_LSHIFT[] = "SHI\n^";
-char LEGEND_LCTRL[] = "CTL";
-char LEGEND_LGUI[] = "GUI";
-char LEGEND_LALT[] = "ALT";
-char LEGEND_RSHIFT[] = "SHI\n^";
-char LEGEND_RCTRL[] = "CTRL";
-char LEGEND_RGUI[] = "GUI";
-char LEGEND_RALT[] = "ALT";
-char LEGEND_APPS[] = "MNU";
-char LEGEND_ENTER[] = {'E','N','T','\n', 0x11, 0xC4, 0xD9, 0x00};
-char LEGEND_ESC[] = "ESC";
-char LEGEND_F1[] = "F1";
-char LEGEND_F2[] = "F2";
-char LEGEND_F3[] = "F3";
-char LEGEND_F4[] = "F4";
-char LEGEND_F5[] = "F5";
-char LEGEND_F6[] = "F6";
-char LEGEND_F7[] = "F7";
-char LEGEND_F8[] = "F8";
-char LEGEND_F9[] = "F9";
-char LEGEND_F10[] = "F10";
-char LEGEND_F11[] = "F11";
-char LEGEND_F12[] = "F12";
-char LEGEND_PRTSC[] = "PRT\nSCR";
-char LEGEND_SCROLL[] = "SCR\nLCK";
-char LEGEND_PAUSE[] = "PSE\nBRK";
-char LEGEND_LEFTSQB[] = "{\n[";
-char LEGEND_INSERT[] = "INS";
-char LEGEND_HOME[] = "HOM";
-char LEGEND_PGUP[] = "PG\nUP";
-char LEGEND_DELETE[] = "DEL";
-char LEGEND_END[] = "END";
-char LEGEND_PGDN[] = "PG\nDN";
-char LEGEND_UP[] = {' ', 0x1E, ' ', 0x00};
-char LEGEND_LEFT[] = {' ', 0x11, ' ', 0x00};
-char LEGEND_DOWN[] = {' ', 0x1F, ' ', 0x00};
-char LEGEND_RIGHT[] = {' ', 0x10, ' ', 0x00};
-char LEGEND_NUM[] = "NL";
-char LEGEND_PADFWSLASH[] = "/";
-char LEGEND_PADASTERISK[] = "*";
-char LEGEND_PADMINUS[] = "-";
-char LEGEND_PADPLUS[] = "+";
-char LEGEND_PADEN[] = "EN\nTR";
-char LEGEND_PADDOT[] = ".\nDL";
-char LEGEND_PAD0[] = "0\nINS";
-char LEGEND_PAD1[] = "1\nEN";
-char LEGEND_PAD2[] = {'2', '\n', 0x1F, 0x00};
-char LEGEND_PAD3[] = "3\nPD";
-char LEGEND_PAD4[] = {'4', '\n', 0x11, 0x00};
-char LEGEND_PAD5[] = "5";
-char LEGEND_PAD6[] = {'6', '\n', 0x10, 0x00};
-char LEGEND_PAD7[] = "7\nHM";
-char LEGEND_PAD8[] = {'8', '\n', 0x1E, 0x00};
-char LEGEND_PAD9[] = "9\nPU";
-char LEGEND_PADCOMMA[] = ",";
-char LEGEND_RIGHTSQB[] = "}\n]";
-char LEGEND_SEMICOLON[] = ":\n;";
-char LEGEND_APOSTROPHE[] = "@\n'";
-char LEGEND_COMMA[] = "<\n,";
-char LEGEND_PERIOD[] = ">\n.";
-char LEGEND_FWSLASH[] = "?\n/";
-char LEGEND_EURO1[] = "~\n#";
-char LEGEND_EURO2[] = "|\n\\";
-char LEGEND_SYSPOWER[] = "PWR";
-char LEGEND_SYSSLEEP[] = "SLEP";
-char LEGEND_SYSWAKE[] = "WAKE";
-char LEGEND_PADEQUAL[] = "=";
-char LEGEND_F13[] = "F13";
-char LEGEND_F14[] = "F14";
-char LEGEND_F15[] = "F15";
-char LEGEND_F16[] = "F16";
-char LEGEND_F17[] = "F17";
-char LEGEND_F18[] = "F18";
-char LEGEND_F19[] = "F19";
-char LEGEND_F20[] = "F20";
-char LEGEND_F21[] = "F21";
-char LEGEND_F22[] = "F22";
-char LEGEND_F23[] = "F23";
-char LEGEND_F24[] = "F24";
-char LEGEND_INTL1[] = "Ro";
-char LEGEND_INTL2[] = "KAT/HIR";
-char LEGEND_INTL3[] = {0x7C, 0x0a, 0x9D, 0x00};
-char LEGEND_INTL4[] = "HENKAN";
-char LEGEND_INTL5[] = "MUHENKAN";
-char LEGEND_INTL6[] = ",";
-char LEGEND_LANG1[] = "HAN/YEO";
-char LEGEND_LANG2[] = "HANJA";
-char LEGEND_LANG3[] = "KATA";
-char LEGEND_LANG4[] = "HIRA";
-char LEGEND_LANG5[] = "HZK";
-char LEGEND_MEDIANEXT[] = {0x10, 0x10, 0x00};
-char LEGEND_MEDIAPREV[] = {0x11, 0x11, 0x00};
-char LEGEND_MEDIASTOP[] = "S";
-char LEGEND_MEDIAPLAY[] = {0x10, 0xDE, 0x00};
-char LEGEND_MEDIAMUTE[] = "M";
-char LEGEND_MEDIAVOLUP[] = {0x1E, 0x00};
-char LEGEND_MEDIAVOLDN[] = {0x1F, 0x00};
-char LEGEND_MEDIASEL[] = "SEL";
-char LEGEND_MEDIAMAIL[] = "MAIL";
-char LEGEND_MEDIACALC[] = "CALC";
-char LEGEND_MEDIACOMP[] = "MC";
-char LEGEND_WWWSEARCH[] = "SEARCH";
-char LEGEND_WWWHOME[] = "HOME";
-char LEGEND_WWWBACK[] = {0x11, 0x11, 0x00};
-char LEGEND_WWWFORWARD[] = {0x10, 0x10, 0x00};
-char LEGEND_WWWSTOP[] = "STOP";
-char LEGEND_WWWREFRESH[] = "RFRESH";
-char LEGEND_WWWFAV[] = "FAVE";
-
-#define CNCAT2(a,b) a##b
-#define CNCAT3(a,b,c) a##b##c
-
-#define DEFINEKEY(keyname,x,y,sx,sy) { CNCAT3(XT_KEY_,keyname,_MAKE), CNCAT3(XT_KEY_,keyname,_BREAK), CNCAT3(KEY_,keyname,_MAKE), CNCAT3(KEY_,keyname,_BREAK), CNCAT3(NAME_,keyname,), CNCAT3(LEGEND_,keyname,),x,y,sx,sy}
-#define DEFINEXTKEY(keyname,x,y,sx,sy) { CNCAT3(XT_KEY_,keyname,_MAKE), CNCAT3(XT_KEY_,keyname,_BREAK), NULL, NULL, CNCAT3(NAME_,keyname,), CNCAT3(LEGEND_,keyname,),x,y,sx,sy}
-KeyDef KEYDEF_EURO1 = DEFINEKEY(EURO1, 28, 12, 1, 2);
-
-KeyDef BIOSKeyDefs[] = {
-    {XT_KEY_BIOS_F11_MAKE, NULL, NULL, NULL, NAME_BIOS_F11,NULL, 46, 1, 3, 1 },
-    {XT_KEY_BIOS_F12_MAKE, NULL, NULL, NULL, NAME_BIOS_F12,NULL, 50, 1, 3, 1 }
-};
-
-
+char NAME_WWWFAVE[] = "WWW Favorites";
+unsigned char LEGEND_WWWFAVE[] = {0x46, 0x41, 0x56, 0x45, 0x00};
 
 KeyDef KeyDefs[] = {
-
-DEFINEKEY(A, 6, 12, 1, 2),
-DEFINEKEY(B, 15, 15, 1, 2 ),
-DEFINEKEY(C, 11, 15, 1, 2 ),
-DEFINEKEY(D, 10, 12, 1, 2 ),
-DEFINEKEY(E, 9, 9, 1, 2 ),
-DEFINEKEY(F, 12, 12, 1, 2 ),
-DEFINEKEY(G, 14, 12, 1, 2 ),
-DEFINEKEY(H, 16, 12, 1, 2 ),
-DEFINEKEY(I, 19, 9, 1, 2 ),
-DEFINEKEY(J, 18, 12, 1, 2 ),
-DEFINEKEY(K, 20, 12, 1, 2 ),
-DEFINEKEY(L, 22, 12, 1, 2 ),
-DEFINEKEY(M, 19, 15, 1, 2 ),
-DEFINEKEY(N, 17, 15, 1, 2 ),
-DEFINEKEY(O, 21, 9, 1, 2 ),
-DEFINEKEY(P, 23, 9, 1, 2 ),
-DEFINEKEY(Q, 5, 9, 1, 2 ),
-DEFINEKEY(R, 11, 9, 1, 2 ),
-DEFINEKEY(S, 8, 12, 1, 2 ),
-DEFINEKEY(T, 13, 9, 1, 2 ),
-DEFINEKEY(U, 17, 9, 1, 2 ),
-DEFINEKEY(V, 13, 15, 1, 2 ),
-DEFINEKEY(W, 7, 9, 1, 2 ),
-DEFINEKEY(X, 9, 15, 1, 2 ),
-DEFINEKEY(Y, 15, 9, 1, 2 ),
-DEFINEKEY(Z, 7, 15, 1, 2 ),
-DEFINEKEY(1, 4, 6, 1, 2 ),
-DEFINEKEY(2, 6, 6, 1, 2 ),
-DEFINEKEY(3, 8, 6, 1, 2 ),
-DEFINEKEY(4, 10, 6, 1, 2 ),
-DEFINEKEY(5, 12, 6, 1, 2 ),
-DEFINEKEY(6, 14, 6, 1, 2 ),
-DEFINEKEY(7, 16, 6, 1, 2 ),
-DEFINEKEY(8, 18, 6, 1, 2 ),
-DEFINEKEY(9, 20, 6, 1, 2 ),
-DEFINEKEY(0, 22, 6, 1, 2 ),
-DEFINEKEY(TILDE, 1, 6, 2, 2 ),
-DEFINEKEY(DASH, 24, 6, 1, 2 ),
-DEFINEKEY(EQUAL, 26, 6, 1, 2 ),
-DEFINEKEY(BKSLASH, 29, 9, 4, 2 ),
-DEFINEKEY(BKSPACE, 30, 6, 3, 2 ),
-DEFINEKEY(SPACE, 13, 18, 3, 1 ),
-DEFINEKEY(TAB, 1, 9, 3, 2 ),
-DEFINEKEY(CAPS, 1, 12, 4, 2 ),
-DEFINEKEY(LSHIFT, 1, 15, 3, 2 ),
-DEFINEKEY(LCTRL, 1, 18, 3, 1 ),
-DEFINEKEY(LGUI, 5, 18, 3, 1 ),
-DEFINEKEY(LALT, 9, 18, 3, 1 ),
-DEFINEKEY(RSHIFT, 30, 15, 3, 2),
-DEFINEKEY(RCTRL, 29, 18, 4, 1 ),
-DEFINEKEY(RGUI, 21, 18, 3, 1 ),
-DEFINEKEY(RALT, 17, 18, 3, 1 ),
-DEFINEKEY(APPS, 25, 18, 3, 1 ),
-DEFINEKEY(ENTER, 30, 12, 3, 2 ),
-DEFINEKEY(ESC, 1, 1, 3, 1 ),
-DEFINEKEY(F1, 6, 3, 3, 1 ),
-DEFINEKEY(F2, 10, 3, 3, 1 ),
-DEFINEKEY(F3, 14, 3, 3, 1 ),
-DEFINEKEY(F4, 18, 3, 3, 1 ),
-DEFINEKEY(F5, 23, 3, 3, 1 ),
-DEFINEKEY(F6, 27, 3, 3, 1 ),
-DEFINEKEY(F7, 31, 3, 3, 1 ),
-DEFINEKEY(F8, 35, 3, 3, 1 ),
-DEFINEKEY(F9, 40, 3, 3, 1 ),
-DEFINEKEY(F10, 44, 3, 3, 1 ),
-DEFINEKEY(F11, 48, 3, 3, 1 ),
-DEFINEKEY(F12, 52, 3, 3, 1 ),
-DEFINEKEY(PRTSC, 35, 6, 3, 2),
-DEFINEKEY(SCROLL, 39, 6, 3, 2 ),
-{XT_KEY_PAUSE_MAKE, NULL, NULL, NULL, NAME_PAUSE, LEGEND_PAUSE, 43, 6, 3, 2 },
-DEFINEKEY(LEFTSQB, 25, 9, 1, 2 ),
-DEFINEKEY(INSERT, 35, 9, 3, 2 ),
-DEFINEKEY(HOME, 39, 9, 3, 2 ),
-DEFINEKEY(PGUP, 43, 9, 3, 2 ),
-DEFINEKEY(DELETE, 35, 12, 3, 2 ),
-DEFINEKEY(END, 39, 12, 3, 2 ),
-DEFINEKEY(PGDN, 43, 12, 3, 2 ),
-DEFINEKEY(UP, 39, 16, 3, 1 ),
-DEFINEKEY(LEFT, 35, 18, 3, 1 ),
-DEFINEKEY(DOWN, 39, 18, 3, 1 ),
-DEFINEKEY(RIGHT, 43, 18, 3, 1 ),
-DEFINEKEY(NUM, 48, 6, 2, 1 ),
-DEFINEKEY(PADFWSLASH, 51, 6, 2, 1 ),
-DEFINEKEY(PADASTERISK, 54, 6, 2, 1 ),
-DEFINEKEY(PADMINUS, 57, 6, 2, 1 ),
-DEFINEKEY(PADPLUS, 57, 8, 2, 2 ),
-DEFINEKEY(PADEN, 57, 17, 2, 2 ),
-DEFINEKEY(PADDOT, 54, 17, 2, 2 ),
-DEFINEKEY(PAD0, 48, 17, 5, 2 ),
-DEFINEKEY(PAD1, 48, 14, 2, 2 ),
-DEFINEKEY(PAD2, 51, 14, 2, 2 ),
-DEFINEKEY(PAD3, 54, 14, 2, 2 ),
-DEFINEKEY(PAD4, 48, 11, 2, 2 ),
-DEFINEKEY(PAD5, 51, 11, 2, 2 ),
-DEFINEKEY(PAD6, 54, 11, 2, 2 ),
-DEFINEKEY(PAD7, 48, 8, 2, 2 ),
-DEFINEKEY(PAD8, 51, 8, 2, 2 ),
-DEFINEKEY(PAD9, 54, 8, 2, 2 ),
-DEFINEKEY(RIGHTSQB, 27, 9, 1, 2 ),
-DEFINEKEY(SEMICOLON, 24, 12, 1, 2 ),
-DEFINEKEY(APOSTROPHE, 26, 12, 1, 2 ),
-DEFINEKEY(COMMA, 21, 15, 1, 2 ),
-DEFINEKEY(PERIOD, 23, 15, 1, 2 ),
-DEFINEKEY(FWSLASH, 25, 15, 1, 2 ),
-DEFINEKEY(EURO2, 5, 15, 1, 2 ),
-{XT_KEY_BIOS_PADEN_MAKE, NULL, NULL, NULL, NAME_BIOS_PADEN, LEGEND_PADEN, 57, 17, 2, 2 },
-{XT_KEY_BIOS_PADFWSLASH_MAKE, NULL, NULL, NULL, NAME_BIOS_PADFWSLASH, LEGEND_PADFWSLASH, 51, 6, 2, 1 },
-{XT_KEY_AMSTRAD_PADEN_MAKE, XT_KEY_AMSTRAD_PADEN_BREAK, NULL, NULL, NAME_AMSTRAD_PADEN, LEGEND_PADEN, 57, 17, 2, 2 },
-{XT_KEY_AMSTRAD_RDEL_MAKE, XT_KEY_AMSTRAD_RDEL_BREAK, NULL, NULL, NAME_AMSTRAD_RDEL, LEGEND_DELETE, 35, 12, 3, 2 },
-DEFINEXTKEY(PADEQUAL, 57, 14, 2, 2 ),
-DEFINEXTKEY(PADCOMMA, 57, 11, 2, 2),
-DEFINEXTKEY(F13, 6, 1, 3, 1),
-DEFINEXTKEY(F14, 10, 1, 3, 1),
-DEFINEXTKEY(F15, 14, 1, 3, 1),
-DEFINEXTKEY(F16, 18, 1, 3, 1),
-DEFINEXTKEY(F17, 23, 1, 3, 1),
-DEFINEXTKEY(F18, 27, 1, 3, 1),
-DEFINEXTKEY(F19, 31, 1, 3, 1),
-DEFINEXTKEY(F20, 35, 1, 3, 1),
-DEFINEXTKEY(F21, 40, 1, 3, 1),
-DEFINEXTKEY(F22, 44, 1, 3, 1),
-DEFINEXTKEY(F23, 48, 1, 3, 1),
-DEFINEXTKEY(F24, 52, 1, 3, 1),
-DEFINEXTKEY(INTL1, 27, 15, 2, 2),
-DEFINEXTKEY(INTL2, 1, 21, 7, 1),
-DEFINEXTKEY(INTL3, 28, 6, 1, 2),
-DEFINEXTKEY(INTL4, 9, 21, 6, 1),
-DEFINEXTKEY(INTL5, 16, 21, 8, 1),
-DEFINEXTKEY(INTL6, 25, 21, 1, 1),
-DEFINEXTKEY(LANG1, 40, 21, 7, 1),
-DEFINEXTKEY(LANG2, 48, 21, 5, 1),
-DEFINEXTKEY(LANG3, 27, 21, 4, 1),
-DEFINEXTKEY(LANG4, 32, 21, 4, 1),
-DEFINEXTKEY(LANG5, 1, 4, 3, 1),
-DEFINEXTKEY(MEDIANEXT, 71, 5, 2, 1),
-DEFINEXTKEY(MEDIAPREV, 63, 5, 2, 1),
-DEFINEXTKEY(MEDIASTOP, 66, 5, 1, 1),
-DEFINEXTKEY(MEDIAPLAY, 68, 5, 2, 1),
-DEFINEXTKEY(MEDIAMUTE, 78, 5, 1, 1),
-DEFINEXTKEY(MEDIAVOLUP, 74, 5, 1, 1),
-DEFINEXTKEY(MEDIAVOLDN, 76, 5, 1, 1),
-DEFINEXTKEY(MEDIASEL, 63, 7, 3, 1),
-DEFINEXTKEY(MEDIAMAIL, 67, 7, 4, 1),
-DEFINEXTKEY(MEDIACALC, 72, 7, 4, 1),
-DEFINEXTKEY(MEDIACOMP, 77, 7, 2, 1),
-DEFINEXTKEY(WWWSEARCH, 66, 10, 6, 1),
-DEFINEXTKEY(WWWHOME, 73, 10, 6, 1),
-DEFINEXTKEY(WWWBACK, 66, 12, 2, 1),
-DEFINEXTKEY(WWWFORWARD, 70, 12, 2, 1),
-DEFINEXTKEY(WWWSTOP, 73, 12, 6, 1),
-DEFINEXTKEY(WWWREFRESH, 66, 14, 6, 1),
-DEFINEXTKEY(WWWFAV, 73, 14, 6, 1),
-DEFINEXTKEY(SYSPOWER, 66, 17, 3, 1),
-DEFINEXTKEY(SYSSLEEP, 70, 17, 4, 1),
-DEFINEXTKEY(SYSWAKE, 75, 17, 4, 1),
+{KEY_SET1_PWR_MAKE, KEY_SET1_PWR_BREAK, KEY_SET2_PWR_MAKE, KEY_SET2_PWR_BREAK, NAME_PWR, LEGEND_PWR,  66, 17, 3, 1},
+{KEY_SET1_SLEP_MAKE, KEY_SET1_SLEP_BREAK, KEY_SET2_SLEP_MAKE, KEY_SET2_SLEP_BREAK, NAME_SLEP, LEGEND_SLEP,  70, 17, 4, 1},
+{KEY_SET1_WAKE_MAKE, KEY_SET1_WAKE_BREAK, KEY_SET2_WAKE_MAKE, KEY_SET2_WAKE_BREAK, NAME_WAKE, LEGEND_WAKE,  75, 17, 4, 1},
+{KEY_SET1_A_MAKE, KEY_SET1_A_BREAK, KEY_SET2_A_MAKE, KEY_SET2_A_BREAK, NAME_A, LEGEND_A,  6, 12, 1, 2},
+{KEY_SET1_B_MAKE, KEY_SET1_B_BREAK, KEY_SET2_B_MAKE, KEY_SET2_B_BREAK, NAME_B, LEGEND_B,  15, 15, 1, 2},
+{KEY_SET1_C_MAKE, KEY_SET1_C_BREAK, KEY_SET2_C_MAKE, KEY_SET2_C_BREAK, NAME_C, LEGEND_C,  11, 15, 1, 2},
+{KEY_SET1_D_MAKE, KEY_SET1_D_BREAK, KEY_SET2_D_MAKE, KEY_SET2_D_BREAK, NAME_D, LEGEND_D,  10, 12, 1, 2},
+{KEY_SET1_E_MAKE, KEY_SET1_E_BREAK, KEY_SET2_E_MAKE, KEY_SET2_E_BREAK, NAME_E, LEGEND_E,  9, 9, 1, 2},
+{KEY_SET1_F_MAKE, KEY_SET1_F_BREAK, KEY_SET2_F_MAKE, KEY_SET2_F_BREAK, NAME_F, LEGEND_F,  12, 12, 1, 2},
+{KEY_SET1_G_MAKE, KEY_SET1_G_BREAK, KEY_SET2_G_MAKE, KEY_SET2_G_BREAK, NAME_G, LEGEND_G,  14, 12, 1, 2},
+{KEY_SET1_H_MAKE, KEY_SET1_H_BREAK, KEY_SET2_H_MAKE, KEY_SET2_H_BREAK, NAME_H, LEGEND_H,  16, 12, 1, 2},
+{KEY_SET1_I_MAKE, KEY_SET1_I_BREAK, KEY_SET2_I_MAKE, KEY_SET2_I_BREAK, NAME_I, LEGEND_I,  19, 9, 1, 2},
+{KEY_SET1_J_MAKE, KEY_SET1_J_BREAK, KEY_SET2_J_MAKE, KEY_SET2_J_BREAK, NAME_J, LEGEND_J,  18, 12, 1, 2},
+{KEY_SET1_K_MAKE, KEY_SET1_K_BREAK, KEY_SET2_K_MAKE, KEY_SET2_K_BREAK, NAME_K, LEGEND_K,  20, 12, 1, 2},
+{KEY_SET1_L_MAKE, KEY_SET1_L_BREAK, KEY_SET2_L_MAKE, KEY_SET2_L_BREAK, NAME_L, LEGEND_L,  22, 12, 1, 2},
+{KEY_SET1_M_MAKE, KEY_SET1_M_BREAK, KEY_SET2_M_MAKE, KEY_SET2_M_BREAK, NAME_M, LEGEND_M,  19, 15, 1, 2},
+{KEY_SET1_N_MAKE, KEY_SET1_N_BREAK, KEY_SET2_N_MAKE, KEY_SET2_N_BREAK, NAME_N, LEGEND_N,  17, 15, 1, 2},
+{KEY_SET1_O_MAKE, KEY_SET1_O_BREAK, KEY_SET2_O_MAKE, KEY_SET2_O_BREAK, NAME_O, LEGEND_O,  21, 9, 1, 2},
+{KEY_SET1_P_MAKE, KEY_SET1_P_BREAK, KEY_SET2_P_MAKE, KEY_SET2_P_BREAK, NAME_P, LEGEND_P,  23, 9, 1, 2},
+{KEY_SET1_Q_MAKE, KEY_SET1_Q_BREAK, KEY_SET2_Q_MAKE, KEY_SET2_Q_BREAK, NAME_Q, LEGEND_Q,  5, 9, 1, 2},
+{KEY_SET1_R_MAKE, KEY_SET1_R_BREAK, KEY_SET2_R_MAKE, KEY_SET2_R_BREAK, NAME_R, LEGEND_R,  11, 9, 1, 2},
+{KEY_SET1_S_MAKE, KEY_SET1_S_BREAK, KEY_SET2_S_MAKE, KEY_SET2_S_BREAK, NAME_S, LEGEND_S,  8, 12, 1, 2},
+{KEY_SET1_T_MAKE, KEY_SET1_T_BREAK, KEY_SET2_T_MAKE, KEY_SET2_T_BREAK, NAME_T, LEGEND_T,  13, 9, 1, 2},
+{KEY_SET1_U_MAKE, KEY_SET1_U_BREAK, KEY_SET2_U_MAKE, KEY_SET2_U_BREAK, NAME_U, LEGEND_U,  17, 9, 1, 2},
+{KEY_SET1_V_MAKE, KEY_SET1_V_BREAK, KEY_SET2_V_MAKE, KEY_SET2_V_BREAK, NAME_V, LEGEND_V,  13, 15, 1, 2},
+{KEY_SET1_W_MAKE, KEY_SET1_W_BREAK, KEY_SET2_W_MAKE, KEY_SET2_W_BREAK, NAME_W, LEGEND_W,  7, 9, 1, 2},
+{KEY_SET1_X_MAKE, KEY_SET1_X_BREAK, KEY_SET2_X_MAKE, KEY_SET2_X_BREAK, NAME_X, LEGEND_X,  9, 15, 1, 2},
+{KEY_SET1_Y_MAKE, KEY_SET1_Y_BREAK, KEY_SET2_Y_MAKE, KEY_SET2_Y_BREAK, NAME_Y, LEGEND_Y,  15, 9, 1, 2},
+{KEY_SET1_Z_MAKE, KEY_SET1_Z_BREAK, KEY_SET2_Z_MAKE, KEY_SET2_Z_BREAK, NAME_Z, LEGEND_Z,  7, 15, 1, 2},
+{KEY_SET1_1_MAKE, KEY_SET1_1_BREAK, KEY_SET2_1_MAKE, KEY_SET2_1_BREAK, NAME_1, LEGEND_1,  4, 6, 1, 2},
+{KEY_SET1_2_MAKE, KEY_SET1_2_BREAK, KEY_SET2_2_MAKE, KEY_SET2_2_BREAK, NAME_2, LEGEND_2,  6, 6, 1, 2},
+{KEY_SET1_3_MAKE, KEY_SET1_3_BREAK, KEY_SET2_3_MAKE, KEY_SET2_3_BREAK, NAME_3, LEGEND_3,  8, 6, 1, 2},
+{KEY_SET1_4_MAKE, KEY_SET1_4_BREAK, KEY_SET2_4_MAKE, KEY_SET2_4_BREAK, NAME_4, LEGEND_4,  10, 6, 1, 2},
+{KEY_SET1_5_MAKE, KEY_SET1_5_BREAK, KEY_SET2_5_MAKE, KEY_SET2_5_BREAK, NAME_5, LEGEND_5,  12, 6, 1, 2},
+{KEY_SET1_6_MAKE, KEY_SET1_6_BREAK, KEY_SET2_6_MAKE, KEY_SET2_6_BREAK, NAME_6, LEGEND_6,  14, 6, 1, 2},
+{KEY_SET1_7_MAKE, KEY_SET1_7_BREAK, KEY_SET2_7_MAKE, KEY_SET2_7_BREAK, NAME_7, LEGEND_7,  16, 6, 1, 2},
+{KEY_SET1_8_MAKE, KEY_SET1_8_BREAK, KEY_SET2_8_MAKE, KEY_SET2_8_BREAK, NAME_8, LEGEND_8,  18, 6, 1, 2},
+{KEY_SET1_9_MAKE, KEY_SET1_9_BREAK, KEY_SET2_9_MAKE, KEY_SET2_9_BREAK, NAME_9, LEGEND_9,  20, 6, 1, 2},
+{KEY_SET1_0_MAKE, KEY_SET1_0_BREAK, KEY_SET2_0_MAKE, KEY_SET2_0_BREAK, NAME_0, LEGEND_0,  22, 6, 1, 2},
+{KEY_SET1_ENTER_MAKE, KEY_SET1_ENTER_BREAK, KEY_SET2_ENTER_MAKE, KEY_SET2_ENTER_BREAK, NAME_ENTER, LEGEND_ENTER,  30, 12, 3, 2},
+{KEY_SET1_ESCAPE_MAKE, KEY_SET1_ESCAPE_BREAK, KEY_SET2_ESCAPE_MAKE, KEY_SET2_ESCAPE_BREAK, NAME_ESCAPE, LEGEND_ESCAPE,  1, 1, 3, 1},
+{KEY_SET1_BKSPACE_MAKE, KEY_SET1_BKSPACE_BREAK, KEY_SET2_BKSPACE_MAKE, KEY_SET2_BKSPACE_BREAK, NAME_BKSPACE, LEGEND_BKSPACE,  30, 6, 3, 2},
+{KEY_SET1_TAB_MAKE, KEY_SET1_TAB_BREAK, KEY_SET2_TAB_MAKE, KEY_SET2_TAB_BREAK, NAME_TAB, LEGEND_TAB,  1, 9, 3, 2},
+{KEY_SET1_SPACE_MAKE, KEY_SET1_SPACE_BREAK, KEY_SET2_SPACE_MAKE, KEY_SET2_SPACE_BREAK, NAME_SPACE, LEGEND_SPACE,  13, 18, 3, 1},
+{KEY_SET1_DASH_MAKE, KEY_SET1_DASH_BREAK, KEY_SET2_DASH_MAKE, KEY_SET2_DASH_BREAK, NAME_DASH, LEGEND_DASH,  24, 6, 1, 2},
+{KEY_SET1_EQUALS_MAKE, KEY_SET1_EQUALS_BREAK, KEY_SET2_EQUALS_MAKE, KEY_SET2_EQUALS_BREAK, NAME_EQUALS, LEGEND_EQUALS,  26, 6, 1, 2},
+{KEY_SET1_LEFTSQB_MAKE, KEY_SET1_LEFTSQB_BREAK, KEY_SET2_LEFTSQB_MAKE, KEY_SET2_LEFTSQB_BREAK, NAME_LEFTSQB, LEGEND_LEFTSQB,  25, 9, 1, 2},
+{KEY_SET1_RIGHTSQB_MAKE, KEY_SET1_RIGHTSQB_BREAK, KEY_SET2_RIGHTSQB_MAKE, KEY_SET2_RIGHTSQB_BREAK, NAME_RIGHTSQB, LEGEND_RIGHTSQB,  27, 9, 1, 2},
+{KEY_SET1_BKSLASH_MAKE, KEY_SET1_BKSLASH_BREAK, KEY_SET2_BKSLASH_MAKE, KEY_SET2_BKSLASH_BREAK, NAME_BKSLASH, LEGEND_BKSLASH,  29, 9, 4, 2},
+{KEY_SET1_EURO1_MAKE, KEY_SET1_EURO1_BREAK, KEY_SET2_EURO1_MAKE, KEY_SET2_EURO1_BREAK, NAME_EURO1, LEGEND_EURO1,  29, 9, 4, 2},
+{KEY_SET1_SEMICOLON_MAKE, KEY_SET1_SEMICOLON_BREAK, KEY_SET2_SEMICOLON_MAKE, KEY_SET2_SEMICOLON_BREAK, NAME_SEMICOLON, LEGEND_SEMICOLON,  24, 12, 1, 2},
+{KEY_SET1_APOSTROPHE_MAKE, KEY_SET1_APOSTROPHE_BREAK, KEY_SET2_APOSTROPHE_MAKE, KEY_SET2_APOSTROPHE_BREAK, NAME_APOSTROPHE, LEGEND_APOSTROPHE,  26, 12, 1, 2},
+{KEY_SET1_TILDE_MAKE, KEY_SET1_TILDE_BREAK, KEY_SET2_TILDE_MAKE, KEY_SET2_TILDE_BREAK, NAME_TILDE, LEGEND_TILDE,  1, 6, 2, 2},
+{KEY_SET1_COMMA_MAKE, KEY_SET1_COMMA_BREAK, KEY_SET2_COMMA_MAKE, KEY_SET2_COMMA_BREAK, NAME_COMMA, LEGEND_COMMA,  21, 15, 1, 2},
+{KEY_SET1_PERIOD_MAKE, KEY_SET1_PERIOD_BREAK, KEY_SET2_PERIOD_MAKE, KEY_SET2_PERIOD_BREAK, NAME_PERIOD, LEGEND_PERIOD,  23, 15, 1, 2},
+{KEY_SET1_FWSLASH_MAKE, KEY_SET1_FWSLASH_BREAK, KEY_SET2_FWSLASH_MAKE, KEY_SET2_FWSLASH_BREAK, NAME_FWSLASH, LEGEND_FWSLASH,  25, 15, 1, 2},
+{KEY_SET1_CAPS_MAKE, KEY_SET1_CAPS_BREAK, KEY_SET2_CAPS_MAKE, KEY_SET2_CAPS_BREAK, NAME_CAPS, LEGEND_CAPS,  1, 12, 4, 2},
+{KEY_SET1_F1_MAKE, KEY_SET1_F1_BREAK, KEY_SET2_F1_MAKE, KEY_SET2_F1_BREAK, NAME_F1, LEGEND_F1,  6, 3, 3, 1},
+{KEY_SET1_F2_MAKE, KEY_SET1_F2_BREAK, KEY_SET2_F2_MAKE, KEY_SET2_F2_BREAK, NAME_F2, LEGEND_F2,  10, 3, 3, 1},
+{KEY_SET1_F3_MAKE, KEY_SET1_F3_BREAK, KEY_SET2_F3_MAKE, KEY_SET2_F3_BREAK, NAME_F3, LEGEND_F3,  14, 3, 3, 1},
+{KEY_SET1_F4_MAKE, KEY_SET1_F4_BREAK, KEY_SET2_F4_MAKE, KEY_SET2_F4_BREAK, NAME_F4, LEGEND_F4,  18, 3, 3, 1},
+{KEY_SET1_F5_MAKE, KEY_SET1_F5_BREAK, KEY_SET2_F5_MAKE, KEY_SET2_F5_BREAK, NAME_F5, LEGEND_F5,  23, 3, 3, 1},
+{KEY_SET1_F6_MAKE, KEY_SET1_F6_BREAK, KEY_SET2_F6_MAKE, KEY_SET2_F6_BREAK, NAME_F6, LEGEND_F6,  27, 3, 3, 1},
+{KEY_SET1_F7_MAKE, KEY_SET1_F7_BREAK, KEY_SET2_F7_MAKE, KEY_SET2_F7_BREAK, NAME_F7, LEGEND_F7,  31, 3, 3, 1},
+{KEY_SET1_F8_MAKE, KEY_SET1_F8_BREAK, KEY_SET2_F8_MAKE, KEY_SET2_F8_BREAK, NAME_F8, LEGEND_F8,  35, 3, 3, 1},
+{KEY_SET1_F9_MAKE, KEY_SET1_F9_BREAK, KEY_SET2_F9_MAKE, KEY_SET2_F9_BREAK, NAME_F9, LEGEND_F9,  40, 3, 3, 1},
+{KEY_SET1_F10_MAKE, KEY_SET1_F10_BREAK, KEY_SET2_F10_MAKE, KEY_SET2_F10_BREAK, NAME_F10, LEGEND_F10,  44, 3, 3, 1},
+{KEY_SET1_F11_MAKE, KEY_SET1_F11_BREAK, KEY_SET2_F11_MAKE, KEY_SET2_F11_BREAK, NAME_F11, LEGEND_F11,  48, 3, 3, 1},
+{KEY_SET1_F12_MAKE, KEY_SET1_F12_BREAK, KEY_SET2_F12_MAKE, KEY_SET2_F12_BREAK, NAME_F12, LEGEND_F12,  52, 3, 3, 1},
+{KEY_SET1_PRTSCR_MAKE, KEY_SET1_PRTSCR_BREAK, KEY_SET2_PRTSCR_MAKE, KEY_SET2_PRTSCR_BREAK, NAME_PRTSCR, LEGEND_PRTSCR,  35, 6, 3, 2},
+{KEY_SET1_SCRLOCK_MAKE, KEY_SET1_SCRLOCK_BREAK, KEY_SET2_SCRLOCK_MAKE, KEY_SET2_SCRLOCK_BREAK, NAME_SCRLOCK, LEGEND_SCRLOCK,  39, 6, 3, 2},
+{KEY_SET1_PAUSE_MAKE, NULL, KEY_SET2_PAUSE_MAKE, NULL, NAME_PAUSE, LEGEND_PAUSE,  43, 6, 3, 2},
+{KEY_SET1_INSERT_MAKE, KEY_SET1_INSERT_BREAK, KEY_SET2_INSERT_MAKE, KEY_SET2_INSERT_BREAK, NAME_INSERT, LEGEND_INSERT,  35, 9, 3, 2},
+{KEY_SET1_HOME_MAKE, KEY_SET1_HOME_BREAK, KEY_SET2_HOME_MAKE, KEY_SET2_HOME_BREAK, NAME_HOME, LEGEND_HOME,  39, 9, 3, 2},
+{KEY_SET1_PGUP_MAKE, KEY_SET1_PGUP_BREAK, KEY_SET2_PGUP_MAKE, KEY_SET2_PGUP_BREAK, NAME_PGUP, LEGEND_PGUP,  43, 9, 3, 2},
+{KEY_SET1_DELETE_MAKE, KEY_SET1_DELETE_BREAK, KEY_SET2_DELETE_MAKE, KEY_SET2_DELETE_BREAK, NAME_DELETE, LEGEND_DELETE,  35, 12, 3, 2},
+{KEY_SET1_END_MAKE, KEY_SET1_END_BREAK, KEY_SET2_END_MAKE, KEY_SET2_END_BREAK, NAME_END, LEGEND_END,  39, 12, 3, 2},
+{KEY_SET1_PGDN_MAKE, KEY_SET1_PGDN_BREAK, KEY_SET2_PGDN_MAKE, KEY_SET2_PGDN_BREAK, NAME_PGDN, LEGEND_PGDN,  43, 12, 3, 2},
+{KEY_SET1_RIGHT_MAKE, KEY_SET1_RIGHT_BREAK, KEY_SET2_RIGHT_MAKE, KEY_SET2_RIGHT_BREAK, NAME_RIGHT, LEGEND_RIGHT,  43, 18, 3, 1},
+{KEY_SET1_LEFT_MAKE, KEY_SET1_LEFT_BREAK, KEY_SET2_LEFT_MAKE, KEY_SET2_LEFT_BREAK, NAME_LEFT, LEGEND_LEFT,  35, 18, 3, 1},
+{KEY_SET1_DOWN_MAKE, KEY_SET1_DOWN_BREAK, KEY_SET2_DOWN_MAKE, KEY_SET2_DOWN_BREAK, NAME_DOWN, LEGEND_DOWN,  39, 18, 3, 1},
+{KEY_SET1_UP_MAKE, KEY_SET1_UP_BREAK, KEY_SET2_UP_MAKE, KEY_SET2_UP_BREAK, NAME_UP, LEGEND_UP,  39, 16, 3, 1},
+{KEY_SET1_NUMLCK_MAKE, KEY_SET1_NUMLCK_BREAK, KEY_SET2_NUMLCK_MAKE, KEY_SET2_NUMLCK_BREAK, NAME_NUMLCK, LEGEND_NUMLCK,  48, 6, 2, 1},
+{KEY_SET1_PADFWSLASH_MAKE, KEY_SET1_PADFWSLASH_BREAK, KEY_SET2_PADFWSLASH_MAKE, KEY_SET2_PADFWSLASH_BREAK, NAME_PADFWSLASH, LEGEND_PADFWSLASH,  51, 6, 2, 1},
+{KEY_SET1_PADASTERISK_MAKE, KEY_SET1_PADASTERISK_BREAK, KEY_SET2_PADASTERISK_MAKE, KEY_SET2_PADASTERISK_BREAK, NAME_PADASTERISK, LEGEND_PADASTERISK,  54, 6, 2, 1},
+{KEY_SET1_PADMINUS_MAKE, KEY_SET1_PADMINUS_BREAK, KEY_SET2_PADMINUS_MAKE, KEY_SET2_PADMINUS_BREAK, NAME_PADMINUS, LEGEND_PADMINUS,  57, 6, 2, 1},
+{KEY_SET1_PADPLUS_MAKE, KEY_SET1_PADPLUS_BREAK, KEY_SET2_PADPLUS_MAKE, KEY_SET2_PADPLUS_BREAK, NAME_PADPLUS, LEGEND_PADPLUS,  57, 8, 2, 2},
+{KEY_SET1_PADENTER_MAKE, KEY_SET1_PADENTER_BREAK, KEY_SET2_PADENTER_MAKE, KEY_SET2_PADENTER_BREAK, NAME_PADENTER, LEGEND_PADENTER,  57, 17, 2, 2},
+{KEY_SET1_PAD1_MAKE, KEY_SET1_PAD1_BREAK, KEY_SET2_PAD1_MAKE, KEY_SET2_PAD1_BREAK, NAME_PAD1, LEGEND_PAD1,  48, 14, 2, 2},
+{KEY_SET1_PAD2_MAKE, KEY_SET1_PAD2_BREAK, KEY_SET2_PAD2_MAKE, KEY_SET2_PAD2_BREAK, NAME_PAD2, LEGEND_PAD2,  51, 14, 2, 2},
+{KEY_SET1_PAD3_MAKE, KEY_SET1_PAD3_BREAK, KEY_SET2_PAD3_MAKE, KEY_SET2_PAD3_BREAK, NAME_PAD3, LEGEND_PAD3,  54, 14, 2, 2},
+{KEY_SET1_PAD4_MAKE, KEY_SET1_PAD4_BREAK, KEY_SET2_PAD4_MAKE, KEY_SET2_PAD4_BREAK, NAME_PAD4, LEGEND_PAD4,  48, 11, 2, 2},
+{KEY_SET1_PAD5_MAKE, KEY_SET1_PAD5_BREAK, KEY_SET2_PAD5_MAKE, KEY_SET2_PAD5_BREAK, NAME_PAD5, LEGEND_PAD5,  51, 11, 2, 2},
+{KEY_SET1_PAD6_MAKE, KEY_SET1_PAD6_BREAK, KEY_SET2_PAD6_MAKE, KEY_SET2_PAD6_BREAK, NAME_PAD6, LEGEND_PAD6,  54, 11, 2, 2},
+{KEY_SET1_PAD7_MAKE, KEY_SET1_PAD7_BREAK, KEY_SET2_PAD7_MAKE, KEY_SET2_PAD7_BREAK, NAME_PAD7, LEGEND_PAD7,  48, 8, 2, 2},
+{KEY_SET1_PAD8_MAKE, KEY_SET1_PAD8_BREAK, KEY_SET2_PAD8_MAKE, KEY_SET2_PAD8_BREAK, NAME_PAD8, LEGEND_PAD8,  51, 8, 2, 2},
+{KEY_SET1_PAD9_MAKE, KEY_SET1_PAD9_BREAK, KEY_SET2_PAD9_MAKE, KEY_SET2_PAD9_BREAK, NAME_PAD9, LEGEND_PAD9,  54, 8, 2, 2},
+{KEY_SET1_PAD0_MAKE, KEY_SET1_PAD0_BREAK, KEY_SET2_PAD0_MAKE, KEY_SET2_PAD0_BREAK, NAME_PAD0, LEGEND_PAD0,  48, 17, 5, 2},
+{KEY_SET1_PADPERIOD_MAKE, KEY_SET1_PADPERIOD_BREAK, KEY_SET2_PADPERIOD_MAKE, KEY_SET2_PADPERIOD_BREAK, NAME_PADPERIOD, LEGEND_PADPERIOD,  54, 17, 2, 2},
+{KEY_SET1_EURO2_MAKE, KEY_SET1_EURO2_BREAK, KEY_SET2_EURO2_MAKE, KEY_SET2_EURO2_BREAK, NAME_EURO2, LEGEND_EURO2,  5, 15, 1, 2},
+{KEY_SET1_APP_MAKE, KEY_SET1_APP_BREAK, KEY_SET2_APP_MAKE, KEY_SET2_APP_BREAK, NAME_APP, LEGEND_APP,  25, 18, 3, 1},
+{KEY_SET1_KEYPOWER_MAKE, KEY_SET1_KEYPOWER_BREAK, KEY_SET2_KEYPOWER_MAKE, KEY_SET2_KEYPOWER_BREAK, NAME_KEYPOWER, LEGEND_KEYPOWER,  66, 17, 3, 1},
+{KEY_SET1_PADEQUALS_MAKE, KEY_SET1_PADEQUALS_BREAK, KEY_SET2_PADEQUALS_MAKE, KEY_SET2_PADEQUALS_BREAK, NAME_PADEQUALS, LEGEND_PADEQUALS,  57, 14, 2, 2},
+{KEY_SET1_F13_MAKE, KEY_SET1_F13_BREAK, KEY_SET2_F13_MAKE, KEY_SET2_F13_BREAK, NAME_F13, LEGEND_F13,  6, 1, 3, 1},
+{KEY_SET1_F14_MAKE, KEY_SET1_F14_BREAK, KEY_SET2_F14_MAKE, KEY_SET2_F14_BREAK, NAME_F14, LEGEND_F14,  10, 1, 3, 1},
+{KEY_SET1_F15_MAKE, KEY_SET1_F15_BREAK, KEY_SET2_F15_MAKE, KEY_SET2_F15_BREAK, NAME_F15, LEGEND_F15,  14, 1, 3, 1},
+{KEY_SET1_F16_MAKE, KEY_SET1_F16_BREAK, KEY_SET2_F16_MAKE, KEY_SET2_F16_BREAK, NAME_F16, LEGEND_F16,  18, 1, 3, 1},
+{KEY_SET1_F17_MAKE, KEY_SET1_F17_BREAK, KEY_SET2_F17_MAKE, KEY_SET2_F17_BREAK, NAME_F17, LEGEND_F17,  23, 1, 3, 1},
+{KEY_SET1_F18_MAKE, KEY_SET1_F18_BREAK, KEY_SET2_F18_MAKE, KEY_SET2_F18_BREAK, NAME_F18, LEGEND_F18,  27, 1, 3, 1},
+{KEY_SET1_F19_MAKE, KEY_SET1_F19_BREAK, KEY_SET2_F19_MAKE, KEY_SET2_F19_BREAK, NAME_F19, LEGEND_F19,  31, 1, 3, 1},
+{KEY_SET1_F20_MAKE, KEY_SET1_F20_BREAK, KEY_SET2_F20_MAKE, KEY_SET2_F20_BREAK, NAME_F20, LEGEND_F20,  35, 1, 3, 1},
+{KEY_SET1_F21_MAKE, KEY_SET1_F21_BREAK, KEY_SET2_F21_MAKE, KEY_SET2_F21_BREAK, NAME_F21, LEGEND_F21,  40, 1, 3, 1},
+{KEY_SET1_F22_MAKE, KEY_SET1_F22_BREAK, KEY_SET2_F22_MAKE, KEY_SET2_F22_BREAK, NAME_F22, LEGEND_F22,  44, 1, 3, 1},
+{KEY_SET1_F23_MAKE, KEY_SET1_F23_BREAK, KEY_SET2_F23_MAKE, KEY_SET2_F23_BREAK, NAME_F23, LEGEND_F23,  48, 1, 3, 1},
+{KEY_SET1_F24_MAKE, KEY_SET1_F24_BREAK, KEY_SET2_F24_MAKE, KEY_SET2_F24_BREAK, NAME_F24, LEGEND_F24,  52, 1, 3, 1},
+{KEY_SET1_PADCOMMA_MAKE, KEY_SET1_PADCOMMA_BREAK, KEY_SET2_PADCOMMA_MAKE, KEY_SET2_PADCOMMA_BREAK, NAME_PADCOMMA, LEGEND_PADCOMMA,  57, 11, 2, 2},
+{KEY_SET1_INTL1_MAKE, KEY_SET1_INTL1_BREAK, KEY_SET2_INTL1_MAKE, KEY_SET2_INTL1_BREAK, NAME_INTL1, LEGEND_INTL1,  27, 15, 2, 2},
+{KEY_SET1_INTL2_MAKE, KEY_SET1_INTL2_BREAK, KEY_SET2_INTL2_MAKE, KEY_SET2_INTL2_BREAK, NAME_INTL2, LEGEND_INTL2,  1, 21, 7, 1},
+{KEY_SET1_INTL3_MAKE, KEY_SET1_INTL3_BREAK, KEY_SET2_INTL3_MAKE, KEY_SET2_INTL3_BREAK, NAME_INTL3, LEGEND_INTL3,  28, 6, 1, 2},
+{KEY_SET1_INTL4_MAKE, KEY_SET1_INTL4_BREAK, KEY_SET2_INTL4_MAKE, KEY_SET2_INTL4_BREAK, NAME_INTL4, LEGEND_INTL4,  9, 21, 6, 1},
+{KEY_SET1_INTL5_MAKE, KEY_SET1_INTL5_BREAK, KEY_SET2_INTL5_MAKE, KEY_SET2_INTL5_BREAK, NAME_INTL5, LEGEND_INTL5,  16, 21, 8, 1},
+{KEY_SET1_INTL6_MAKE, KEY_SET1_INTL6_BREAK, KEY_SET2_INTL6_MAKE, KEY_SET2_INTL6_BREAK, NAME_INTL6, LEGEND_INTL6,  25, 21, 1, 1},
+{KEY_SET1_LANG1_MAKE, NULL, KEY_SET2_LANG1_MAKE, NULL, NAME_LANG1, LEGEND_LANG1,  40, 21, 7, 1},
+{KEY_SET1_LANG2_MAKE, NULL, KEY_SET2_LANG2_MAKE, NULL, NAME_LANG2, LEGEND_LANG2,  48, 21, 5, 1},
+{KEY_SET1_LANG3_MAKE, KEY_SET1_LANG3_BREAK, KEY_SET2_LANG3_MAKE, KEY_SET2_LANG3_BREAK, NAME_LANG3, LEGEND_LANG3,  27, 21, 4, 1},
+{KEY_SET1_LANG4_MAKE, KEY_SET1_LANG4_BREAK, KEY_SET2_LANG4_MAKE, KEY_SET2_LANG4_BREAK, NAME_LANG4, LEGEND_LANG4,  32, 21, 4, 1},
+{KEY_SET1_LANG5_MAKE, KEY_SET1_LANG5_BREAK, KEY_SET2_LANG5_MAKE, KEY_SET2_LANG5_BREAK, NAME_LANG5, LEGEND_LANG5,  1, 4, 3, 1},
+{KEY_SET1_LCTRL_MAKE, KEY_SET1_LCTRL_BREAK, KEY_SET2_LCTRL_MAKE, KEY_SET2_LCTRL_BREAK, NAME_LCTRL, LEGEND_LCTRL,  1, 18, 3, 1},
+{KEY_SET1_LSHIFT_MAKE, KEY_SET1_LSHIFT_BREAK, KEY_SET2_LSHIFT_MAKE, KEY_SET2_LSHIFT_BREAK, NAME_LSHIFT, LEGEND_LSHIFT,  1, 15, 3, 2},
+{KEY_SET1_LALT_MAKE, KEY_SET1_LALT_BREAK, KEY_SET2_LALT_MAKE, KEY_SET2_LALT_BREAK, NAME_LALT, LEGEND_LALT,  9, 18, 3, 1},
+{KEY_SET1_LGUI_MAKE, KEY_SET1_LGUI_BREAK, KEY_SET2_LGUI_MAKE, KEY_SET2_LGUI_BREAK, NAME_LGUI, LEGEND_LGUI,  5, 18, 3, 1},
+{KEY_SET1_RCTRL_MAKE, KEY_SET1_RCTRL_BREAK, KEY_SET2_RCTRL_MAKE, KEY_SET2_RCTRL_BREAK, NAME_RCTRL, LEGEND_RCTRL,  29, 18, 4, 1},
+{KEY_SET1_RSHIFT_MAKE, KEY_SET1_RSHIFT_BREAK, KEY_SET2_RSHIFT_MAKE, KEY_SET2_RSHIFT_BREAK, NAME_RSHIFT, LEGEND_RSHIFT,  30, 15, 3, 2},
+{KEY_SET1_RALT_MAKE, KEY_SET1_RALT_BREAK, KEY_SET2_RALT_MAKE, KEY_SET2_RALT_BREAK, NAME_RALT, LEGEND_RALT,  17, 18, 3, 1},
+{KEY_SET1_RGUI_MAKE, KEY_SET1_RGUI_BREAK, KEY_SET2_RGUI_MAKE, KEY_SET2_RGUI_BREAK, NAME_RGUI, LEGEND_RGUI,  21, 18, 3, 1},
+{KEY_SET1_MEDIANEXT_MAKE, KEY_SET1_MEDIANEXT_BREAK, KEY_SET2_MEDIANEXT_MAKE, KEY_SET2_MEDIANEXT_BREAK, NAME_MEDIANEXT, LEGEND_MEDIANEXT,  71, 5, 2, 1},
+{KEY_SET1_MEDIAPREV_MAKE, KEY_SET1_MEDIAPREV_BREAK, KEY_SET2_MEDIAPREV_MAKE, KEY_SET2_MEDIAPREV_BREAK, NAME_MEDIAPREV, LEGEND_MEDIAPREV,  63, 5, 2, 1},
+{KEY_SET1_MEDIASTOP_MAKE, KEY_SET1_MEDIASTOP_BREAK, KEY_SET2_MEDIASTOP_MAKE, KEY_SET2_MEDIASTOP_BREAK, NAME_MEDIASTOP, LEGEND_MEDIASTOP,  66, 5, 1, 1},
+{KEY_SET1_MEDIANPLAY_MAKE, KEY_SET1_MEDIANPLAY_BREAK, KEY_SET2_MEDIANPLAY_MAKE, KEY_SET2_MEDIANPLAY_BREAK, NAME_MEDIANPLAY, LEGEND_MEDIANPLAY,  68, 5, 2, 1},
+{KEY_SET1_MEDIAMUTE_MAKE, KEY_SET1_MEDIAMUTE_BREAK, KEY_SET2_MEDIAMUTE_MAKE, KEY_SET2_MEDIAMUTE_BREAK, NAME_MEDIAMUTE, LEGEND_MEDIAMUTE,  78, 5, 1, 1},
+{KEY_SET1_VOLUP_MAKE, KEY_SET1_VOLUP_BREAK, KEY_SET2_VOLUP_MAKE, KEY_SET2_VOLUP_BREAK, NAME_VOLUP, LEGEND_VOLUP,  74, 5, 1, 1},
+{KEY_SET1_VOLDN_MAKE, KEY_SET1_VOLDN_BREAK, KEY_SET2_VOLDN_MAKE, KEY_SET2_VOLDN_BREAK, NAME_VOLDN, LEGEND_VOLDN,  76, 5, 1, 1},
+{KEY_SET1_MEDSELECT_MAKE, KEY_SET1_MEDSELECT_BREAK, KEY_SET2_MEDSELECT_MAKE, KEY_SET2_MEDSELECT_BREAK, NAME_MEDSELECT, LEGEND_MEDSELECT,  63, 7, 3, 1},
+{KEY_SET1_APPMAIL_MAKE, KEY_SET1_APPMAIL_BREAK, KEY_SET2_APPMAIL_MAKE, KEY_SET2_APPMAIL_BREAK, NAME_APPMAIL, LEGEND_APPMAIL,  67, 7, 4, 1},
+{KEY_SET1_APPCALC_MAKE, KEY_SET1_APPCALC_BREAK, KEY_SET2_APPCALC_MAKE, KEY_SET2_APPCALC_BREAK, NAME_APPCALC, LEGEND_APPCALC,  72, 7, 4, 1},
+{KEY_SET1_APPMYCOMP_MAKE, KEY_SET1_APPMYCOMP_BREAK, KEY_SET2_APPMYCOMP_MAKE, KEY_SET2_APPMYCOMP_BREAK, NAME_APPMYCOMP, LEGEND_APPMYCOMP,  77, 7, 2, 1},
+{KEY_SET1_WWWSEARCH_MAKE, KEY_SET1_WWWSEARCH_BREAK, KEY_SET2_WWWSEARCH_MAKE, KEY_SET2_WWWSEARCH_BREAK, NAME_WWWSEARCH, LEGEND_WWWSEARCH,  66, 10, 6, 1},
+{KEY_SET1_WWWHOME_MAKE, KEY_SET1_WWWHOME_BREAK, KEY_SET2_WWWHOME_MAKE, KEY_SET2_WWWHOME_BREAK, NAME_WWWHOME, LEGEND_WWWHOME,  73, 10, 6, 1},
+{KEY_SET1_WWWBACK_MAKE, KEY_SET1_WWWBACK_BREAK, KEY_SET2_WWWBACK_MAKE, KEY_SET2_WWWBACK_BREAK, NAME_WWWBACK, LEGEND_WWWBACK,  66, 12, 2, 1},
+{KEY_SET1_WWWFORWARD_MAKE, KEY_SET1_WWWFORWARD_BREAK, KEY_SET2_WWWFORWARD_MAKE, KEY_SET2_WWWFORWARD_BREAK, NAME_WWWFORWARD, LEGEND_WWWFORWARD,  70, 12, 2, 1},
+{KEY_SET1_WWWSTOP_MAKE, KEY_SET1_WWWSTOP_BREAK, KEY_SET2_WWWSTOP_MAKE, KEY_SET2_WWWSTOP_BREAK, NAME_WWWSTOP, LEGEND_WWWSTOP,  73, 12, 6, 1},
+{KEY_SET1_WWWREFRESH_MAKE, KEY_SET1_WWWREFRESH_BREAK, KEY_SET2_WWWREFRESH_MAKE, KEY_SET2_WWWREFRESH_BREAK, NAME_WWWREFRESH, LEGEND_WWWREFRESH,  66, 14, 6, 1},
+{KEY_SET1_WWWFAVE_MAKE, KEY_SET1_WWWFAVE_BREAK, KEY_SET2_WWWFAVE_MAKE, KEY_SET2_WWWFAVE_BREAK, NAME_WWWFAVE, LEGEND_WWWFAVE,  73, 14, 6, 1},
+{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL}
 };

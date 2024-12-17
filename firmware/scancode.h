@@ -36,20 +36,16 @@ extern __code uint8_t KEY_SCANCODE_2[];
 extern __code uint8_t KEY_ECHO[];
 extern __code uint8_t KEY_ERROR[];
 
-extern __code uint8_t KEY_LSHIFT_MAKE[];
-extern __code uint8_t KEY_LSHIFT_BREAK[];
+extern __code uint8_t KEY_SET1_LSHIFT_MAKE[];
+extern __code uint8_t KEY_SET1_LSHIFT_BREAK[];
 
-extern __code uint8_t XT_KEY_LSHIFT_MAKE[];
-extern __code uint8_t XT_KEY_LSHIFT_BREAK[];
+extern __code uint8_t KEY_SET2_LSHIFT_MAKE[];
+extern __code uint8_t KEY_SET2_LSHIFT_BREAK[];
 
-extern const uint8_t * const HIDtoPS2_Make[];
-extern const uint8_t * const HIDtoPS2_Break[];
-extern const uint8_t * const ModtoPS2_BREAK[];
-extern const uint8_t * const ModtoPS2_MAKE[];
+extern const uint8_t * const HIDtoSET2_Make[];
+extern const uint8_t * const HIDtoSET2_Break[];
 
-extern const uint8_t * const HIDtoXT_Make[];
-extern const uint8_t * const HIDtoXT_Break[];
-extern const uint8_t * const ModtoXT_BREAK[];
-extern const uint8_t * const ModtoXT_MAKE[];
+extern const uint8_t * const HIDtoSET1_Make[];
+extern const uint8_t * const HIDtoSET1_Break[];
 
 #endif //__SCANCODES_H__

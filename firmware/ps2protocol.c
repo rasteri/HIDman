@@ -24,6 +24,15 @@
 #include "system.h"
 #include "scancode.h"
 
+
+__code unsigned char KEY_ACK[] = {1, 0xFA};
+__code unsigned char KEY_BATCOMPLETE[] = {1, 0xAA};
+__code unsigned char KEY_ID[] = {2, 0xAB, 0x83};
+
+__code unsigned char KEY_SCANCODE_2[] = {1, 0x02};
+__code unsigned char KEY_ECHO[] = {1, 0xEE};
+__code unsigned char KEY_ERROR[] = {1, 0xFE};
+
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
 // if negative, we're repeating - count down to repeatRate then return to -1
@@ -99,7 +108,7 @@ void HandleRepeats(void)
 	}
 	else if (RepeatState < RepeatRate)
 	{
-		SendKeyboard( FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[RepeatKey] : HIDtoXT_Make[RepeatKey]);
+		SendKeyboard( FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[RepeatKey] : HIDtoSET1_Make[RepeatKey]);
 		SetRepeatState(-1);
 	}
 }
@@ -381,15 +390,12 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 				{
 					//DEBUGOUT("\nSendn %x\n", c);
 					// Make
-					if (c <= 0x67)
+
+					SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[c] : HIDtoSET1_Make[c]);
+					if (!(c >= 0xE0 && c <= 0xE7))
 					{
-						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Make[c] : HIDtoXT_Make[c]);
 						RepeatKey = c;
 						SetRepeatState(1);
-					}
-					else if (c >= 0xE0 && c <= 0xE7)
-					{
-						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? ModtoPS2_MAKE[c - 0xE0] : ModtoXT_MAKE[c - 0xE0]);
 					}
 				}
 			}
@@ -398,26 +404,21 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 				if (!MenuActive)
 				{
 					// break
-					if (c <= 0x67)
-					{
-						//DEBUGOUT("\nBreakn %x\n", c);
-						// if the key we just released is the one that's repeating then stop
-						if (c == RepeatKey)
-						{
-							RepeatKey = 0;
-							SetRepeatState(0);
-						}
 
-						// Pause has no break for some reason
-						if (c == 0x48)
-							continue;
-
-						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoPS2_Break[c] : HIDtoXT_Break[c]);
-					}
-					else if (c >= 0xE0 && c <= 0xE7)
+					//DEBUGOUT("\nBreakn %x\n", c);
+					// if the key we just released is the one that's repeating then stop
+					if (c == RepeatKey)
 					{
-						SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? ModtoPS2_BREAK[c - 0xE0] : ModtoXT_BREAK[c - 0xE0]);
+						RepeatKey = 0;
+						SetRepeatState(0);
 					}
+
+					// Pause has no break for some reason
+					if (c == 0x48)
+						continue;
+
+					SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[c] : HIDtoSET1_Break[c]);
+
 				}
 			}
 			

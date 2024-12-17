@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "datagen.h"
 
 char *
 strsep (char **stringp, const char *delim)
@@ -145,20 +144,44 @@ const char* tokline(char* line, KEY *key)
     return NULL;
 }
 
+
 KEY keys[256];
 
-void PrintHexBytes(uint8_t *bytes) {
+void PrintHexBytesWithLength(FILE *file, uint8_t *bytes) {
     uint8_t length = bytes[0] + 1;
 
     while (length--) {
-        printf("0x%02X, ", *(bytes++));
+        fprintf(file, "0x%02X, ", *(bytes++));
     }
 }
 
+void PrintHexBytes(FILE *file, uint8_t *bytes) {
+    uint8_t length = bytes[0] + 1;
 
-void PrintLookupTable(char *TableName, char *Formatting)
+    while (--length) {
+        fprintf(file, "0x%02X, ", *(++bytes));
+    }
+}
+
+#define LU_SET1MAKE 0
+#define LU_SET1BREAK 1
+#define LU_SET2MAKE 2
+#define LU_SET2BREAK 3
+
+void PrintLookupTable(FILE *file, char which)
 {
-    printf("const unsigned char * const %s[] = {\n", TableName);
+
+    char TableName[100];
+    char Formatting[100];
+
+    switch (which){
+        case LU_SET1MAKE: strcpy(TableName, "HIDtoSET1_Make"); strcpy(Formatting, "KEY_SET1_%s_MAKE,\n"); break;
+        case LU_SET1BREAK: strcpy(TableName, "HIDtoSET1_Break"); strcpy(Formatting, "KEY_SET1_%s_BREAK,\n"); break;
+        case LU_SET2MAKE: strcpy(TableName, "HIDtoSET2_Make"); strcpy(Formatting, "KEY_SET2_%s_MAKE,\n"); break;
+        case LU_SET2BREAK: strcpy(TableName, "HIDtoSET2_Break"); strcpy(Formatting, "KEY_SET2_%s_BREAK,\n"); break;
+    }
+
+    fprintf(file, "const unsigned char * const %s[] = {\n", TableName);
 
     // for each entry in the hid lookup table
     for (int i = 0; i < 256; i++)
@@ -167,18 +190,26 @@ void PrintLookupTable(char *TableName, char *Formatting)
         // search for entries in the DB that correspond to that
         for (int j = 0; j < 256; j++)
         {
-            if (keys[j].UsagePage == 7 && keys[j].UsageID == i && keys[j].Set1Make[0] != 0)
+            uint8_t *array;
+
+            switch (which){
+                case LU_SET1MAKE: array = keys[j].Set1Make; break;
+                case LU_SET1BREAK: array = keys[j].Set1Break; break;
+                case LU_SET2MAKE: array = keys[j].Set2Make; break;
+                case LU_SET2BREAK: array = keys[j].Set2Break; break;
+            }
+            if (keys[j].UsagePage == 7 && keys[j].UsageID == i && array[0] != 0)
             {
-                printf(Formatting, keys[j].ShortName);
+                fprintf(file, Formatting, keys[j].ShortName);
                 found = 1;
                 break;
             }
         }
         if (!found)
-            printf("NULL,\n");
+            fprintf(file, "NULL,\n");
     }
 
-    printf("};\n\n");
+    fprintf(file, "};\n\n");
 }
 
 int main() {
@@ -197,30 +228,35 @@ int main() {
         keycount++;
     }
 
+    fclose(file);
+
+    file = fopen("scancode.c", "w");
+    fprintf(file, "#include<stdio.h>\n#ifndef __SDCC\n#define __code\n#endif\n");
+
     //Make/break codes for SET1 and SET2
     //eg --  __code unsigned char KEY_SET1_LSHIFT_MAKE[] = {1, 0x2A};
     for (int i = 0; i < 256; i++)
     {
         if (keys[i].Set1Make[0] != 0) {
-            printf("__code unsigned char KEY_SET1_%s_MAKE[] = { ", keys[i].ShortName);
-            PrintHexBytes(keys[i].Set1Make);
-            printf("};\n");
+            fprintf(file, "__code unsigned char KEY_SET1_%s_MAKE[] = { ", keys[i].ShortName);
+            PrintHexBytesWithLength(file, keys[i].Set1Make);
+            fprintf(file, "};\n");
         }
         if (keys[i].Set1Break[0] != 0) {
-            printf("__code unsigned char KEY_SET1_%s_BREAK[] = { ", keys[i].ShortName);
-            PrintHexBytes(keys[i].Set1Break);
-            printf("};\n");
+            fprintf(file, "__code unsigned char KEY_SET1_%s_BREAK[] = { ", keys[i].ShortName);
+            PrintHexBytesWithLength(file, keys[i].Set1Break);
+            fprintf(file, "};\n");
         }
 
         if (keys[i].Set2Make[0] != 0) {
-            printf("__code unsigned char KEY_SET2_%s_MAKE[] = { ", keys[i].ShortName);
-            PrintHexBytes(keys[i].Set2Make);
-            printf("};\n");
+            fprintf(file, "__code unsigned char KEY_SET2_%s_MAKE[] = { ", keys[i].ShortName);
+            PrintHexBytesWithLength(file, keys[i].Set2Make);
+            fprintf(file, "};\n");
         }
         if (keys[i].Set2Break[0] != 0) {
-            printf("__code unsigned char KEY_SET2_%s_BREAK[] = { ", keys[i].ShortName);
-            PrintHexBytes(keys[i].Set2Break);
-            printf("};\n\n");
+            fprintf(file, "__code unsigned char KEY_SET2_%s_BREAK[] = { ", keys[i].ShortName);
+            PrintHexBytesWithLength(file, keys[i].Set2Break);
+            fprintf(file, "};\n\n");
         }
         
     }
@@ -238,10 +274,64 @@ int main() {
     //        KEY_SET1_E_MAKE
     // ...
 
-    PrintLookupTable("HIDtoSET1_MAKE", "KEY_SET1_%s_MAKE,\n");
-    PrintLookupTable("HIDtoSET1_BREAK", "KEY_SET1_%s_BREAK,\n");
-    PrintLookupTable("HIDtoSET2_MAKE", "KEY_SET2_%s_MAKE,\n");
-    PrintLookupTable("HIDtoSET2_BREAK", "KEY_SET2_%s_BREAK,\n");
+    PrintLookupTable(file, LU_SET1MAKE);
+    PrintLookupTable(file, LU_SET1BREAK);
+    PrintLookupTable(file, LU_SET2MAKE);
+    PrintLookupTable(file, LU_SET2BREAK);
+
+    fclose(file);
+    file = fopen("../mashpipe/keydefs.c", "w");
+    fprintf(file, "#include \"keydefs.h\"\n#include \"..\\firmware\\scancode.c\"\n");
+
+    // Key names for mashpipe
+    //char NAME_Z[] = "Z";
+
+    // legend in cp432
+    //char LEGEND_Z[] = "Z";
+
+    for (int j = 0; j < 256; j++) 
+    {
+        if (keys[j].Set1Make[0] != 0){ 
+            fprintf(file, "char NAME_%s[] = \"%s\";\n", keys[j].ShortName, keys[j].FriendlyName);
+            fprintf(file, "unsigned char LEGEND_%s[] = {", keys[j].ShortName);
+            PrintHexBytes(file, keys[j].Legend);
+            fprintf(file, "0x00};\n\n");
+        }
+    }
+
+    fprintf(file, "KeyDef KeyDefs[] = {\n");
+
+    for (int j = 0; j < 256; j++) 
+    {
+        int length = 0;
+
+        length += sprintf(line+length, "{");
+
+        char printline = 0;
+
+        if (keys[j].Set1Make[0]){ length += sprintf(line+length, "KEY_SET1_%s_MAKE, ", keys[j].ShortName); printline = 1;}
+        else length += sprintf(line+length, "NULL, ");
+
+        if (keys[j].Set1Break[0]){ length += sprintf(line+length, "KEY_SET1_%s_BREAK, ", keys[j].ShortName); printline = 1;}
+        else length += sprintf(line+length, "NULL, ");
+
+        if (keys[j].Set2Make[0]){ length += sprintf(line+length, "KEY_SET2_%s_MAKE, ", keys[j].ShortName); printline = 1;}
+        else length += sprintf(line+length, "NULL, ");
+
+        if (keys[j].Set2Break[0]){ length += sprintf(line+length, "KEY_SET2_%s_BREAK, ", keys[j].ShortName); printline = 1;}
+        else length += sprintf(line+length, "NULL, ");
+
+        if (!printline) continue; //if no codes, don't bother to spit out line
+
+        length += sprintf(line+length, "NAME_%s, ", keys[j].ShortName);
+        length += sprintf(line+length, "LEGEND_%s, ", keys[j].ShortName);
+
+        fprintf(file, "%s %u, %u, %u, %u},\n", line, keys[j].xpos, keys[j].ypos, keys[j].xsize, keys[j].ysize);
+    }
+    fprintf(file, "{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL}\n");
+    fprintf(file, "};\n");
+
+    //{ XT_KEY_PAD3_MAKE, XT_KEY_PAD3_BREAK, KEY_PAD3_MAKE, KEY_PAD3_BREAK, NAME_PAD3, LEGEND_PAD3,54,14,2,2}
 
     return 0;
 }

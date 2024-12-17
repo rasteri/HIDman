@@ -50,6 +50,25 @@ clock_t NextThink = 0;
 
 unsigned char far *text_mem = MK_FP(0xB000, 0x8000);
 
+char NAME_AMSTRAD_PADEN[] = "Enter (Keypad/Amstrad)";
+char NAME_AMSTRAD_RDEL[] = "Forwardspace (Amstrad)";
+
+// for some reason the bios does weird things here
+unsigned char XT_KEY_BIOS_F11_MAKE[] = {1, 0x85};
+unsigned char XT_KEY_BIOS_F12_MAKE[] = {1, 0x86};
+unsigned char XT_KEY_BIOS_PADEN_MAKE[] = {2, 0xE0, 0x0D};
+unsigned char XT_KEY_BIOS_PADFWSLASH_MAKE[] = {2, 0xE0, 0x2F};
+
+char NAME_BIOS_F11[] = "F11 (BIOS)";
+char NAME_BIOS_F12[] = "F12 (BIOS)";
+char NAME_BIOS_PADEN[] = "Enter (Keypad/BIOS)";
+char NAME_BIOS_PADFWSLASH[] = "Forward Slash (Keypad/BIOS)";
+
+KeyDef BIOSKeyDefs[] = {
+    {XT_KEY_BIOS_F11_MAKE, NULL, NULL, NULL, NAME_BIOS_F11, NULL, 46, 1, 3, 1 },
+    {XT_KEY_BIOS_F12_MAKE, NULL, NULL, NULL, NAME_BIOS_F12, NULL, 50, 1, 3, 1 },
+    {NULL, NULL, NULL,NULL,NULL, NULL, NULL,NULL,NULL, NULL}
+};
 
 void BuildCodeCache()
 {
@@ -60,9 +79,9 @@ void BuildCodeCache()
     memset(codecache, 0x00, sizeof(KeyDef) * 256);
     memset(e0codecache, 0x00, sizeof(KeyDef) * 256);
 
-    for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    cunt = 0;
+    while (KeyDefs[cunt].Xsize != NULL)
     {
-
         currdef = &KeyDefs[cunt];
 
         if (currdef->XTMake[0] == 1)
@@ -76,6 +95,8 @@ void BuildCodeCache()
 
         if (currdef->XTBreak[0] == 2 && currdef->XTBreak[1] == 0xE0)
             e0codecache[currdef->XTBreak[2]] = currdef;
+
+        cunt++;
     }
 }
 
@@ -274,14 +295,13 @@ int CompareScanCode(unsigned char *array, unsigned char *s2, unsigned int length
 
 char LastFewMakes[4];
 
-KeyDef *SearchList(unsigned char *OutType, KeyDef *list, unsigned int listLength, unsigned char *scancode, unsigned int length)
+KeyDef *SearchList(unsigned char *OutType, KeyDef *list, unsigned char *scancode, unsigned int length)
 {
 
     unsigned int cunt = 0;
 
     KeyDef *currkeydef;
-
-    for (cunt = 0; cunt < listLength; cunt++)
+    while (list[cunt].Xsize != NULL)
     {
         currkeydef = &list[cunt];
 
@@ -295,6 +315,7 @@ KeyDef *SearchList(unsigned char *OutType, KeyDef *list, unsigned int listLength
             *OutType = TYPE_BREAK;
             return currkeydef;
         }
+        cunt++;
     }
 
     return NULL;
@@ -310,7 +331,7 @@ KeyDef *FindXTKey(unsigned char *OutType, unsigned char *Scancode, unsigned int 
     // hack if we're in BIOS mode, check for F11/F12 because they reuse other scancodes
     if (biosmode)
     {
-        retval = SearchList(OutType, BIOSKeyDefs, BIOSKeyDefsSize, Scancode, length);
+        retval = SearchList(OutType, BIOSKeyDefs, Scancode, length);
         if (retval != NULL)
             return retval;
     }
@@ -335,7 +356,7 @@ KeyDef *FindXTKey(unsigned char *OutType, unsigned char *Scancode, unsigned int 
     }
 
     // finally search the whole list
-    return SearchList(OutType, KeyDefs, KeyDefsSize, Scancode, length);
+    return SearchList(OutType, KeyDefs, Scancode, length);
 
     return NULL;
 }
@@ -416,8 +437,8 @@ void ProcessScancode(unsigned char code)
         HighlightKey(foundkey, outtype, sameaslast);
 
         // special case for 2B, also light up Euro1 key (since keycodes are the same)
-        if (foundkey->XTMake[1] == 0x2B)
-            HighlightKey(&KEYDEF_EURO1, outtype, sameaslast);
+        /*if (foundkey->XTMake[1] == 0x2B)
+            HighlightKey(&KEYDEF_EURO1, outtype, sameaslast);*/
 
         PrevHighlightKey = foundkey;
         PrevOutType = outtype;
@@ -560,7 +581,7 @@ int main(int argc, char *argv[])
 
     clrscr();
 
-    for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    /*for (cunt = 0; cunt < KeyDefsSize; cunt++)
     {
         printf(KeyDefs[cunt].Name);
         printf(",");
@@ -576,7 +597,7 @@ int main(int argc, char *argv[])
         printf("\n");
 
     }
-    exit(0);
+    exit(0);*/
     _fmemset(ScreenBuf, 0x00, 0x781);
 
     r.x.ax = 0x01;
@@ -637,9 +658,12 @@ int main(int argc, char *argv[])
     _fmemset(ScreenBuf, 0x00, 0x781);
 
     // Draw the keys
-    for (cunt = 0; cunt < KeyDefsSize; cunt++)
+    cunt = 0;
+
+    while (KeyDefs[cunt].Xsize != NULL)
     {
         DrawKey(&KeyDefs[cunt]);
+        cunt++;
     }
 
     gotoxy(59, 1);
@@ -671,7 +695,8 @@ int main(int argc, char *argv[])
     if (biosmode == 4)
     {
         biosmode = 0;
-        for (cunt = 0; cunt < KeyDefsSize; cunt++)
+        cunt = 0;
+        while(KeyDefs[cunt].Xsize != NULL)
         {
             if (KeyDefs[cunt].XTMake != NULL)
                 for (shit = 0; shit < KeyDefs[cunt].XTMake[0]; shit++)
@@ -680,6 +705,8 @@ int main(int argc, char *argv[])
             if (KeyDefs[cunt].XTBreak != NULL)
                 for (shit = 0; shit < KeyDefs[cunt].XTBreak[0]; shit++)
                     ProcessScancode(KeyDefs[cunt].XTBreak[shit + 1]);
+            
+            cunt ++;
         }
         getch();
         goto ehoh;

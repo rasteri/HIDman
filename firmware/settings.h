@@ -22,7 +22,7 @@ typedef struct Settings {
     bool Intellimouse;
 
     // Limit XT keyboards to 81 keys only
-    bool XT81Keys;
+    bool XT83Keys;
 
     // Use game controller to control mouse
     bool GameControllerAsMouse;

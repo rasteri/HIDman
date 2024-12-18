@@ -1,5 +1,5 @@
 #include "keydefs.h"
-#include "scancode.c"
+#include "../firmware/scancode.c"
 char NAME_PWR[] = "System Power";
 unsigned char LEGEND_PWR[] = {0x50, 0x57, 0x52, 0x00};
 

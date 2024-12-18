@@ -14,20 +14,20 @@ i I,I,I,49,19,9,1,2,07,0C,17,97,43,F0 43,0C,Keyboard i and I
 j J,J,J,4A,18,12,1,2,07,0D,24,A4,3B,F0 3B,0D,Keyboard j and J
 k K,K,K,4B,20,12,1,2,07,0E,25,A5,42,F0 42,0E,Keyboard k and K
 l L,L,L,4C,22,12,1,2,07,0F,26,A6,4B,F0 4B,0F,Keyboard l and L
-m M,M,M,4D,19,15,1,2,07,10,32,B2,3A,F0 3A,10,Keyboard m and M2
+m M,M,M,4D,19,15,1,2,07,10,32,B2,3A,F0 3A,10,Keyboard m and M
 n N,N,N,4E,17,15,1,2,07,11,31,B1,31,F0 31,11,Keyboard n and N
 o O,O,O,4F,21,9,1,2,07,12,18,98,44,F0 44,12,Keyboard o and O2
-p P,P,P,50,23,9,1,2,07,13,19,99,4D,F0 4D,13,Keyboard p and P2
-q Q,Q,Q,51,5,9,1,2,07,14,10,90,15,F0 15,14,Keyboard q and Q2
+p P,P,P,50,23,9,1,2,07,13,19,99,4D,F0 4D,13,Keyboard p and P
+q Q,Q,Q,51,5,9,1,2,07,14,10,90,15,F0 15,14,Keyboard q and Q
 r R,R,R,52,11,9,1,2,07,15,13,93,2D,F0 2D,15,Keyboard r and R
 s S,S,S,53,8,12,1,2,07,16,1F,9F,1B,F0 1B,16,Keyboard s and S
 t T,T,T,54,13,9,1,2,07,17,14,94,2C,F0 2C,17,Keyboard t and T
 u U,U,U,55,17,9,1,2,07,18,16,96,3C,F0 3C,18,Keyboard u and U
 v V,V,V,56,13,15,1,2,07,19,2F,AF,2A,F0 2A,19,Keyboard v and V
-w W,W,W,57,7,9,1,2,07,1A,11,91,1D,F0 1D,1A,Keyboard w and W2
-x X,X,X,58,9,15,1,2,07,1B,2D,AD,22,F0 22,1B,Keyboard x and X2
-y Y,Y,Y,59,15,9,1,2,07,1C,15,95,35,F0 35,1C,Keyboard y and Y2
-z Z,Z,Z,5A,7,15,1,2,07,1D,2C,AC,1A,F0 1A,1D,Keyboard z and Z2
+w W,W,W,57,7,9,1,2,07,1A,11,91,1D,F0 1D,1A,Keyboard w and W
+x X,X,X,58,9,15,1,2,07,1B,2D,AD,22,F0 22,1B,Keyboard x and X
+y Y,Y,Y,59,15,9,1,2,07,1C,15,95,35,F0 35,1C,Keyboard y and Y
+z Z,Z,Z,5A,7,15,1,2,07,1D,2C,AC,1A,F0 1A,1D,Keyboard z and Z
 1 !,One / Exclamation Mark (Main),1,21 0A 31,4,6,1,2,07,1E,02,82,16,F0 16,1E,Keyboard 1 and !2
 2 @,Two / At Symbol (Main),2,40 0A 32,6,6,1,2,07,1F,03,83,1E,F0 1E,1F,Keyboard 2 and @2
 3 #,Three / Hash (Main),3,23 0A 33,8,6,1,2,07,20,04,84,26,F0 26,20,Keyboard 3 and #2
@@ -128,32 +128,31 @@ Keyboard Find,,,,,,,,07,7E,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,7E,Keyboa
 Keyboard Mute,,,,,,,,07,7F,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,7F,Keyboard Mute
 Keyboard Volume Up,,,,,,,,07,80,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,80,Keyboard Volume Up
 Keyboard Volume Dn,,,,,,,,07,81,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,81,Keyboard Volume Down
-Keyboard Locking Caps Lock,,,,,,,,07,82,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,82,Keyboard Locking Caps Lock12
-Keyboard Locking Num Lock,,,,,,,,07,83,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,83,Keyboard Locking Num Lock12
-Keyboard Locking Scroll Lock,,,,,,,,07,84,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,84,Keyboard Locking Scroll Lock12
-Keypad comma (Brazilian Keypad .),Comma (Keypad),PADCOMMA,2C,57,11,2,2,07,85,7E,FE,6D,F0 6D,85,Keypad Comma13
-Keyboard Equal Sign,,PADEQUALS,,,,,,07,86,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,86,Keypad Equal Sign14
-Keyboard Int'l 1 ろ (Ro),Ro,INTL1,52 6F,27,15,2,2,07,87,73,F3,51,F0 51,87,Keyboard International1
-Keyboard Intl'2 かかかかひひひかロロロ字 (Katakana/Hiragana),Katakana/Hiragana OR Forwardspace (AMSTRAD),INTL2,4B 41 54 2F 48 49 52,1,21,7,1,07,88,70,F0,13,F0 13,88,Keyboard International2
-Keyboard Int'l 2 ¥ (Yen),Yen,INTL3,7C 0A FF9D,28,6,1,2,07,89,7D,FD,6A,F0 6A,89,Keyboard International3
-Keyboard Int'l 4 前前前 変変(次前前) 全前前 (Henkan),Henkan,INTL4,48 45 4E 4B 41 4E,9,21,6,1,07,8A,79,F9,64,F0 64,8A,Keyboard International4
-Keyboard Int'l 5 無変変 (Muhenkan),Muhenkan,INTL5,4D 55 48 45 4E 4B 41 4E,16,21,8,1,07,8B,7B,FB,67,F0 67,8B,Keyboard International5
-Keyboard Int'l 6 (PC9800 Keypad comma  ),PC9800 Comma,INTL6,2C,25,21,1,1,07,8C,5C,DC,27,F0 27,8C,Keyboard International6
-Keyboard Int'l 7,,,,,,,,07,8D,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,8D,Keyboard International7
-Keyboard Int'l 8,,,,,,,,07,8E,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,8E,Keyboard International8
-Keyboard Int'l 9,,,,,,,,07,8F,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,8F,Keyboard International9
-Keyboard Lang 1 한/옝 (Hanguel/English),Hangul/Yeong,LANG1,48 41 4E 2F 59 45 4F,40,21,7,1,07,90,F2,None,F2,None,90,Keyboard LANG124
-Keyboard Lang 2 한한 (Hanja),Hanja,LANG2,48 41 4E 4A 41,48,21,5,1,07,91,F1,None,F1,None,91,Keyboard LANG225
-Keyboard Lang 3かかかか (Katakana),Katakana,LANG3,4B 41 54 41,27,21,4,1,07,92,78,F8,63,F0 63,92,Keyboard LANG326
-Keyboard Lang 4ひひひか (Hiragana),Hiragana,LANG4,48 49 52 41,32,21,4,1,07,93,77,F7,62,F0 62,93,Keyboard LANG427
-Keyboard Lang 5 半半/全半 (Zenkaku/Hankaku),Zenkaku/Hankaku/Kanji,LANG5,48 5A 4B,1,4,3,1,07,94,76,F6,5F,F0 5F,94,Keyboard LANG528
-Keyboard Lang 6,,,,,,,,07,95,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,95,Keyboard LANG629
-Keyboard Lang 7,,,,,,,,07,96,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,96,Keyboard LANG729
-Keyboard Lang 8,,,,,,,,07,97,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,97,Keyboard LANG829
-Keyboard Lang 9,,,,,,,,07,98,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,98,Keyboard LANG929
-"Keyboard Alternate
-Erase",,,,,,,,07,99,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,99,Keyboard Alternate Erase30
-Keyboard SysReq/Attention,,,,,,,,07,9A,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,9A,Keyboard SysReq/Attention7
+Keyboard Locking Caps Lock,,,,,,,,07,82,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,82,Keyboard Locking Caps Lock
+Keyboard Locking Num Lock,,,,,,,,07,83,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,83,Keyboard Locking Num Lock
+Keyboard Locking Scroll Lock,,,,,,,,07,84,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,84,Keyboard Locking Scroll Lock
+Keypad comma (Brazilian Keypad .),Comma (Keypad),PADCOMMA,2C,57,11,2,2,07,85,7E,FE,6D,F0 6D,85,Keypad Comma
+Keyboard Equal Sign,,PADEQUALS,,,,,,07,86,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,86,Keypad Equal Sign
+Keyboard Int'l 1 ろ (Ro),Ro,INTL1,52 6F,27,15,2,2,07,87,73,F3,51,F0 51,87,Keyboard International
+Keyboard Intl'2 かかかかひひひかロロロ字 (Katakana/Hiragana),Katakana/Hiragana OR Forwardspace (AMSTRAD),INTL2,4B 41 54 2F 48 49 52,1,21,7,1,07,88,70,F0,13,F0 13,88,Keyboard International
+Keyboard Int'l 2 ¥ (Yen),Yen,INTL3,7C 0A FF9D,28,6,1,2,07,89,7D,FD,6A,F0 6A,89,Keyboard International
+Keyboard Int'l 4 前前前 変変(次前前) 全前前 (Henkan),Henkan,INTL4,48 45 4E 4B 41 4E,9,21,6,1,07,8A,79,F9,64,F0 64,8A,Keyboard International
+Keyboard Int'l 5 無変変 (Muhenkan),Muhenkan,INTL5,4D 55 48 45 4E 4B 41 4E,16,21,8,1,07,8B,7B,FB,67,F0 67,8B,Keyboard International
+Keyboard Int'l 6 (PC9800 Keypad comma  ),PC9800 Comma,INTL6,2C,25,21,1,1,07,8C,5C,DC,27,F0 27,8C,Keyboard International
+Keyboard Int'l 7,,,,,,,,07,8D,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,8D,Keyboard International
+Keyboard Int'l 8,,,,,,,,07,8E,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,8E,Keyboard International
+Keyboard Int'l 9,,,,,,,,07,8F,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,8F,Keyboard International
+Keyboard Lang 1 한/옝 (Hanguel/English),Hangul/Yeong,LANG1,48 41 4E 2F 59 45 4F,40,21,7,1,07,90,F2,None,F2,None,90,Keyboard LANG
+Keyboard Lang 2 한한 (Hanja),Hanja,LANG2,48 41 4E 4A 41,48,21,5,1,07,91,F1,None,F1,None,91,Keyboard LANG
+Keyboard Lang 3かかかか (Katakana),Katakana,LANG3,4B 41 54 41,27,21,4,1,07,92,78,F8,63,F0 63,92,Keyboard LANG
+Keyboard Lang 4ひひひか (Hiragana),Hiragana,LANG4,48 49 52 41,32,21,4,1,07,93,77,F7,62,F0 62,93,Keyboard LANG
+Keyboard Lang 5 半半/全半 (Zenkaku/Hankaku),Zenkaku/Hankaku/Kanji,LANG5,48 5A 4B,1,4,3,1,07,94,76,F6,5F,F0 5F,94,Keyboard LANG
+Keyboard Lang 6,,,,,,,,07,95,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,95,Keyboard LANG
+Keyboard Lang 7,,,,,,,,07,96,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,96,Keyboard LANG
+Keyboard Lang 8,,,,,,,,07,97,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,97,Keyboard LANG
+Keyboard Lang 9,,,,,,,,07,98,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,98,Keyboard LANG
+Keyboard Alternate Erase,,,,,,,,07,99,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,99,Keyboard Alternate Erase
+Keyboard SysReq/Attention,,,,,,,,07,9A,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,9A,Keyboard SysReq/Attention
 Keyboard Cancel,,,,,,,,07,9B,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,9B,Keyboard Cancel
 Keyboard Clear,,,,,,,,07,9C,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,9C,Keyboard Clear
 Keyboard Prior,,,,,,,,07,9D,UNASSIGNED,UNASSIGNED,UNASSIGNED,UNASSIGNED,9D,Keyboard Prior

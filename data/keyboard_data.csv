@@ -2,9 +2,9 @@ Key Name,Friendly Name,Short Name,Legend (CP437),Xpos,Ypos,Xsize,Ysize,Usage Pag
 System Power,System Power,PWR,50 57 52,66,17,3,1,01,81,E0 5E,E0 DE,E0 37,E0 F0 37,,
 System Sleep,System Sleep,SLEP,53 4C 45 50,70,17,4,1,01,82,E0 5F,E0 DF,E0 3F,E0 F0 3F,,
 System Wake,System Wake,WAKE,57 41 4B 45,75,17,4,1,01,83,E0 63,E0 E3,E0 5E,E0 F0 5E,,
-a A,A,A,41,6,12,1,2,07,04,1E,9E,1C,F0 1C,4,Keyboard a and A2
+a A,A,A,41,6,12,1,2,07,04,1E,9E,1C,F0 1C,4,Keyboard a and A
 b B,B,B,42,15,15,1,2,07,05,30,B0,32,F0 32,5,Keyboard b and B
-c C,C,C,43,11,15,1,2,07,06,2E,AE,21,F0 21,6,Keyboard c and C2
+c C,C,C,43,11,15,1,2,07,06,2E,AE,21,F0 21,6,Keyboard c and C
 d D,D,D,44,10,12,1,2,07,07,20,A0,23,F0 23,7,Keyboard d and D
 e E,E,E,45,9,9,1,2,07,08,12,92,24,F0 24,8,Keyboard e and E
 f F,F,F,46,12,12,1,2,07,09,21,A1,2B,F0 2B,9,Keyboard f and F
@@ -16,7 +16,7 @@ k K,K,K,4B,20,12,1,2,07,0E,25,A5,42,F0 42,0E,Keyboard k and K
 l L,L,L,4C,22,12,1,2,07,0F,26,A6,4B,F0 4B,0F,Keyboard l and L
 m M,M,M,4D,19,15,1,2,07,10,32,B2,3A,F0 3A,10,Keyboard m and M
 n N,N,N,4E,17,15,1,2,07,11,31,B1,31,F0 31,11,Keyboard n and N
-o O,O,O,4F,21,9,1,2,07,12,18,98,44,F0 44,12,Keyboard o and O2
+o O,O,O,4F,21,9,1,2,07,12,18,98,44,F0 44,12,Keyboard o and O
 p P,P,P,50,23,9,1,2,07,13,19,99,4D,F0 4D,13,Keyboard p and P
 q Q,Q,Q,51,5,9,1,2,07,14,10,90,15,F0 15,14,Keyboard q and Q
 r R,R,R,52,11,9,1,2,07,15,13,93,2D,F0 2D,15,Keyboard r and R

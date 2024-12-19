@@ -447,6 +447,9 @@ void ProcessScancode(unsigned char code)
     }
 }
 
+// lock access to screen when in interrupt
+char ScreenLock;
+
 static void interrupt keyb_int()
 {
     unsigned char sixone;

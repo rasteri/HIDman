@@ -624,14 +624,22 @@ BOOL EnumerateRootHubPort(UINT8 port)
 
 			ENDPOINT *pEndPoint = &pInterface->Endpoint[0];
 
+			// "new thing" means wait for a change bitmap before clearing ports
+			// this is how other USB stacks seem to do it
 			printf("Doing new thing - %x\n", pInterface->Endpoint[0].EndpointAddr);
 
+			uint8_t newthing = 1;
 
 			s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 20000);
 
+			
+
 			if (s != ERR_SUCCESS){
 				DEBUGOUT("new enum. failed\n");
-				return FALSE;
+				// if "new thing" failed just clear all ports without waiting
+				// seems to be required for some hubs
+				newthing = 0;
+				//return FALSE;
 			}
 
 			uint8_t changebitmap = ReceiveDataBuffer[0];
@@ -640,7 +648,7 @@ BOOL EnumerateRootHubPort(UINT8 port)
 
 			for (i = 0; i < hubPortNum; i++)
 			{
-				if (changebitmap & (1 << (i+1))) {
+				if (!newthing || (changebitmap & (1 << (i+1)))) {
 					DEBUGOUT("checkn port %d\n", i);
 					mDelaymS(50);
 

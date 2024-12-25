@@ -53,5 +53,5 @@ void printstackpointer(void)
 {
     uint8_t dumdum = 0;
 
-    printhexval(&dumdum);
+    printhexval((uint8_t)&dumdum);
 }

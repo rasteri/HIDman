@@ -37,7 +37,13 @@ void CreateSeg(INTERFACE *pInterface)
 	currSegPnt->startBit = tempSB;                                                                     
 	currSegPnt->reportCount = HIDParseState.hidGlobal.reportCount;                                     
 	tempSB += HIDParseState.hidGlobal.reportSize;                                                      
-	currSegPnt->reportSize = HIDParseState.hidGlobal.reportSize;                                       
+	currSegPnt->reportSize = HIDParseState.hidGlobal.reportSize; 
+
+	printf("lm %lx\n", HIDParseState.hidGlobal.logicalMinimum);
+
+	if (HIDParseState.hidGlobal.logicalMinimum < 0) {
+		currSegPnt->InputParam |= INPUT_PARAM_SIGNED;
+	}                                      
 }
 
 //search though preset to see if this matches a mapping

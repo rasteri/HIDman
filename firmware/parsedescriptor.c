@@ -71,11 +71,11 @@ static INT32 ItemSData(HID_ITEM *itemInfo)
 	switch (itemInfo->size)
 	{
 	case 1:
-		return itemInfo->value.s8;
+		return SIGNEX(itemInfo->value.s8, 7); //itemInfo->value.s8;
 	case 2:
-		return itemInfo->value.s16;
+		return SIGNEX(itemInfo->value.s16, 15);//itemInfo->value.s16;
 	case 4:
-		return itemInfo->value.s32;
+		return itemInfo->value.s32; 
 	}
 
 	return 0;

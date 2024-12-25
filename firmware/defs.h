@@ -157,6 +157,8 @@
 
 #define MAX_HID_DEVICES 8
 
+#define SIGNEX(v, sb) ((v) | (((v) & (1 << (sb))) ? ~((1 << (sb))-1) : 0))
+
 typedef struct _EndPoint
 {
 	unsigned char EndpointAddr;
@@ -169,8 +171,8 @@ typedef struct _EndPoint
 typedef struct _HID_GLOBAL
 {
 	uint8_t usagePage;
-	INT8 logicalMinimum;
-	INT8 logicalMaximum;
+	int32_t logicalMinimum;
+	uint32_t logicalMaximum;
 	INT8 physicalMinimum;
 	INT8 physicalMaximum;
 	uint8_t unitExponent;
@@ -209,6 +211,9 @@ typedef struct _HID_LOCAL
 #define MAP_TYPE_ARRAY 4
 #define MAP_TYPE_BITFIELD 5
 #define MAP_TYPE_EQUAL 6
+
+#define INPUT_PARAM_SIGNED 1
+#define INPUT_PARAM_SIGNED_SCALEDOWN 2
 
 #define JOYPRESETCOUNT 18
 

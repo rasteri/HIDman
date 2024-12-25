@@ -120,7 +120,7 @@ void HandleRepeats(void)
 
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 
-#define SIGNEX(v, sb) ((v) | (((v) & (1 << (sb))) ? ~((1 << (sb))-1) : 0))
+
 
 void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 {
@@ -214,7 +214,8 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 
 		// if it's a signed integer we need to extend the sign
 		// todo, actually determine if it is a signed int... look at logical max/min fields in descriptor
-		currSeg->value = SIGNEX(currSeg->value, currSeg->reportSize - 1);
+		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
+			currSeg->value = SIGNEX(currSeg->value, currSeg->reportSize - 1);
 
 		printf("cv %lX\n", currSeg->value);
 
@@ -283,7 +284,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				// TODO scaling
 				case MAP_MOUSE_X:
 					printf("x %ld\n", (int32_t)currSeg->value);
-					if (currSeg->InputParam == 2){
+					if (currSeg->InputParam == INPUT_PARAM_SIGNED_SCALEDOWN){
 
 						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
 
@@ -300,7 +301,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 					break;
 				case MAP_MOUSE_Y:
 					printf("y %ld\n", (int32_t)currSeg->value);
-					if (currSeg->InputParam == 2) {
+					if (currSeg->InputParam == INPUT_PARAM_SIGNED_SCALEDOWN) {
 
 						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
 

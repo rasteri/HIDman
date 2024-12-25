@@ -39,8 +39,6 @@ void CreateSeg(INTERFACE *pInterface)
 	tempSB += HIDParseState.hidGlobal.reportSize;                                                      
 	currSegPnt->reportSize = HIDParseState.hidGlobal.reportSize; 
 
-	printf("lm %lx\n", HIDParseState.hidGlobal.logicalMinimum);
-
 	if (HIDParseState.hidGlobal.logicalMinimum < 0) {
 		currSegPnt->InputParam |= INPUT_PARAM_SIGNED;
 	}                                      

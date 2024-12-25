@@ -217,8 +217,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
 			currSeg->value = SIGNEX(currSeg->value, currSeg->reportSize - 1);
 
-		printf("cv %lX\n", currSeg->value);
-
 		//old way
 		/*currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
 						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size*/
@@ -283,7 +281,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				{
 				// TODO scaling
 				case MAP_MOUSE_X:
-					printf("x %ld\n", (int32_t)currSeg->value);
 					if (currSeg->InputParam == INPUT_PARAM_SIGNED_SCALEDOWN){
 
 						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
@@ -300,7 +297,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 
 					break;
 				case MAP_MOUSE_Y:
-					printf("y %ld\n", (int32_t)currSeg->value);
 					if (currSeg->InputParam == INPUT_PARAM_SIGNED_SCALEDOWN) {
 
 						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);

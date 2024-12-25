@@ -237,7 +237,7 @@ typedef struct JoyPreset
 	struct JoyPreset *next;
 } JoyPreset;
 
-// defines a mapping between a HID segment and a PS/2 event
+// defines a mapping between a HID segment and an output event
 typedef struct HID_SEG
 {
 	uint8_t index;
@@ -261,8 +261,7 @@ typedef struct HID_SEG
 
 	uint8_t reportCount;
 
-	//uint8_t oldValue;
-	uint8_t value;
+	uint32_t value;
 
 	struct HID_SEG *next;
 } HID_SEG;

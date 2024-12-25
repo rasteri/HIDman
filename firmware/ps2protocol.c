@@ -191,12 +191,29 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 	}
 	else
 	{
-		// find byte
-		currByte = data + (currSeg->startBit >> 3);
+		// bits may be across any byte alignment
+		// so do the neccesary shifting to get it to all fit in a uint32_t
+		int8_t shiftbits = -(currSeg->startBit % 8);
+		uint8_t startbyte = currSeg->startBit / 8;
 
-		// find bits
-		currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
-						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size
+		currSeg->value = 0;
+
+        currByte = data + startbyte;
+        
+		while(shiftbits < currSeg->reportSize) {
+        
+			if (shiftbits < 0)
+				currSeg->value |= ((uint32_t)(*currByte)) >> (uint32_t)(-shiftbits);
+			else
+				currSeg->value |= ((uint32_t)(*currByte)) << (uint32_t)shiftbits;
+            
+            currByte++;
+			shiftbits += 8;
+		}
+
+		//old way
+		/*currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
+						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size*/
 
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 			report->keyboardUpdated = 1;
@@ -242,8 +259,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		}
 		else if (make)
 		{
-
-
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
 				SetKey(currSeg->OutputControl, report);
@@ -272,12 +287,11 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						MouseMove(tmpl, 0, 0);
 					}
 					else
-
-					MouseMove((int8_t)currSeg->value, 0, 0);
+						MouseMove((int32_t)currSeg->value, 0, 0);
 
 					break;
 				case MAP_MOUSE_Y:
-					if (currSeg->InputParam == 2){
+					if (currSeg->InputParam == 2) {
 
 						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
 
@@ -289,9 +303,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						MouseMove(0, tmpl, 0);
 					}
 					else
-					
-
-					MouseMove(0, (int8_t)currSeg->value, 0);
+						MouseMove(0, (int32_t)currSeg->value, 0);
 
 					break;
 				case MAP_MOUSE_WHEEL:
@@ -380,6 +392,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 
 	if (descReport->keyboardUpdated)
 	{
+		// this could be optimized by XORing bytes first
 		for (uint8_t c = 0; c < 255; c++)
 		{
 			if (BitPresent(descReport->KeyboardKeyMap, c) && !BitPresent(descReport->oldKeyboardKeyMap, c))

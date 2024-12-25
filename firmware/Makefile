@@ -71,6 +71,12 @@ CFLAGS := -V -mmcs51 --model-large --stack-auto \
 
 LFLAGS := $(CFLAGS)
 
+TESTCFLAGS := -V -mmcs51 --model-large --stack-auto \
+	--xram-size 0x8000 --xram-loc $(XRAM_LOC) \
+	--code-size 0xEFFF \
+	-I/ -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
+	$(EXTRA_FLAGS)
+
 print-%  : ; @echo $* = $($*)
 
 makebuilddir:
@@ -108,7 +114,7 @@ clean:
 	-rm -f ../mashpipe/*.EXE
 
 test: $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel
-	$(CC) $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel $(LFLAGS) -o $(OBJDIR)/test.ihx
+	$(CC) $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
 	s51 -s - build/test 
 
 datagen: 

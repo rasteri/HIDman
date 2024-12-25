@@ -58,7 +58,7 @@ typedef struct MOUSE {
 extern MOUSE OutputMice[];
 
 void InitMice(void);
-void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ);
+void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ);
 uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, int16_t *Y, int16_t *Z, uint8_t *Buttons, bool Accelerate, uint8_t Downscale);
 void MouseClick(uint8_t Button);
 void MouseUnclick(uint8_t Button);

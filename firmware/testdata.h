@@ -25,3 +25,9 @@ extern __code uint8_t CheapoKeyboardConfigDescriptor[];
 extern __code uint8_t MiniKeyboardTouchpadDeviceDescriptor[];
 extern __code uint8_t MiniKeyboardTouchpadConfigDescriptor[];
 extern __code uint8_t MiniKeyboardTouchpadReportDescriptor[];
+
+extern __code uint8_t Mouse16BitDeviceDescriptor[];
+extern __code uint8_t Mouse16BitConfigDescriptor[];
+extern __code uint8_t Mouse16BitReportDescriptor[];
+
+extern __code uint8_t Mouse16BitTestData[];

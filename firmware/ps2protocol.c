@@ -119,6 +119,9 @@ void HandleRepeats(void)
 #define GetOldKey(key,report) (report->oldKeyboardKeyMap[key >> 3] & (1 << (key & 0x07)))
 
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
+
+#define SIGNEX(v, sb) ((v) | (((v) & (1 << (sb))) ? ~((1 << (sb))-1) : 0))
+
 void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 {
 	bool make = 0;
@@ -196,8 +199,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		int8_t shiftbits = -(currSeg->startBit % 8);
 		uint8_t startbyte = currSeg->startBit / 8;
 
-		currSeg->value = 0;
-
         currByte = data + startbyte;
         
 		while(shiftbits < currSeg->reportSize) {
@@ -210,6 +211,12 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
             currByte++;
 			shiftbits += 8;
 		}
+
+		// if it's a signed integer we need to extend the sign
+		// todo, actually determine if it is a signed int... look at logical max/min fields in descriptor
+		currSeg->value = SIGNEX(currSeg->value, currSeg->reportSize - 1);
+
+		printf("cv %lX\n", currSeg->value);
 
 		//old way
 		/*currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
@@ -275,6 +282,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				{
 				// TODO scaling
 				case MAP_MOUSE_X:
+					printf("x %ld\n", (int32_t)currSeg->value);
 					if (currSeg->InputParam == 2){
 
 						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
@@ -291,6 +299,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 
 					break;
 				case MAP_MOUSE_Y:
+					printf("y %ld\n", (int32_t)currSeg->value);
 					if (currSeg->InputParam == 2) {
 
 						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
@@ -311,7 +320,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
 					else*/
 
-					MouseMove(0, 0, (int8_t)currSeg->value);
+					MouseMove(0, 0, (int32_t)currSeg->value);
 
 					break;
 				}

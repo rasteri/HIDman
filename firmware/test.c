@@ -83,8 +83,8 @@ bool TestDescriptors(
                 return 1;
             }
             
-            ParseReport(pInterface, 7 * 8, KeychronWirelessReportPressA);
-            ParseReport(pInterface, 7 * 8, KeychronWirelessReportReleaseA);
+            ParseReport(pInterface, 64, Mouse16BitTestData);
+            //ParseReport(pInterface, 7 * 8, KeychronWirelessReportReleaseA);
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -174,7 +174,7 @@ void main()
     testlinkedlist();
 
 
-    TestDescriptors (
+    /*TestDescriptors (
         PS4DeviceDescriptor, 18,
         PS4ConfigDescriptor, 225,
         PS4ReportDescriptor, 507,
@@ -207,7 +207,7 @@ void main()
         CheapoKeyboardConfigDescriptor, 59,
         CheapoKeyboardReportDescriptor, 54,
         8
-    );
+    );*/
 
    /* TestDescriptors (
         CheapoGamepadDeviceDescriptor, 18,
@@ -222,6 +222,13 @@ void main()
         MiniKeyboardTouchpadReportDescriptor, 119,
         8
     );*/
+
+    TestDescriptors (
+        Mouse16BitDeviceDescriptor, 18,
+        Mouse16BitConfigDescriptor, 59,
+        Mouse16BitReportDescriptor, 67,
+        10
+    );
 
     printf("memused : %u\n", MemoryUsed());
     printf("memfree : %u\n", MemoryFree());

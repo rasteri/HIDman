@@ -36,9 +36,11 @@ void InitMice(void)
 	Ps2MouseSetDefaults();
 }
 uint8_t updates = 0;
-void MouseMove(int16_t DeltaX, int16_t DeltaY, int16_t DeltaZ)
+void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
 {
-
+	printf("mm %ld,", DeltaX);
+	printf("%ld,", DeltaY);
+	printf("%ld\n", DeltaZ);
     for (int x = 0; x < 2; x++)
     {
         MOUSE *m = &OutputMice[x];

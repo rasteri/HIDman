@@ -55,7 +55,7 @@ typedef struct MOUSE {
 	
 } MOUSE;
 
-extern MOUSE OutputMice[];
+__xdata extern MOUSE OutputMice[];
 
 void InitMice(void);
 void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ);
@@ -73,7 +73,7 @@ void Ps2MouseSetScaling(uint8_t Scaling);
 void Ps2MouseSetReporting(bool Reporting);
 void Ps2MouseSetDefaults(void); 
 
-extern uint8_t serialMouseMode;
+extern __xdata uint8_t serialMouseMode;
 
 void HandleMouse(void);
 

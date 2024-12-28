@@ -198,8 +198,8 @@ void ReenumerateAllPorts(void);
 
 void ProcessUsbHostPort(void);
 
-extern BOOL volatile s_CheckUsbPort0;
-extern BOOL volatile s_CheckUsbPort1;
+extern __xdata  BOOL volatile s_CheckUsbPort0;
+extern __xdata  BOOL volatile s_CheckUsbPort1;
 
 // USB specific traces
 

@@ -9,7 +9,7 @@
 
 __xdata volatile uint16_t SoftWatchdog = 0;
 
-__xdata FunctionReference runBootloader = (FunctionReference)0xF400;
+FunctionReference runBootloader = (FunctionReference)0xF400;
 __xdata volatile bool OutputsEnabled = 0;
 
 /*******************************************************************************

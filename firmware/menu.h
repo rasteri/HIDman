@@ -13,15 +13,15 @@
 
 void Menu_Press_Key(uint8_t key);
 extern __xdata bool MenuActive;
-extern bool DumpReport;
+extern __xdata  bool DumpReport;
 
 extern __xdata char SendBuffer[];
 
-extern uint8_t menuKey;
+extern __xdata  uint8_t menuKey;
 
 void SendKeyboardBuffer(void);
 void Menu_Task(void);
-extern uint8_t menuState;
+extern __xdata uint8_t menuState;
 void inputProcess(void);
 
 //#define DEBUGOUT(...) 
@@ -29,7 +29,7 @@ void inputProcess(void);
 #define SendKeyboardString(...) {sprintf(SendBuffer, __VA_ARGS__); SendKeyboardBuffer();}
 
 
-extern bool KeyboardDebugOutput;
+extern __xdata bool KeyboardDebugOutput;
 
-extern uint8_t LEDStatus;
+extern __xdata uint8_t LEDStatus;
 #endif

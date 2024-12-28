@@ -33,7 +33,7 @@ void UART_Init()
 
 static USB_HUB_PORT __xdata TestPort;
 
-__code uint8_t KeyboardTestDataD[] = { 0, 0x05, 0, 0, 0, 0, 0, 0 };
+__code uint8_t KeyboardTestDataD[] = { 0, 0x05, 10, 20, 30, 40, 50, 0 };
 __code uint8_t KeyboardTestDataU[] = { 0, 0x00, 0, 0, 0, 0, 0, 0 };
 
 __code uint8_t KovaTestData[] = { 
@@ -47,8 +47,8 @@ __code uint8_t KovaTestData[] = {
 0x00, 
 };
 
-uint16_t iters = 0;
-uint8_t bleh;
+__xdata uint16_t iters = 0;
+__xdata uint8_t bleh;
 void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 {
     if (!bleh++){
@@ -106,17 +106,17 @@ bool TestDescriptors(
                 return 1;
             }
             
-            while(1) {
+            /*while(1) {
                 ParseReport(pInterface, 8 * 8, KeyboardTestDataD);
                 iters++;
                 ParseReport(pInterface, 8 * 8, KeyboardTestDataU);
                 iters++;
-            }
+            }*/
 
-            /*while(1){
+            while(1){
                 ParseReport(pInterface, 8 * 8, KovaTestData);
                 iters++;
-            }*/
+            }
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -189,7 +189,7 @@ bool testintsizes() {
     return 0;
 }
 
-INTERFACE funky;
+__xdata INTERFACE funky;
 
 void main()
 {
@@ -214,19 +214,19 @@ void main()
 
     testlinkedlist();
 
-    TestDescriptors (
+    /*TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         StandardKeyboardDescriptor, 63,
         8
-    );
+    );*/
 
-    /*TestDescriptors (
+    TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         KovaReportDescriptor, 232,
         8
-    );*/
+    );
 
     /*TestDescriptors (
         PS4DeviceDescriptor, 18,

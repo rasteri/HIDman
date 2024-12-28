@@ -218,7 +218,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterfa
 
 	while ((start = FetchItem(start, end, &item)) != NULL)
 	{
-
+		printstackpointer();
 		if (item.format != HID_ITEM_FORMAT_SHORT)
 		{
 			goto ERR;

@@ -18,9 +18,9 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report);
 
 
 
-extern uint16_t StatusMode;
+extern __xdata uint16_t StatusMode;
 
-extern uint8_t LEDDelayMs;
+extern __xdata uint8_t LEDDelayMs;
 
 // Mouse buffer size must be at least 6 for intellimouse detection, more for debugging
 #define MOUSE_BUFFER_SIZE 32

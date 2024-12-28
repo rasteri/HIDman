@@ -68,7 +68,7 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 	}
 }
 
-char buf[100];
+__xdata char buf[100];
 
 bool SendKeyboard(const uint8_t *chunk)
 {
@@ -114,7 +114,7 @@ void ReleaseKey(uint8_t currchar)
         ;
 }
 
-uint8_t GlobalSendBuff[8];
+__xdata uint8_t GlobalSendBuff[8];
 
 void PS2ProcessPort(uint8_t port)
 {

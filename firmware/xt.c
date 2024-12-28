@@ -11,9 +11,9 @@
 #include "defs.h"
 #include "xt.h"
 
-uint16_t ratelimit = 0;
+__xdata uint16_t ratelimit = 0;
 
-uint8_t oldstate = 0;
+__xdata uint8_t oldstate = 0;
 void XTProcessPort(void)
 {
 	const uint8_t *chunk;

@@ -45,7 +45,7 @@ __xdata int16_t RepeatRate = -1000;
 
 __xdata char lastKeyboardHID[8];
 
-uint8_t LEDDelayMs = 0;
+__xdata uint8_t LEDDelayMs = 0;
 
 // Mouse buffer needed for handling multi-byte commands and intellimouse detection 
 __xdata uint8_t MouseBuffer[MOUSE_BUFFER_SIZE];
@@ -346,9 +346,9 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
  
 bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 {
-	static HID_REPORT *descReport;
-	static LinkedList *currSegNode;
-	static HID_SEG *currSegment;
+	HID_REPORT *descReport;
+	LinkedList *currSegNode;
+	HID_SEG *currSegment;
 
 	// Turn off LEDs for a while
 #if defined(BOARD_MICRO)
@@ -375,7 +375,8 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 	{
 		descReport = (HID_REPORT *)ListGetData(interface->Reports, 0);
 	}
-	if (descReport == NULL){
+	
+	if (descReport == NULL) {
 		DEBUGOUT("Invalid report\n");
 		return 0;
 	}

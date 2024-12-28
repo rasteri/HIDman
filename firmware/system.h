@@ -42,8 +42,8 @@ extern FunctionReference runBootloader;
 void GPIOInit(void);
 void ClockInit(void);
 
-extern volatile uint16_t SoftWatchdog;
-extern volatile bool OutputsEnabled;
+extern __xdata volatile uint16_t SoftWatchdog;
+extern __xdata volatile bool OutputsEnabled;
 #define DEBUGOUT(...) { printf(__VA_ARGS__);}
 #endif
 

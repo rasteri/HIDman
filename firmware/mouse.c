@@ -21,13 +21,13 @@
 #include "system.h"
 
 #if defined(OPT_SERIAL_MOUSE)
-	uint8_t serialMouseMode = SERIAL_MOUSE_MODE_OFF;
+	__xdata uint8_t serialMouseMode = SERIAL_MOUSE_MODE_OFF;
 	__xdata char serialMouseType = '3'; // Logitech 3 button: '3', Microsoft: 'M'
 #endif
 
-int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
+__xdata int16_t Ps2MouseScalingTable[] = {-9, -6, -3, -1, -1, 0, 1, 1, 3, 6, 9};
 
-MOUSE OutputMice[2];
+__xdata MOUSE OutputMice[2];
 
 void InitMice(void)
 {
@@ -35,7 +35,7 @@ void InitMice(void)
 	Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
 	Ps2MouseSetDefaults();
 }
-uint8_t updates = 0;
+__xdata uint8_t updates = 0;
 void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
 {
     for (int x = 0; x < 2; x++)
@@ -196,9 +196,9 @@ void Ps2MouseSetDefaults(void) {
 	Ps2MouseSetMode(MOUSE_PS2_MODE_STREAM);
 } 
 
-uint8_t PrevButtons = 0;
+__xdata uint8_t PrevButtons = 0;
 
-MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
+__xdata MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
 
 void HandleMouse(void) {
 	

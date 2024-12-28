@@ -84,6 +84,7 @@ static INT32 ItemSData(HID_ITEM *itemInfo)
 static uint8_t *FetchItem(uint8_t *start, uint8_t *end, HID_ITEM *item)
 {
 	static __xdata uint8_t b;
+
 	if (end - start <= 0)
 	{
 		return NULL;
@@ -218,12 +219,14 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterfa
 
 	while ((start = FetchItem(start, end, &item)) != NULL)
 	{
-		printstackpointer();
+		//printf("i");
+		//mDelaymS(100);
 		if (item.format != HID_ITEM_FORMAT_SHORT)
 		{
 			goto ERR;
 		}
-
+		//printf("o\n");
+		//mDelaymS(100);
 		switch (item.type)
 		{
 		case TYPE_MAIN:
@@ -386,6 +389,7 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterfa
 		{
 			return TRUE;
 		}
+		
 	}
 
 ERR:

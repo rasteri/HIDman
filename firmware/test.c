@@ -48,12 +48,12 @@ __code uint8_t KovaTestData[] = {
 };
 
 __xdata uint16_t iters = 0;
+__xdata bool updateiters = 0;
 __xdata uint8_t bleh;
 void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
 {
     if (!bleh++){
-        printf("%u\n", iters);
-        iters = 0;
+        updateiters = 1;
     }
 
 }
@@ -64,9 +64,13 @@ bool TestDescriptors(
     uint8_t *Report, uint16_t ReportLen,
     uint8_t ExpectedSegments){
 
-    static  INTERFACE * __xdata pInterface;
+    static INTERFACE * __xdata pInterface;
 
     static USB_HUB_PORT *__xdata pUsbDevice = &TestPort;
+
+	EA = 0;	 // disable all interrupts
+
+
     InitHubPortData(pUsbDevice);
 
     if (!ParseDeviceDescriptor((USB_DEV_DESCR *)Dev, DevLen, pUsbDevice)) {
@@ -105,18 +109,23 @@ bool TestDescriptors(
                 printf("Can't parse Report Descriptor\n");
                 return 1;
             }
-            
-            /*while(1) {
+            EA = 1;	 // enable all interrupts
+            while(1) {
                 ParseReport(pInterface, 8 * 8, KeyboardTestDataD);
                 iters++;
                 ParseReport(pInterface, 8 * 8, KeyboardTestDataU);
                 iters++;
-            }*/
+                if (updateiters){
+                    updateiters = 0;
+                    printf("i : %d\n", iters);
+                    iters = 0;
+                }
+            }
 
-            while(1){
+            /*while(1){
                 ParseReport(pInterface, 8 * 8, KovaTestData);
                 iters++;
-            }
+            }*/
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -214,19 +223,19 @@ void main()
 
     testlinkedlist();
 
-    /*TestDescriptors (
+    TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         StandardKeyboardDescriptor, 63,
         8
-    );*/
+    );
 
-    TestDescriptors (
+    /*TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         KovaReportDescriptor, 232,
         8
-    );
+    );*/
 
     /*TestDescriptors (
         PS4DeviceDescriptor, 18,

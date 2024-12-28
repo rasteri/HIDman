@@ -380,7 +380,7 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 		DEBUGOUT("gdd.fail\n");
 		return (FALSE);
 	}
-	printstackpointer();
+
 	DEBUGOUT("gdd len:%d\n", len);
 
 	ParseDeviceDescriptor((USB_DEV_DESCR *)ReceiveDataBuffer, len, pUsbDevice);

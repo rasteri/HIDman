@@ -33,7 +33,30 @@ void UART_Init()
 
 static USB_HUB_PORT __xdata TestPort;
 
+__code uint8_t KeyboardTestDataD[] = { 0, 0x05, 0, 0, 0, 0, 0, 0 };
+__code uint8_t KeyboardTestDataU[] = { 0, 0x00, 0, 0, 0, 0, 0, 0 };
 
+__code uint8_t KovaTestData[] = { 
+0x01,       
+0x00,       
+0x05, 
+0x00, 
+0xFA, 
+0xFF, 
+0x00, 
+0x00, 
+};
+
+uint16_t iters = 0;
+uint8_t bleh;
+void mTimer0Interrupt(void) __interrupt(INT_NO_TMR0)
+{
+    if (!bleh++){
+        printf("%u\n", iters);
+        iters = 0;
+    }
+
+}
 
 bool TestDescriptors(
     uint8_t *Dev, uint16_t DevLen, 
@@ -83,8 +106,17 @@ bool TestDescriptors(
                 return 1;
             }
             
-            ParseReport(pInterface, 64, Mouse16BitTestData);
-            //ParseReport(pInterface, 7 * 8, KeychronWirelessReportReleaseA);
+            while(1) {
+                ParseReport(pInterface, 8 * 8, KeyboardTestDataD);
+                iters++;
+                ParseReport(pInterface, 8 * 8, KeyboardTestDataU);
+                iters++;
+            }
+
+            /*while(1){
+                ParseReport(pInterface, 8 * 8, KovaTestData);
+                iters++;
+            }*/
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -161,6 +193,15 @@ INTERFACE funky;
 
 void main()
 {
+    // timer0 setup
+	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
+	TH0 = 0x00;					 // I dunno
+
+	TR0 = 1; // start timer0
+	ET0 = 1; //enable timer0 interrupt;
+
+	EA = 1;	 // enable all interrupts
+
     UART_Init();
 
     printstackpointer();
@@ -173,6 +214,19 @@ void main()
 
     testlinkedlist();
 
+    TestDescriptors (
+        CheapoKeyboardDeviceDescriptor, 18,
+        CheapoKeyboardConfigDescriptor, 59,
+        StandardKeyboardDescriptor, 63,
+        8
+    );
+
+    /*TestDescriptors (
+        CheapoKeyboardDeviceDescriptor, 18,
+        CheapoKeyboardConfigDescriptor, 59,
+        KovaReportDescriptor, 232,
+        8
+    );*/
 
     /*TestDescriptors (
         PS4DeviceDescriptor, 18,
@@ -223,12 +277,12 @@ void main()
         8
     );*/
 
-    TestDescriptors (
+    /*TestDescriptors (
         Mouse16BitDeviceDescriptor, 18,
         Mouse16BitConfigDescriptor, 59,
         Mouse16BitReportDescriptor, 67,
         10
-    );
+    );*/
 
     printf("memused : %u\n", MemoryUsed());
     printf("memfree : %u\n", MemoryFree());

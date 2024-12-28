@@ -24,7 +24,7 @@
 
 __xdata char SendBuffer[255];
 
-bool KeyboardDebugOutput = 0;
+__xdata bool KeyboardDebugOutput = 0;
 __xdata bool MenuActive = 0;
 
 #define SEND_STATE_IDLE 0
@@ -33,7 +33,7 @@ __xdata bool MenuActive = 0;
 #define SEND_STATE_BREAK 3
 #define SEND_STATE_SHIFTOFF 4
 
-uint8_t sendBufferState = SEND_STATE_IDLE;
+__xdata uint8_t sendBufferState = SEND_STATE_IDLE;
 
 
 
@@ -74,12 +74,12 @@ void SendKeyboardBuffer(void)
     }
 }
 
-uint8_t fuckcount = 1;
+__xdata uint8_t fuckcount = 1;
 
-uint8_t menuState = MENU_STATE_INIT;
-uint8_t lastMenuState = MENU_STATE_INIT;
+__xdata uint8_t menuState = MENU_STATE_INIT;
+__xdata uint8_t lastMenuState = MENU_STATE_INIT;
 
-uint8_t menuKey = 0;
+__xdata uint8_t menuKey = 0;
 
 void Menu_Press_Key(uint8_t key)
 {
@@ -274,9 +274,9 @@ void Menu_Task(void)
 }
 
 // blue LED on by default
-uint8_t LEDStatus = 0x04;
+__xdata uint8_t LEDStatus = 0x04;
 
-int16_t gpiodebounce = 0;
+__xdata int16_t gpiodebounce = 0;
 
 // How long to wait in ms before input event can be triggered again
 #define DEBOUNCETIME 25

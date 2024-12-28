@@ -40,10 +40,6 @@ void InitSettings(bool SafeMode){
 
         //if (!SafeMode) HMSettings.Intellimouse = 1;
         HMSettings.Intellimouse = 1;
-
-        HMSettings.SerialDebugOutput = 1;
-
-        HMSettings.MouseReportMode = 1;
         
         if (SyncSettings()) {
             DEBUGOUT("Writin failed\n");

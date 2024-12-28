@@ -31,3 +31,4 @@ extern __code uint8_t Mouse16BitConfigDescriptor[];
 extern __code uint8_t Mouse16BitReportDescriptor[];
 
 extern __code uint8_t Mouse16BitTestData[];
+extern __code uint8_t KovaReportDescriptor[];

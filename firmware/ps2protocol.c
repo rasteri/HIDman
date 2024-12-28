@@ -129,7 +129,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 	uint16_t cnt, endbit;
 	uint8_t *currByte;
 	uint8_t pressed = 0;
-	uint8_t ButSet = 0, ButReset = 0;
 	int16_t tmpl;
 
 	if (currSeg->InputType == MAP_TYPE_BITFIELD)
@@ -192,8 +191,10 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			tmp++;
 		}
 	}
-	else
+	else if (currSeg->InputType) //i.e. not MAP_TYPE_NONE
 	{
+		uint32_t value = 0;
+
 		// bits may be across any byte alignment
 		// so do the neccesary shifting to get it to all fit in a uint32_t
 		int8_t shiftbits = -(currSeg->startBit % 8);
@@ -204,9 +205,9 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		while(shiftbits < currSeg->reportSize) {
         
 			if (shiftbits < 0)
-				currSeg->value |= ((uint32_t)(*currByte)) >> (uint32_t)(-shiftbits);
+				value |= ((uint32_t)(*currByte)) >> (uint32_t)(-shiftbits);
 			else
-				currSeg->value |= ((uint32_t)(*currByte)) << (uint32_t)shiftbits;
+				value |= ((uint32_t)(*currByte)) << (uint32_t)shiftbits;
             
             currByte++;
 			shiftbits += 8;
@@ -215,24 +216,29 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		// if it's a signed integer we need to extend the sign
 		// todo, actually determine if it is a signed int... look at logical max/min fields in descriptor
 		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
-			currSeg->value = SIGNEX(currSeg->value, currSeg->reportSize - 1);
+			value = SIGNEX(value, currSeg->reportSize - 1);
 
-		//old way
-		/*currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
-						 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size*/
+		
+
+		//old way, not significantly faster anymore
+		//currByte = data + (currSeg->startBit >> 3);
+		//currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
+		//				 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size
+
+		//printf("x:%lx\n", currSeg->value);
 
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 			report->keyboardUpdated = 1;
 
-		if (currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE && currSeg->value > currSeg->InputParam)
+		if (currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE && value > currSeg->InputParam)
 		{
 			make = 1;
 		}
-		else if (currSeg->InputType == MAP_TYPE_THRESHOLD_BELOW && currSeg->value < currSeg->InputParam)
+		else if (currSeg->InputType == MAP_TYPE_THRESHOLD_BELOW && value < currSeg->InputParam)
 		{
 			make = 1;
 		}
-		else if (currSeg->InputType == MAP_TYPE_EQUAL && currSeg->value == currSeg->InputParam)
+		else if (currSeg->InputType == MAP_TYPE_EQUAL && value == currSeg->InputParam)
 		{
 			make = 1;
 		}
@@ -247,19 +253,19 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			switch (currSeg->OutputControl)
 				{
 				case MAP_MOUSE_BUTTON1:
-					MouseSet(0, currSeg->value);
+					MouseSet(0, value);
 					break;
 				case MAP_MOUSE_BUTTON2:
-					MouseSet(1, currSeg->value);
+					MouseSet(1, value);
 					break;
 				case MAP_MOUSE_BUTTON3:
-					MouseSet(2, currSeg->value);
+					MouseSet(2, value);
 					break;
 				case MAP_MOUSE_BUTTON4:
-					MouseSet(3, currSeg->value);
+					MouseSet(3, value);
 					break;
 				case MAP_MOUSE_BUTTON5:
-					MouseSet(4, currSeg->value);
+					MouseSet(4, value);
 					break;
 				}
 		}
@@ -283,7 +289,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 				case MAP_MOUSE_X:
 					if (currSeg->InputParam == INPUT_PARAM_SIGNED_SCALEDOWN){
 
-						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
+						tmpl = ((int8_t)((value + 8) >> 4) - 0x08);
 
 						// deadzone
 						if (tmpl <= -DEADZONE) tmpl+= DEADZONE;
@@ -293,7 +299,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						MouseMove(tmpl, 0, 0);
 					}
 					else
-						MouseMove((int32_t)currSeg->value, 0, 0);
+						MouseMove((int32_t)value, 0, 0);
 
 					break;
 				case MAP_MOUSE_Y:
@@ -309,15 +315,12 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 						MouseMove(0, tmpl, 0);
 					}
 					else
-						MouseMove(0, (int32_t)currSeg->value, 0);
+						MouseMove(0, (int32_t)value, 0);
 
 					break;
 				case MAP_MOUSE_WHEEL:
-					/*if (currSeg->InputParam == 2)
-						currSeg->value = (uint8_t)(-((int8_t)((currSeg->value + 8) >> 4) - 0x08));
-					else*/
 
-					MouseMove(0, 0, (int32_t)currSeg->value);
+					MouseMove(0, 0, (int32_t)value);
 
 					break;
 				}
@@ -327,7 +330,7 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 		{
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
-				SetKey(currSeg->value, report);
+				SetKey(value, report);
 			}
 		}
 	}
@@ -396,53 +399,65 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 		currSegNode = currSegNode->next;
 	}
 
-	if (descReport->keyboardUpdated)
+	if(descReport->keyboardUpdated)
 	{
-		// this could be optimized by XORing bytes first
-		for (uint8_t c = 0; c < 255; c++)
+		// for each byte in the report
+		for (uint8_t d = 0; d < 32; d++) 
 		{
-			if (BitPresent(descReport->KeyboardKeyMap, c) && !BitPresent(descReport->oldKeyboardKeyMap, c))
-			{
-				if (MenuActive)
-					Menu_Press_Key(c);
-				else
-				{
-					//DEBUGOUT("\nSendn %x\n", c);
-					// Make
+			// XOR to see if any bits are different
+			uint8_t xorred = descReport->KeyboardKeyMap[d] ^ descReport->oldKeyboardKeyMap[d];
+			if (xorred){
 
-					SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[c] : HIDtoSET1_Make[c]);
-					if (!(c >= 0xE0 && c <= 0xE7))
+				for (uint8_t c = 0; c < 8; c++)
+				{
+					if (xorred & (1 << c)) 
 					{
-						RepeatKey = c;
-						SetRepeatState(1);
+						uint8_t hidcode = (d << 3) | c;
+
+						if (descReport->KeyboardKeyMap[d] & (1 << c)) // set in current but not prev
+						{
+							if (MenuActive)
+								Menu_Press_Key(hidcode);
+							else
+							{
+								//DEBUGOUT("\nSendn %x\n", hidcode);
+								// Make
+
+								SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[hidcode] : HIDtoSET1_Make[hidcode]);
+								if (!(hidcode >= 0xE0 && hidcode <= 0xE7))
+								{
+									RepeatKey = hidcode;
+									SetRepeatState(1);
+								}
+							}
+						}
+						else // set in prev but not current
+						{
+							if (!MenuActive)
+							{
+								// break
+
+								//DEBUGOUT("\nBreakn %x\n", hidcode);
+								// if the key we just released is the one that's repeating then stop
+								if (hidcode == RepeatKey)
+								{
+									RepeatKey = 0;
+									SetRepeatState(0);
+								}
+
+								// Pause has no break for some reason
+								if (hidcode == 0x48)
+									continue;
+
+								SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[hidcode] : HIDtoSET1_Break[hidcode]);
+
+							}
+						}
 					}
+					
 				}
 			}
-			else if (!BitPresent(descReport->KeyboardKeyMap, c) && BitPresent(descReport->oldKeyboardKeyMap, c))
-			{
-				if (!MenuActive)
-				{
-					// break
-
-					//DEBUGOUT("\nBreakn %x\n", c);
-					// if the key we just released is the one that's repeating then stop
-					if (c == RepeatKey)
-					{
-						RepeatKey = 0;
-						SetRepeatState(0);
-					}
-
-					// Pause has no break for some reason
-					if (c == 0x48)
-						continue;
-
-					SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[c] : HIDtoSET1_Break[c]);
-
-				}
-			}
-			
 		}
-
 		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 32);
 		descReport->keyboardUpdated = 0;
 	}

@@ -48,6 +48,7 @@ void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
     }
 }
 
+
 void GetMouseAxisUpdate(MOUSE *m, int16_t* Axis, int16_t* Value, int16_t Min, int16_t Max, uint8_t Downscale) 
 {	
 	// assume update value won't exceed min/max limit

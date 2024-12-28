@@ -7,10 +7,10 @@
 #include "settings.h"
 #include "scancode.h"
 
-volatile uint16_t SoftWatchdog = 0;
+__xdata volatile uint16_t SoftWatchdog = 0;
 
-FunctionReference runBootloader = (FunctionReference)0xF400;
-volatile bool OutputsEnabled = 0;
+__xdata FunctionReference runBootloader = (FunctionReference)0xF400;
+__xdata volatile bool OutputsEnabled = 0;
 
 /*******************************************************************************
  * Function Name  : mDelayus(UNIT16 n)

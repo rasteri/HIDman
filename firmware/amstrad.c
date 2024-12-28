@@ -12,7 +12,7 @@
 #include "xt.h"
 #include "scancode.h"
 
-uint8_t amsoldstate = 0;
+
 void AmstradProcessPort(void)
 {
 	const uint8_t *chunk;

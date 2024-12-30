@@ -13,10 +13,10 @@
 #include "linkedlist.h"
 
 // Inserts node at HEAD of list, i.e. before head
-LinkedList* ListAdd(LinkedList* head, size_t data_size, uint8_t index) {
+__xdata LinkedList* ListAdd(__xdata LinkedList* head, size_t data_size, uint8_t index) {
 
     // Allocate memory for node
-    struct LinkedList* newNode = (LinkedList*)andyalloc(sizeof(LinkedList));
+    __xdata struct LinkedList* newNode = (__xdata LinkedList*)andyalloc(sizeof(LinkedList));
 
     newNode->data = andyalloc(data_size);
     newNode->next = head;
@@ -35,7 +35,7 @@ void *ListGetData(LinkedList* head, uint8_t index) {
     }
     return NULL;
 }
-
+/*
 LinkedList* AddInt(LinkedList *list, uint8_t index, int val){
     int *currdat;
 
@@ -90,3 +90,4 @@ void testlinkedlist() {
     printf("%u",TestInt(list, 10, 73));
 
 }
+*/

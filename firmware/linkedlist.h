@@ -8,11 +8,11 @@
 
 typedef struct LinkedList {
     uint8_t index;
-    void  *data;
-    struct LinkedList *next;
+    __xdata void *data;
+    __xdata struct LinkedList *next;
 } LinkedList;
 
-LinkedList* ListAdd(LinkedList* head, size_t data_size, uint8_t index);
+__xdata LinkedList* ListAdd(__xdata LinkedList* head, size_t data_size, uint8_t index);
 void *ListGetData(LinkedList* head, uint8_t index);
 
 #endif

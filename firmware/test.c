@@ -33,10 +33,10 @@ void UART_Init()
 
 static USB_HUB_PORT __xdata TestPort;
 
-__code uint8_t KeyboardTestDataD[] = { 0, 0x05, 10, 20, 30, 40, 50, 0 };
-__code uint8_t KeyboardTestDataU[] = { 0, 0x00, 0, 0, 0, 0, 0, 0 };
+__xdata uint8_t KeyboardTestDataD[] = { 0, 0x05, 10, 20, 30, 40, 50, 0 };
+__xdata uint8_t KeyboardTestDataU[] = { 0, 0x00, 0, 0, 0, 0, 0, 0 };
 
-__code uint8_t KovaTestData[] = { 
+__xdata uint8_t KovaTestData[] = { 
 0x01,       
 0x00,       
 0x05, 
@@ -64,7 +64,7 @@ bool TestDescriptors(
     uint8_t *Report, uint16_t ReportLen,
     uint8_t ExpectedSegments){
 
-    static INTERFACE * __xdata pInterface;
+    static __xdata INTERFACE * __xdata pInterface;
 
     static USB_HUB_PORT *__xdata pUsbDevice = &TestPort;
 
@@ -90,7 +90,7 @@ bool TestDescriptors(
 
     for (uint8_t i = 0; i < pUsbDevice->InterfaceNum; i++)
     {
-        pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
+        pInterface = (__xdata INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
 
         if (pInterface == NULL) {
             printf("Interface %d not HID\n", i);
@@ -221,7 +221,7 @@ void main()
     andyclearmem();
     InitPresets();
 
-    testlinkedlist();
+    //testlinkedlist();
 
     TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,

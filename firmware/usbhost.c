@@ -331,7 +331,7 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 	for (i = 0; i < interfaceNum; i++)
 	{
 		//INTERFACE *pInterface = &pUsbDevice->Interface[i];
-		INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
+		__xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
 		if (pInterface != NULL && pInterface->InterfaceClass == USB_DEV_CLASS_HID)
 		{
 			endpointNum = pInterface->EndpointNum;

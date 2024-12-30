@@ -285,7 +285,7 @@ typedef struct _HID_REPORT
 	uint8_t KeyboardKeyMap[32];
 	uint8_t oldKeyboardKeyMap[32];
 
-	LinkedList *HidSegments;
+	__xdata LinkedList *HidSegments;
 } HID_REPORT;
 
 

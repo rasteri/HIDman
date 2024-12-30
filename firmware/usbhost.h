@@ -152,7 +152,7 @@ typedef struct _INTERFACE
 	ENDPOINT  Endpoint[MAX_ENDPOINT_NUM]; //endpoints
 	
 	bool usesReports;
-	LinkedList *Reports;
+	__xdata LinkedList *Reports;
 
 } INTERFACE, *PINTERFACE;
 void InitInterface(INTERFACE* Interface);
@@ -180,7 +180,7 @@ typedef struct _USB_HUB_PORT
 	UINT8       DeviceAddress;
 	UINT8       DeviceSpeed;
 	UINT8       InterfaceNum;
-	LinkedList*  Interfaces;
+	__xdata LinkedList*  Interfaces;
 	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 

@@ -122,7 +122,7 @@ __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xF
 
 
 
-void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
+void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata uint8_t *data)
 {
 	bool make = 0;
 	uint8_t tmp = 0;
@@ -152,7 +152,6 @@ void processSeg(HID_SEG *currSeg, HID_REPORT *report, uint8_t *data)
 			{
 				if (pressed)
 				{
-					
 					SetKey(tmp, report);
 					if (!GetOldKey(tmp, report)) {
 						report->keyboardUpdated = 1;
@@ -344,11 +343,11 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
 		return 0;
 }
  
-bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
+bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *report)
 {
-	HID_REPORT *descReport;
-	LinkedList *currSegNode;
-	HID_SEG *currSegment;
+	__xdata HID_REPORT *descReport;
+	__xdata LinkedList *currSegNode;
+	__xdata HID_SEG *currSegment;
 
 	// Turn off LEDs for a while
 #if defined(BOARD_MICRO)
@@ -369,11 +368,11 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 	{
 		// first byte of report will be the report number
 		//descReport = interface->reports[report[0]];
-		descReport = (HID_REPORT *)ListGetData(interface->Reports, report[0]);
+		descReport = (__xdata HID_REPORT *)ListGetData(interface->Reports, report[0]);
 	}
 	else
 	{
-		descReport = (HID_REPORT *)ListGetData(interface->Reports, 0);
+		descReport = (__xdata HID_REPORT *)ListGetData(interface->Reports, 0);
 	}
 	
 	if (descReport == NULL) {
@@ -396,7 +395,7 @@ bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report)
 	// TODO handle segs that are bigger than 8 bits
 	while (currSegNode != NULL)
 	{
-		processSeg((HID_SEG *)(currSegNode->data), descReport, report);
+		processSeg((__xdata HID_SEG *)(currSegNode->data), descReport, report);
 		currSegNode = currSegNode->next;
 	}
 

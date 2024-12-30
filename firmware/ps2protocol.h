@@ -9,7 +9,7 @@ void HandleRepeats(void);
 void HandleReceived(uint8_t port);
 void RepeatTimer(void);
 
-bool ParseReport(INTERFACE *interface, uint32_t len, uint8_t *report);
+bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *report);
 
 #define SetRepeatState(st) \
     TR0 = 0;               \

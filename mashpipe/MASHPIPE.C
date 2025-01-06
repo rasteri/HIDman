@@ -2,7 +2,6 @@
     MashPipe - Keyboard tester for 8088 + DOS
     Supports all Set 1 scancodes
 
-
 */
 
 #include <stdio.h>
@@ -463,15 +462,79 @@ static void interrupt keyb_int()
     sixone &= ~0x80;
     outp(0x61, sixone);
 
+    //reset PIC
     outp(0x20, 0x20);
 }
 
 static void interrupt (*old_keyb_int)();
 
-void hook_keyb_int(void)
-{
-    old_keyb_int = getvect(0x09);
-    setvect(0x09, keyb_int);
+/* NTS: Do not confuse our input with the controller's input. This reflects the controller's input
+ *      meaning: Can we, the host, OUTPUT DATA to the CONTROLLER'S INPUT? */
+/*unsigned char k8042_wait_for_input_buffer(void) {
+    unsigned int patience = 0xFFFFU;
+    unsigned char c;
+
+    do { c = inp(K8042_STATUS);
+    } while ((c & K8042_STATUS_INPUT_FULL) && --patience != 0U);
+    k8042_last_status = c;
+    return (c & K8042_STATUS_INPUT_FULL) == 0;
+}*/
+
+#define K8042_STATUS                    0x64    /* (R) */
+#define K8042_COMMAND                   0x64    /* (W) */
+#define K8042_DATA                      0x60    /* (R/W) */
+
+/* status bits */
+#define K8042_STATUS_OUTPUT_FULL        0x01
+#define K8042_STATUS_INPUT_FULL         0x02
+#define K8042_STATUS_SYSTEM             0x04
+#define K8042_STATUS_DATA_WRITE         0x08    /* 1=next write to 0x64  0=next write to 0x60 */
+#define K8042_STATUS_INHIBIT            0x10
+#define K8042_STATUS_XMIT_TIMEOUT       0x20
+#define K8042_STATUS_MOUSE_OUTPUT_FULL  0x20
+#define K8042_STATUS_RECV_TIMEOUT       0x40
+#define K8042_STATUS_PARITY_ERR         0x80
+
+
+void k8042_drain_buffer() {
+    unsigned char c;
+
+    do {
+        inp(K8042_DATA);
+        c = inp(K8042_STATUS);
+    } while (c & (K8042_STATUS_INPUT_FULL|K8042_STATUS_OUTPUT_FULL));
+
+}
+
+unsigned char k8042_wait_for_input_buffer(void) {
+    unsigned int patience = 0xFFFFU;
+    unsigned char c;
+
+    do { c = inp(K8042_STATUS);
+    } while ((c & K8042_STATUS_INPUT_FULL) && --patience != 0U);
+    return (c & K8042_STATUS_INPUT_FULL) == 0;
+}
+
+unsigned char k8042_write_data(unsigned char c) {
+    unsigned char r = k8042_wait_for_input_buffer();
+    if (r) outp(K8042_DATA,c);
+    return r;
+}
+
+
+
+unsigned char k8042_write_command(unsigned char c) {
+    unsigned char r = k8042_wait_for_input_buffer();
+    if (r) outp(K8042_COMMAND,c);
+    return r;
+}
+
+
+unsigned char k8042_write_command_byte(unsigned char c) {
+    if (k8042_write_command(0x60) && k8042_write_data(c))
+        return 1;
+
+    return 0;
 }
 
 void unhook_keyb_int(void)
@@ -482,6 +545,30 @@ void unhook_keyb_int(void)
         old_keyb_int = NULL;
     }
 }
+
+void hook_keyb_int(void)
+{
+    unsigned char temp;
+
+    old_keyb_int = getvect(0x09);
+    setvect(0x09, keyb_int);
+    k8042_drain_buffer();
+    //clrscr();
+    textcolor(LIGHTGRAY);
+    textbackground(BLACK);
+
+
+    if (!k8042_write_command_byte(0x05)){ printf("balls\n"); exit(0);}
+
+
+
+    //unhook_keyb_int();
+
+    //exit(0);
+
+}
+
+
 
 int ctrlbrk_handler(void)
 {
@@ -521,8 +608,6 @@ void ReadMouse() {
     int grabbed;
     clock_t currtime;
     int clockvelx, clockvely;
-
-
 
     currtime = clock();
 
@@ -624,30 +709,35 @@ int main(int argc, char *argv[])
         textcolor(WHITE);
         textbackground(BLACK);
         clrscr();
-        gotoxy(1, 3);
-        cputs("MashPipe v0.0.1\r\n");
+        gotoxy(1, 1);
+        cputs("MashPipe v0.0.2\r\n");
         textcolor(LIGHTGRAY);
         cputs("---------------\r\n\r\n");
 
         cputs("Modes (and what PCs support them)\r\n\r\n");
 
         textcolor(WHITE);
-        cputs("0. Raw Mode (all PCs)\r\n");
+        cputs("Raw Modes  :\r\n\r\n");
         textcolor(LIGHTGRAY);
-        cputs("   Reads directly from the keyboard controller at 0x60.\r\n");
+        cputs("   Read directly from the keyboard controller at 0x60.\r\n");
         cputs("   Supports all keys/features\r\n\r\n");
+        textcolor(WHITE);
+        cputs("   0. Scancode Set 1 (All PCs)\r\n\r\n");
+        cputs("   1. Scancode Set 2 (AT-compatibles and newer)\r\n\r\n");
 
         textcolor(WHITE);
-        cputs("1. Standard BIOS Mode (all PCs)\r\n");
+        cputs("BIOS Modes :\r\n\r\n");
         textcolor(LIGHTGRAY);
-        cputs("   Uses BIOS routines (int16h 00h/01h) to read keyboard.\r\n");
-        cputs("   Can't read all keys, or detect when keys released\r\n\r\n");
+        cputs("   Uses BIOS routines to read keyboard. Can't detect when keys released.\r\n\r\n");
+        textcolor(WHITE);
+        cputs("   2. Standard BIOS (All PCs)\r\n");
+        textcolor(LIGHTGRAY);
+        cputs("       Can't read all keys (int16h 00h/01h)\r\n\r\n");
 
         textcolor(WHITE);
-        cputs("2. Extended BIOS Mode (BIOSes newer than 1985ish)\r\n");
+        cputs("   3. Extended BIOS Mode (BIOSes newer than 1985ish)\r\n");
         textcolor(LIGHTGRAY);
-        cputs("   Use advanced BIOS routines (int16h 10h/11h) to read keyboard.\r\n");
-        cputs("   Reads most keys but still can't detect when released.\r\n\r\n");
+        cputs("       Reads most keys (int16h 10h/11h)\r\n\r\n");
 
         cputs("Not all keys are present on all keyboards.");
 
@@ -715,7 +805,7 @@ int main(int argc, char *argv[])
         goto ehoh;
     }
 
-    if (!biosmode)
+    if (biosmode <= 1)
         hook_keyb_int();
 
     while (!exiting)

@@ -114,7 +114,7 @@ void Menu_Task(void)
         case MENU_STATE_MAIN:
             if (lastMenuState != MENU_STATE_MAIN)
             {
-                SendKeyboardString("\n\nHIDman v1.1.5a\n\n");
+                SendKeyboardString("\n\nHIDman v1.1.5c\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");
@@ -224,7 +224,7 @@ void Menu_Task(void)
                     break;
 
                 case KEY_2:
-                    SendKeyboardString("Logging HID Data. Press ESC to stop...\n");
+                    SendKeyboardString("Logging. Press ESC to stop, R to redetect...\n");
                     KeyboardDebugOutput = 1;
                     menuState = MENU_STATE_DUMPING;
                     break;
@@ -262,6 +262,13 @@ void Menu_Task(void)
             break;
 
         case MENU_STATE_DUMPING:
+            // R, reenumerate devices
+            if (menuKey == 0x15) 
+            {
+                ReenumerateAllPorts();
+            }
+
+            // ESC, stop dumping
             if (menuKey == 0x29)
             {
                 menuState = MENU_STATE_INIT;

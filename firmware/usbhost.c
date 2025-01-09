@@ -1001,6 +1001,7 @@ void ReenumerateAllPorts(void){
 	InitUsbData();
 	andyclearmem();
 	InitPresets();
+	
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 	{
 		DEBUGOUT("port %d\n", i);

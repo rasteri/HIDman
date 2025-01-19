@@ -10,6 +10,7 @@
 #include "ps2protocol.h"
 #include "defs.h"
 #include "xt.h"
+#include "scancode.h"
 
 __xdata uint16_t ratelimit = 0;
 
@@ -38,6 +39,7 @@ void XTProcessPort(void)
 			ports[PORT_KEY].state = S_IDLE;
 			reEnter = 1;
 			ports[PORT_KEY].sendbit = 0;
+			WritePS2Clock(PORT_KEY, 1);
 			break;
 
 		case S_IDLE:
@@ -75,6 +77,18 @@ void XTProcessPort(void)
 						ports[PORT_KEY].recvbit = 0;
 					}
 				}
+
+				ports[PORT_KEY].resetCounter = 0;
+			}
+
+			// host is inhibiting (pulling clock low)
+			// wait 20ms then send self-test byte
+			else {
+				ports[PORT_KEY].resetCounter++;
+				if (ports[PORT_KEY].resetCounter > 1200){
+					SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+					ports[PORT_KEY].resetCounter = 0;
+				}
 			}
 
 			break;
@@ -102,6 +116,7 @@ void XTProcessPort(void)
 					WritePS2Clock(PORT_KEY, 1);
 					WritePS2Data(PORT_KEY, 1);
 					ports[PORT_KEY].recvbit = 0;
+					ports[PORT_KEY].resetCounter = 0;
 					ports[PORT_KEY].state = S_IDLE;
 				}
 			}
@@ -192,6 +207,7 @@ void XTProcessPort(void)
 
 				// give ourselves a little break between bytes
 				ports[PORT_KEY].state = S_IDLE;
+				ports[PORT_KEY].resetCounter = 0;
 			}
 			else
 			{

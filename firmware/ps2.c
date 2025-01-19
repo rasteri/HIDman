@@ -21,7 +21,7 @@
 
 __xdata ps2port ports[2];
 
-void InitPS2Ports()
+void InitPS2Ports(void)
 {
 	memset(ports, 0x00, sizeof(ports));
 	ports[0].data = 0xFF;

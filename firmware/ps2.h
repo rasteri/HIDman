@@ -11,7 +11,7 @@
 #define PS2_RATE_LIMIT 0
 #define XT_RATE_LIMIT 1000
 
-void InitPS2Ports();
+void InitPS2Ports(void);
 
 #if defined(BOARD_MICRO)        // Pinouts for HIDman-micro
 	SBIT(KEY_CLOCK, 0x90, 7);
@@ -92,6 +92,8 @@ typedef struct ps2port
 	uint8_t sendBuffEnd;
 	sendbuffer sendBuff;
 	uint8_t recvBuff;
+
+	uint16_t resetCounter;
 
 } ps2port;
 

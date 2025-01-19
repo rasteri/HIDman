@@ -347,7 +347,6 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 {
 	__xdata HID_REPORT *descReport;
 	__xdata LinkedList *currSegNode;
-	__xdata HID_SEG *currSegment;
 
 	// Turn off LEDs for a while
 #if defined(BOARD_MICRO)
@@ -367,7 +366,6 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 	if (interface->usesReports)
 	{
 		// first byte of report will be the report number
-		//descReport = interface->reports[report[0]];
 		descReport = (__xdata HID_REPORT *)ListGetData(interface->Reports, report[0]);
 	}
 	else
@@ -392,7 +390,6 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 	// clear key map as all pressed keys should be present in report
 	memset(descReport->KeyboardKeyMap, 0, 32);
 
-	// TODO handle segs that are bigger than 8 bits
 	while (currSegNode != NULL)
 	{
 		processSeg((__xdata HID_SEG *)(currSegNode->data), descReport, report);
@@ -406,7 +403,8 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 		{
 			// XOR to see if any bits are different
 			uint8_t xorred = descReport->KeyboardKeyMap[d] ^ descReport->oldKeyboardKeyMap[d];
-			if (xorred){
+
+			if (xorred) {
 
 				for (uint8_t c = 0; c < 8; c++)
 				{

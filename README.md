@@ -24,6 +24,12 @@ Peripherals that support legacy PCs are becoming hard to find, especially for th
 
 # How to get one
 
+## Purchase : 
+
+* Retro Hack Shack has stock - https://retrohackshack.com/product/hidman-usb-keyboard-converter/
+
+## DIY : 
+
 * Grab an assembled PCB from PCBway : https://www.pcbway.com/project/shareproject/HIDman_USB_to_Retro_PC_Adapter_3b4fb5d5.html
 * Also grab the front plate : https://www.pcbway.com/project/shareproject/Front_enclosure_plate_for_HIDman_0aec2ae9.html
 * And the rear plate : https://www.pcbway.com/project/shareproject/Rear_Enclosure_for_HIDman_c0ff0b8a.html

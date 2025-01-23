@@ -26,7 +26,7 @@ Peripherals that support legacy PCs are becoming hard to find, especially for th
 
 ## Purchase : 
 
-* Retro Hack Shack has stock - https://retrohackshack.com/product/hidman-usb-keyboard-converter/
+* If you're in the US, retro hack shack has stock - https://retrohackshack.com/product/hidman-usb-keyboard-converter/
 
 ## DIY : 
 

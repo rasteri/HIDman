@@ -26,5 +26,6 @@ extern __xdata uint8_t LEDDelayMs;
 #define MOUSE_BUFFER_SIZE 32
 
 extern __xdata uint8_t MouseBuffer[];
-
+extern uint16_t BatCounter;
+extern __code unsigned char KEY_BATCOMPLETE[];
 #endif //__PROTOCOL_H__

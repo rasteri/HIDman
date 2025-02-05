@@ -120,7 +120,7 @@ void HandleRepeats(void)
 
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 
-
+uint16_t BatCounter = 0;
 
 void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata uint8_t *data)
 {
@@ -554,7 +554,8 @@ void HandleReceived(uint8_t port)
 			case 0xFF:
 				SimonSaysSendKeyboard(KEY_ACK);
 				TypematicDefaults();
-				SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+				// Start a 500ms countdown then send BAT OK (happens in main.c)
+				BatCounter = 500;
 				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 

@@ -85,9 +85,8 @@ void XTProcessPort(void)
 			// wait 20ms then send self-test byte
 			else {
 				ports[PORT_KEY].resetCounter++;
-				if (ports[PORT_KEY].resetCounter > 1200){
+				if (ports[PORT_KEY].resetCounter == 1200){
 					SimonSaysSendKeyboard(KEY_BATCOMPLETE);
-					ports[PORT_KEY].resetCounter = 0;
 				}
 			}
 

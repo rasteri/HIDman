@@ -21,6 +21,7 @@
 
 uint8_t UsbUpdateCounter = 0;
 
+
 void EveryMillisecond(void) {
 
 	// Soft watchdog is to get around the fact that the real watchdog runs too fast
@@ -72,6 +73,15 @@ void EveryMillisecond(void) {
 
 	// check the button
 	inputProcess();
+
+	// Deal with BAT (which requires a delay)
+
+	if (BatCounter){
+		BatCounter--;
+		if (!BatCounter)
+			SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+	}
+
 
 	// Turn current LED on if we haven't seen any activity in a while
 	if (LEDDelayMs) {

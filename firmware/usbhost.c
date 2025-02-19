@@ -874,6 +874,8 @@ void regrabinterfaces(__xdata USB_HUB_PORT *pUsbHubPort)
 #ifdef DEBUG
 			int j;
 #endif
+
+			DEBUGOUT("\n\n");
 			//INTERFACE *pInterface = &pUsbDevice->Interface[i];		
 			INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
 
@@ -911,6 +913,8 @@ void regrabinterfaces(__xdata USB_HUB_PORT *pUsbHubPort)
 				DEBUGOUT("\n\nInterface %hx Report Descriptor - \n", i);
 				DumpHex(ReceiveDataBuffer, len);
 
+
+
 				// use default boot mode descriptors if a keyboard or mouse is detected and "advanced USB" is disabled in menu
 				if (
 					(!HMSettings.MouseReportMode && pInterface->InterfaceProtocol == HID_PROTOCOL_MOUSE) ||
@@ -936,14 +940,16 @@ void regrabinterfaces(__xdata USB_HUB_PORT *pUsbHubPort)
 					}
 				}
 				else {
-					DEBUGOUT("set report mode - %x - ", GetBootProtocol(pUsbDevice, i));
-					SetBootProtocol(pUsbDevice, i, 1);
-					DEBUGOUT("%x\n", GetBootProtocol(pUsbDevice, i));
+					// only switch into report mode if boot mode is supported (yeah that's the way it works)
+					if (pInterface->InterfaceSubClass == 0x01) {
+						DEBUGOUT("set report mode - %x - ", GetBootProtocol(pUsbDevice, i));
+						SetBootProtocol(pUsbDevice, i, 1);
+						DEBUGOUT("%x\n", GetBootProtocol(pUsbDevice, i));
+					}
+					
 					ParseReportDescriptor(ReceiveDataBuffer, len, pInterface);
 					DumpHID(pInterface);
 				}
-
-				static __xdata HID_SEG * __xdata tmpseg;
 
 				if (pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD)
 				{

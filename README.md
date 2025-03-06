@@ -96,7 +96,7 @@ If you are having trouble getting a USB device to work, enable HID Dumping then 
 
 Firmware development is continuing, so if you have problems it's always worth updating to the latest version.
 
-If you're on windows, first install WCH's ISP tool - https://www.wch-ic.com/downloads/WCHISPTool_Setup_exe.html
+If you're on windows, first install WCH's ISP tool - https://www.wch.cn/downloads/WCHISPTool_Setup_exe.html
 If on Mac or Linux, install ch55xtool : https://github.com/MarsTechHAN/ch552tool
 
 The next step is to put the HIDman in firmware update mode.

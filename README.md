@@ -83,6 +83,8 @@ Simply open a text editor on your target PC (eg notepad, edit, vi), then hold HI
 
 "Adv.Keyboard" and "Adv.Mouse" switch the keyboard and mouse respectively into "Native Mode". This may be required to access certain functions such as scroll wheels and extra buttons on mice.
 
+**Note : Some USB devices with both keyboard and mouse interfaces (e.g. mice with configurable buttons) require both Adv.Keyboard and Adv.Mouse to be enabled otherwise they behave unpredictably.**
+
 "Intellimouse" enables scroll wheel and 5-button support for PS/2 mice.
 
 "Debug" enables the debug menu. The most useful debugging option is "Dump HID Data". Enabling this dumps information about all USB devices connected after that point. 

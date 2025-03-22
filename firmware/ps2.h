@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "ch559.h"
+#include "settings.h"
 #define PORT_KEY 0
 #define PORT_MOUSE 1
 
@@ -170,11 +171,11 @@ void PS2ProcessPort(uint8_t port);
 #define WritePS2Clock(port, val)    \
 	if (port == PORT_KEY) {       	\
 			KEY_CLOCK = val;         \
-			KEYAUX_CLOCK = val;		\
+			if (FlashSettings->EnableAUXPS2) KEYAUX_CLOCK = val;		\
 	}	\
 	else if (port == PORT_MOUSE){  	\
 			MOUSE_CLOCK = val;	\
-			MOUSEAUX_CLOCK = val; \
+			if (FlashSettings->EnableAUXPS2) MOUSEAUX_CLOCK = val; \
 	}\
 
 
@@ -185,7 +186,7 @@ void PS2ProcessPort(uint8_t port);
 #define WritePS2Data(port, val)     \
 	if (port == PORT_KEY){        \
 		KEY_DATA = val;            \
-		KEYAUX_DATA = val;\
+		if (FlashSettings->EnableAUXPS2) KEYAUX_DATA = val;\
 	} \
 	else if (port == PORT_MOUSE) { \
 		if (val) {                 \
@@ -195,16 +196,16 @@ void PS2ProcessPort(uint8_t port);
 			P4_OUT &= 0b11110111;    \
 			P4_DIR |= 0b00001000;    \
 		}							\
-		MOUSEAUX_DATA = val;\
+		if (FlashSettings->EnableAUXPS2) MOUSEAUX_DATA = val;\
 	}
 #else
 #define WritePS2Data(port, val)     \
 	if (port == PORT_KEY){        \
 			KEY_DATA = val;          \
-			KEYAUX_DATA = val;}		\
+			if (FlashSettings->EnableAUXPS2) KEYAUX_DATA = val;}		\
 	else if (port == PORT_MOUSE){ \
 			MOUSE_DATA = val;\
-			MOUSEAUX_DATA = val; }
+			if (FlashSettings->EnableAUXPS2) MOUSEAUX_DATA = val; }
 
 #endif
 

@@ -34,25 +34,32 @@ void InitPS2Ports(void)
 bool ReadPS2Clock(uint8_t port)
 {
 	if (port == PORT_KEY)
-		return KEY_CLOCK & KEYAUX_CLOCK;
+		return KEY_CLOCK & 
+		(FlashSettings->EnableAUXPS2 ? KEYAUX_CLOCK : 1); // If AUX port enabled, consider that too
 	else {/*if (port == PORT_MOUSE)*/
-		return MOUSEAUX_CLOCK & MOUSE_CLOCK;
+		return MOUSE_CLOCK &
+		(FlashSettings->EnableAUXPS2 ? MOUSEAUX_CLOCK : 1); // If AUX port enabled, consider that too
 	}
 }
 
 bool ReadPS2Data(uint8_t port)
 {
 	if (port == PORT_KEY)
-		return KEY_DATA & KEYAUX_DATA;
+		return KEY_DATA & 
+		(FlashSettings->EnableAUXPS2 ? KEYAUX_DATA : 1); // If AUX port enabled, consider that too
 	else { /*if (port == PORT_MOUSE)*/
 #if defined(BOARD_AXP) || defined(BOARD_MINI)
-		if ((P4_IN & 0b00001000) && MOUSEAUX_DATA) 
+		if (
+			(P4_IN & 0b00001000) && 
+			!(FlashSettings->EnableAUXPS2 && !MOUSEAUX_DATA) // If AUX port enabled, consider that too
+			)
 			return 1;
 		else 
 			return 0;
 
 #else
-		return MOUSE_DATA & MOUSEAUX_DATA;
+		return MOUSE_DATA & 
+		(FlashSettings->EnableAUXPS2 ? MOUSEAUX_DATA : 1);
 #endif
 	}
 

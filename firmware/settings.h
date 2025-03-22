@@ -18,6 +18,9 @@ typedef struct Settings {
     // Set all USB mice to run in Report Mode rather than Boot Mode
     bool MouseReportMode;
 
+    // Output mouse signals on the keyboard port's auxilliary pins (and vice versa)
+    bool EnableAUXPS2;
+
     // Emulate 3rd PS/2 button + Wheel
     bool Intellimouse;
 

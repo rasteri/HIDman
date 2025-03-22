@@ -114,7 +114,7 @@ void Menu_Task(void)
         case MENU_STATE_MAIN:
             if (lastMenuState != MENU_STATE_MAIN)
             {
-                SendKeyboardString("\n\nHIDman v1.1.5g\n\n");
+                SendKeyboardString("\n\nHIDman v1.1.5h\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");
@@ -210,6 +210,8 @@ void Menu_Task(void)
                 SendKeyboardString("3. PS2 mouse status\n");
                 SendKeyboardString("4. Serial Log - ");
                 YesNo(FlashSettings->SerialDebugOutput);
+                SendKeyboardString("5. PS2 AUX Output - ");
+                YesNo(FlashSettings->EnableAUXPS2);
 
                 //SendKeyboardString("5. Memory Test\n\n");
                 SendKeyboardString("\nESC main menu\n");
@@ -245,7 +247,8 @@ void Menu_Task(void)
                     menuState = MENU_STATE_INIT;
                     break;
 
-                case KEY_4:     HMSettings.SerialDebugOutput ^= 1;        SyncSettings(); lastMenuState = 0; break;
+                case KEY_4:     HMSettings.SerialDebugOutput ^= 1;  SyncSettings(); lastMenuState = 0; break;
+                case KEY_5:     HMSettings.EnableAUXPS2 ^= 1;       SyncSettings(); lastMenuState = 0; break;
 
                 case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
 

@@ -37,26 +37,7 @@ void DumpHex(uint8_t *buffa, uint16_t len)
 }
 
 
-void InitInterface(INTERFACE* Interface)
-{
-	memset(Interface, 0, sizeof(INTERFACE));
 
-	Interface->InterfaceClass = USB_DEV_CLASS_RESERVED;
-	Interface->InterfaceProtocol = USB_PROTOCOL_NONE;
-	Interface->ReportSize = 0;
-	Interface->EndpointNum = 0;
-
-
-	for (int j = 0; j < MAX_ENDPOINT_NUM; j++)
-	{
-		Interface->Endpoint[j].EndpointAddr = 0;
-		Interface->Endpoint[j].MaxPacketSize = 0;
-		Interface->Endpoint[j].EndpointDir = ENDPOINT_IN;
-		Interface->Endpoint[j].TOG = FALSE;
-	}
-
-	Interface->usesReports = 0;
-}
 
 
 void FillSetupReq(USB_SETUP_REQ *pSetupReq, UINT8 type, UINT8 req, UINT16 value, UINT16 index, UINT16 length)

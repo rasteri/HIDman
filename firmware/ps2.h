@@ -103,7 +103,7 @@ extern __xdata ps2port ports[];
 bool ReadPS2Clock(unsigned char port);
 bool ReadPS2Data(unsigned char port);
 
-bool SendKeyboard(const uint8_t *chunk);
+bool SendKeyboard(__code uint8_t *chunk);
 //void SendMouse();
 
 void SimonSaysSendKeyboard(const uint8_t *chunk);

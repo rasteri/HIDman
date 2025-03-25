@@ -42,10 +42,10 @@ extern __code uint8_t KEY_SET1_LSHIFT_BREAK[];
 extern __code uint8_t KEY_SET2_LSHIFT_MAKE[];
 extern __code uint8_t KEY_SET2_LSHIFT_BREAK[];
 
-extern const uint8_t * const HIDtoSET2_Make[];
-extern const uint8_t * const HIDtoSET2_Break[];
+extern __code uint8_t * __code HIDtoSET2_Make[];
+extern __code uint8_t * __code HIDtoSET2_Break[];
 
-extern const uint8_t * const HIDtoSET1_Make[];
-extern const uint8_t * const HIDtoSET1_Break[];
+extern __code uint8_t * __code HIDtoSET1_Make[];
+extern __code uint8_t * __code HIDtoSET1_Break[];
 
 #endif //__SCANCODES_H__

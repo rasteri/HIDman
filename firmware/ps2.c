@@ -77,7 +77,7 @@ void SimonSaysSendKeyboard(const uint8_t *chunk)
 
 __xdata char buf[100];
 
-bool SendKeyboard(const uint8_t *chunk)
+bool SendKeyboard(__code uint8_t *chunk)
 {
 	// reset watchdog timer, this routine blocks. It shouldn't really
 	SoftWatchdog = 0;

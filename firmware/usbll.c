@@ -107,23 +107,7 @@ void DisableRootHubPort(UINT8 RootHubIndex)
 	}
 }
 
-void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
-{
-	pUsbHubPort->HubPortStatus = PORT_DEVICE_NONE;
-	pUsbHubPort->DeviceClass = USB_DEV_CLASS_RESERVED;
-	pUsbHubPort->MaxPacketSize0 = DEFAULT_ENDP0_SIZE;
 
-	pUsbHubPort->VendorID = 0x0000;
-	pUsbHubPort->ProductID = 0x0000;
-	pUsbHubPort->bcdDevice = 0x0000;
-
-	pUsbHubPort->DeviceAddress = 0;
-	pUsbHubPort->DeviceSpeed = FULL_SPEED;
-	pUsbHubPort->InterfaceNum = 0;
-	pUsbHubPort->Interfaces = NULL;
-
-	pUsbHubPort->HubPortNum = 0;
-}
 
 void InitRootHubPortData(UINT8 rootHubIndex)
 {

@@ -1,0 +1,151 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <assert.h>
+
+#include "type.h"
+#include "ch559.h"
+#include "system.h"
+#include "defs.h"
+#include "usbdef.h"
+#include "usbhost.h"
+#include "menu.h"
+#include "data.h"
+#include "settings.h"
+#include "andyalloc.h"
+#include "keyboardled.h"
+#include "parsedescriptor.h"
+#include "ps2protocol.h"
+#include "testdata.h"
+#include "preset.h"
+#include "test.h"
+#include "usbll.h"
+#include "linkedlist.h"
+#include "testcommon.h"
+#define TESTVERBOSE 1
+
+/*
+Things we might want to test:
+- HID report parsing. Rather than counting segs, search for segs that are the correct type, in the correct startbit, etc
+- HID report processing. Can actually dig the bits out and get a sensible result at the end
+- Ring buffer functions (when we write them lol)
+- Presskey/releasekey actually gives a sensible result out of the ringbuffer at the end
+- Test entire thing - parse a report, send some events, make sure they come out of ringbuffer at end
+
+Probably gonna need seperate executables for different tests because of limited code space
+ 
+*/
+__xdata USB_HUB_PORT UsbDev;
+
+
+void TestStandardKeyboard(){
+
+    InitTest(&UsbDev, CheapoKeyboardDeviceDescriptor, 18, CheapoKeyboardConfigDescriptor, 59);
+
+    assert(UsbDev.InterfaceNum == 2);
+    
+
+    __xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(UsbDev.Interfaces, 0);
+
+    assert(!InterfaceParseReportDescriptor(pInterface, StandardKeyboardDescriptor, 63));
+    assert(!pInterface->usesReports);
+
+
+    __xdata HID_REPORT *report = (__xdata HID_REPORT *)ListGetData(pInterface->Reports, 0);
+
+    assert(report->length == 64);
+    assert(report->appUsagePage == REPORT_USAGE_PAGE_GENERIC);
+    assert(report->appUsage == REPORT_USAGE_KEYBOARD);
+
+    // modifyers
+    __xdata HID_SEG * testseg = FindSegByStartBit(report, 0);
+
+    assert(testseg != NULL);
+    assert(testseg->InputType == MAP_TYPE_BITFIELD);
+    assert(testseg->OutputChannel == MAP_KEYBOARD);
+    assert(testseg->OutputControl == 0xE0);
+
+    // scancode array
+    for( uint8_t x = 16; x < 64; x += 8){
+        testseg = FindSegByStartBit(report, x);
+        assert(testseg != NULL);
+        assert(testseg->OutputChannel == MAP_KEYBOARD);
+        assert(testseg->InputType == MAP_TYPE_ARRAY);
+    }
+
+    //DumpHID(pInterface);
+}
+
+void TestG304(){
+
+    InitTest(&UsbDev, G304DeviceDescriptor, 18, G304ConfigDescriptor, 34);
+
+    assert(UsbDev.InterfaceNum == 1);
+    
+    __xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(UsbDev.Interfaces, 0);
+
+    assert(!InterfaceParseReportDescriptor(pInterface, G304ReportDescriptor, 105));
+
+    assert(pInterface->usesReports);
+
+    // uses report 2 for mouse
+    __xdata HID_REPORT *report = (__xdata HID_REPORT *)ListGetData(pInterface->Reports, 2);
+
+    assert(report->length == 56);
+    assert(report->appUsagePage == REPORT_USAGE_PAGE_GENERIC);
+    assert(report->appUsage == REPORT_USAGE_MOUSE);
+
+    // buttons
+    __xdata HID_SEG * testseg = FindSegByStartBit(report, 8);
+    assert(testseg != NULL);
+    assert(testseg->InputType == MAP_TYPE_BITFIELD);
+    assert(testseg->OutputControl == MAP_MOUSE_BUTTON1);
+    assert(testseg->OutputChannel == MAP_MOUSE);
+
+    // X, Y, wheel
+    testseg = FindSegByStartBit(report, 16);
+    assert(testseg != NULL);
+    assert(testseg->InputType == MAP_TYPE_SCALE);
+    assert(testseg->OutputControl == MAP_MOUSE_X);
+    assert(testseg->OutputChannel == MAP_MOUSE);
+
+    testseg = FindSegByStartBit(report, 28);
+    assert(testseg != NULL);
+    assert(testseg->InputType == MAP_TYPE_SCALE);
+    assert(testseg->OutputControl == MAP_MOUSE_Y);
+    assert(testseg->OutputChannel == MAP_MOUSE);
+
+    testseg = FindSegByStartBit(report, 40);
+    assert(testseg != NULL);
+    assert(testseg->InputType == MAP_TYPE_SCALE);
+    assert(testseg->OutputControl == MAP_MOUSE_WHEEL);
+    assert(testseg->OutputChannel == MAP_MOUSE);
+}
+
+
+
+void main()
+{
+    // timer0 setup
+	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
+	TH0 = 0x00;					 // I dunno
+
+	TR0 = 1; // start timer0
+	ET0 = 1; //enable timer0 interrupt;
+
+	EA = 1;	 // enable all interrupts
+
+    UART_Init();
+
+    printstackpointer();
+
+    TestG304();
+    TestStandardKeyboard();
+
+    printf("Parser tests passed\n");
+
+    for (;;)
+    {
+        //printf("v");
+    }
+}

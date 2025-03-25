@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "type.h"
 #include "ch559.h"
 #include "system.h"
@@ -19,6 +20,18 @@
 #include "usbll.h"
 #include "linkedlist.h"
 #define TESTVERBOSE
+
+/*
+Things we might want to test:
+- HID report parsing. Rather than counting segs, search for segs that are the correct type, in the correct startbit, etc
+- HID report processing. Can actually dig the bits out and get a sensible result at the end
+- Ring buffer functions (when we write them lol)
+- Presskey/releasekey actually gives a sensible result out of the ringbuffer at the end
+- Test entire thing - parse a report, send some events, make sure they come out of ringbuffer at end
+
+Probably gonna need seperate executables for different tests because of limited code space
+ 
+*/
 
 void UART_Init()
 {

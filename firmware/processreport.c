@@ -106,6 +106,65 @@ __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xF
 
 uint16_t BatCounter = 0;
 
+uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
+
+	uint32_t value = 0;
+	uint8_t *currByte;
+
+	// bits may be across any byte alignment
+	// so do the neccesary shifting to get it to all fit in an array
+	uint8_t shiftbits = (currSeg->startBit % 8);
+
+	uint8_t startbyte = currSeg->startBit / 8;
+	
+	currByte = data + startbyte;
+
+	int8_t remainingbits = currSeg->reportSize;
+
+
+	if (shiftbits) {
+		// first byte will always be shifted right
+		value |= ((uint32_t)(*currByte)) >> (uint32_t)(shiftbits);
+		/*printf ("sh0:-%d ", shiftbits);
+		printf ("b4rb0:%d ", remainingbits);
+		printf ("v0:%lX ", value);*/
+		remainingbits -= 8 - shiftbits;
+		//printf ("afrb0:%d \n", remainingbits);
+		// everything else will be shifted left by the remaining bits (plus 8 each time)
+		shiftbits = 8 - shiftbits;
+
+		currByte++;
+	}
+	
+	// middle bytes keep all 8 bits
+	while(remainingbits >= 8) {
+		
+		value |= (((uint32_t)(*currByte)) ) << (uint32_t)shiftbits;
+		/*printf ("sh1:%d ", shiftbits);
+		printf ("rb1:%d ", remainingbits);
+		printf ("v1:%lX ", value);*/
+
+		currByte++;
+		shiftbits += 8;
+		remainingbits -= 8;
+		//printf ("afrb0:%d \n", remainingbits);
+	}
+
+	//final byte masks off upper bits
+	if (remainingbits > 0){
+		
+		value |= ((((uint32_t)(*currByte))) & (bitMasks[remainingbits]) ) << (uint32_t)shiftbits;
+
+		/*printf ("sh2:%d ", shiftbits);
+		printf ("rb2:%d ", remainingbits);
+		printf ("v2:%lX \n", value);*/
+	}
+
+
+
+	return value;
+}
+
 void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata uint8_t *data)
 {
 	bool make = 0;
@@ -176,66 +235,11 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 	}
 	else if (currSeg->InputType) //i.e. not MAP_TYPE_NONE
 	{
-		uint32_t value = 0;
-
-		// bits may be across any byte alignment
-		// so do the neccesary shifting to get it to all fit in a uint32_t
-
-		uint8_t shiftbits = (currSeg->startBit % 8);
-
-		uint8_t startbyte = currSeg->startBit / 8;
+		uint32_t value = SegExtractValue(currSeg, data);
 		
-        currByte = data + startbyte;
-
-		uint8_t remainingbits = currSeg->reportSize;
-
-
-		if (shiftbits) {
-			// first byte will always be shifted right
-			value |= ((uint32_t)(*currByte)) >> (uint32_t)(shiftbits);
-			printf ("sh0:-%d ", shiftbits);
-			printf ("b4rb0:%d ", remainingbits);
-			printf ("v0:%lX ", value);
-			remainingbits -= 8 - shiftbits;
-			printf ("afrb0:%d \n", remainingbits);
-			// everything else will be shifted left by the remaining bits (plus 8 each time)
-			shiftbits = 8 - shiftbits;
-
-			currByte++;
-		}
-        
-		// middle bytes keep all 8 bits
-		while(remainingbits >= 8) {
-			
-			value |= (((uint32_t)(*currByte)) ) << (uint32_t)shiftbits;
-			printf ("sh1:%d ", shiftbits);
-			printf ("rb1:%d ", remainingbits);
-            printf ("v1:%lX ", value);
-
-            currByte++;
-			shiftbits += 8;
-			remainingbits -= 8;
-			printf ("afrb0:%d \n", remainingbits);
-		}
-		if (remainingbits){
-			//final byte masks off upper bits
-			value |= ((((uint32_t)(*currByte))) & (bitMasks[remainingbits]) ) << (uint32_t)shiftbits;
-
-			printf ("sh2:%d ", shiftbits);
-			printf ("rb2:%d ", remainingbits);
-			printf ("v2:%lX \n", value);
-		}
-
 		// if it's a signed integer we need to extend the sign
 		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
 			value = SIGNEX(value, currSeg->reportSize - 1);
-
-		//old way, not significantly faster anymore
-		//currByte = data + (currSeg->startBit >> 3);
-		//currSeg->value = ((*currByte) >> (currSeg->startBit & 0x07)) // shift bits so lsb of this seg is at bit zero
-		//				 & bitMasks[currSeg->reportSize];			 // mask off the bits according to seg size
-
-		//printf("x:%lx\n", currSeg->value);
 
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 			report->keyboardUpdated = 1;

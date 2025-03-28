@@ -22,7 +22,7 @@
 #include "usbll.h"
 #include "linkedlist.h"
 #include "testcommon.h"
-#define TESTVERBOSE 1
+//#define TESTVERBOSE 1
 
 /*
 Things we might want to test:

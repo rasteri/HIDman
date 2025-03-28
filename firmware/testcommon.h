@@ -14,3 +14,4 @@ void InitTest (
 
 __xdata HID_SEG * FindSegByStartBit(__xdata HID_REPORT * descReport, uint16_t StartBit);
 
+uint32_t rand32(void);

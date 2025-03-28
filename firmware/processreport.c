@@ -180,28 +180,55 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 
 		// bits may be across any byte alignment
 		// so do the neccesary shifting to get it to all fit in a uint32_t
-		int8_t shiftbits = -(currSeg->startBit % 8);
-		uint8_t startbyte = currSeg->startBit / 8;
 
+		uint8_t shiftbits = (currSeg->startBit % 8);
+
+		uint8_t startbyte = currSeg->startBit / 8;
+		
         currByte = data + startbyte;
+
+		uint8_t remainingbits = currSeg->reportSize;
+
+
+		if (shiftbits) {
+			// first byte will always be shifted right
+			value |= ((uint32_t)(*currByte)) >> (uint32_t)(shiftbits);
+			printf ("sh0:-%d ", shiftbits);
+			printf ("b4rb0:%d ", remainingbits);
+			printf ("v0:%lX ", value);
+			remainingbits -= 8 - shiftbits;
+			printf ("afrb0:%d \n", remainingbits);
+			// everything else will be shifted left by the remaining bits (plus 8 each time)
+			shiftbits = 8 - shiftbits;
+
+			currByte++;
+		}
         
-		while(shiftbits < currSeg->reportSize) {
-        
-			if (shiftbits < 0)
-				value |= ((uint32_t)(*currByte)) >> (uint32_t)(-shiftbits);
-			else
-				value |= ((uint32_t)(*currByte)) << (uint32_t)shiftbits;
-            
+		// middle bytes keep all 8 bits
+		while(remainingbits >= 8) {
+			
+			value |= (((uint32_t)(*currByte)) ) << (uint32_t)shiftbits;
+			printf ("sh1:%d ", shiftbits);
+			printf ("rb1:%d ", remainingbits);
+            printf ("v1:%lX ", value);
+
             currByte++;
 			shiftbits += 8;
+			remainingbits -= 8;
+			printf ("afrb0:%d \n", remainingbits);
+		}
+		if (remainingbits){
+			//final byte masks off upper bits
+			value |= ((((uint32_t)(*currByte))) & (bitMasks[remainingbits]) ) << (uint32_t)shiftbits;
+
+			printf ("sh2:%d ", shiftbits);
+			printf ("rb2:%d ", remainingbits);
+			printf ("v2:%lX \n", value);
 		}
 
 		// if it's a signed integer we need to extend the sign
-		// todo, actually determine if it is a signed int... look at logical max/min fields in descriptor
 		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
 			value = SIGNEX(value, currSeg->reportSize - 1);
-
-		
 
 		//old way, not significantly faster anymore
 		//currByte = data + (currSeg->startBit >> 3);
@@ -281,8 +308,10 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 						
 						MouseMove(tmpl, 0, 0);
 					}
-					else
+					else{
+						printf("a %lX\n", value);
 						MouseMove((int32_t)value, 0, 0);
+					}
 
 					break;
 				case MAP_MOUSE_Y:
@@ -297,12 +326,15 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 
 						MouseMove(0, tmpl, 0);
 					}
-					else
+					else{
+						printf("b %lX\n", value);
 						MouseMove(0, (int32_t)value, 0);
+					}
 
 					break;
 				case MAP_MOUSE_WHEEL:
 
+					printf("c %lX\n", value);
 					MouseMove(0, 0, (int32_t)value);
 
 					break;

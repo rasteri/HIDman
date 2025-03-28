@@ -23,6 +23,7 @@
 #include "linkedlist.h"
 #include "testcommon.h"
 #include "scancode.h"
+#include "ps2mapping.h"
 #define TESTVERBOSE 1
 
 /*
@@ -36,12 +37,19 @@ Things we might want to test:
 Probably gonna need seperate executables for different tests because of limited code space
  
 */
+
+// mask off the number of bits
+__code uint16_t bitMasks16[] = {
+    0x0000, 
+    0x0001, 0x0003, 0x0007, 0x000f, 0x001F, 0x003F, 0x007F, 0x00FF,
+    0x01FF, 0x03FF, 0x07FF, 0x0fFF, 0x1fFF, 0x3fFF, 0x7fFF, 0xFFFF
+ };
 __xdata USB_HUB_PORT UsbDev;
 
 __xdata uint8_t KeyboardTestDataD[] = { 0, 0, 4, 0, 0, 0, 0, 0 };
 __xdata uint8_t KeyboardTestDataU[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-//__xdata uint8_t FakeG304TestData1[] = { 0x02, 0x00, 0x21, 0x43, 0x65, 0x00 };
+
 
 __xdata uint8_t FakeG304TestData1[] = { 0x02, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
 __xdata uint8_t FakeG304TestData2[] = { 0x02, 0x00, 0x00, 0xE0, 0xFF, 0x00, 0x00  };
@@ -93,80 +101,39 @@ void Menu_Press_Key(uint8_t key)
 
 }
 
-void TestStandardKeyboard(void){
+
+void TestBitOffsets(uint8_t reportSize, uint16_t startBit, __xdata uint8_t *TestData, uint8_t TestDataLen){
 
     InitTest(&UsbDev, CheapoKeyboardDeviceDescriptor, 18, CheapoKeyboardConfigDescriptor, 59);
     
     __xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(UsbDev.Interfaces, 0);
-    assert(!InterfaceParseReportDescriptor(pInterface, StandardKeyboardDescriptor, 63));
 
-    assert (ParseReport(pInterface, 8 * 8, KeyboardTestDataD));
-    assert (ParseReport(pInterface, 8 * 8, KeyboardTestDataU));
-    assert (ParseReport(pInterface, 8 * 8, KeyboardTestDataD));
-    assert (ParseReport(pInterface, 8 * 8, KeyboardTestDataU));
-    //DumpHID(pInterface);
+    pInterface->Reports = ListAdd(pInterface->Reports, sizeof(HID_REPORT), 1);
+
+    HIDParseState.hidGlobal.reportID = 1;
+    HIDParseState.hidGlobal.reportSize = reportSize;
+    HIDParseState.hidGlobal.reportCount = 1;
+    HIDParseState.hidGlobal.usagePage = REPORT_USAGE_PAGE_GENERIC;
+    HIDParseState.appUsage = REPORT_USAGE_MOUSE;
+    HIDParseState.startBit = startBit;
+    HIDParseState.appUsagePage = REPORT_USAGE_PAGE_GENERIC;
+    HIDParseState.arrUsage[0] = USAGE_X;
+    HIDParseState.arrUsage[1] = USAGE_Y;
+    HIDParseState.usagePtr = 2;
+    pInterface->usesReports = true;
+    CreateUsageMapping(pInterface);
+    DumpHID(pInterface);
+
+    ParseReport(pInterface, TestDataLen, TestData);
 }
 
-void TestG304(void){
-
-    InitTest(&UsbDev, G304DeviceDescriptor, 18, G304ConfigDescriptor, 34);
-    __xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(UsbDev.Interfaces, 0);
-    
-    assert(!InterfaceParseReportDescriptor(pInterface, G304ReportDescriptor, 105));
-
-    assert (ParseReport(pInterface, 7 * 8, FakeG304TestData1));
-    assert (ParseReport(pInterface, 7 * 8, FakeG304TestData2));
-    assert (ParseReport(pInterface, 7 * 8, FakeG304TestData3));
-    //DumpHID(pInterface);
+void testrand(){
+    uint32_t heh = rand32();
+    for (int x = 0; x < 100; x++){
+        heh = rand32();
+        printf("%lX\n", heh);
+    }
 }
-
-void TestG30411(){
-
-    InitTest(&UsbDev, G304DeviceDescriptor, 18, G304ConfigDescriptor, 34);
-
-    assert(UsbDev.InterfaceNum == 1);
-    
-    __xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(UsbDev.Interfaces, 0);
-
-    assert(!InterfaceParseReportDescriptor(pInterface, G304ReportDescriptor, 105));
-
-    assert(pInterface->usesReports);
-
-    // uses report 2 for mouse
-    __xdata HID_REPORT *report = (__xdata HID_REPORT *)ListGetData(pInterface->Reports, 2);
-
-    assert(report->length == 56);
-    assert(report->appUsagePage == REPORT_USAGE_PAGE_GENERIC);
-    assert(report->appUsage == REPORT_USAGE_MOUSE);
-
-    // buttons
-    __xdata HID_SEG * testseg = FindSegByStartBit(report, 8);
-    assert(testseg != NULL);
-    assert(testseg->InputType == MAP_TYPE_BITFIELD);
-    assert(testseg->OutputControl == MAP_MOUSE_BUTTON1);
-    assert(testseg->OutputChannel == MAP_MOUSE);
-
-    // X, Y, wheel
-    testseg = FindSegByStartBit(report, 16);
-    assert(testseg != NULL);
-    assert(testseg->InputType == MAP_TYPE_SCALE);
-    assert(testseg->OutputControl == MAP_MOUSE_X);
-    assert(testseg->OutputChannel == MAP_MOUSE);
-
-    testseg = FindSegByStartBit(report, 28);
-    assert(testseg != NULL);
-    assert(testseg->InputType == MAP_TYPE_SCALE);
-    assert(testseg->OutputControl == MAP_MOUSE_Y);
-    assert(testseg->OutputChannel == MAP_MOUSE);
-
-    testseg = FindSegByStartBit(report, 40);
-    assert(testseg != NULL);
-    assert(testseg->InputType == MAP_TYPE_SCALE);
-    assert(testseg->OutputControl == MAP_MOUSE_WHEEL);
-    assert(testseg->OutputChannel == MAP_MOUSE);
-}
-
-
 
 void main()
 {
@@ -182,16 +149,27 @@ void main()
     UART_Init();
 
     printstackpointer();
-    /*uint32_t value = 0x00000FFF;
-    value = 0x00000F00;
-    printf("sign %lX\n", (uint32_t)SIGNEX(value, 11));
-    while(1);*/
 
-    TestG304();
-   // TestStandardKeyboard();
+    //testrand();
+
+    /*static __xdata uint8_t FunTestData1[] = { 0x01, 0x21, 0x43, 0x65};
+    TestBitOffsets(12, 8, FunTestData1, 4);
+
+    static __xdata uint8_t FunTestData2[] = {0x01, 0x42, 0x86, 0xCA, 0x00}; //needs a 5th byte so it's blank coz it'll shift
+    TestBitOffsets(12, 9, FunTestData2, 5);
+
+    static __xdata uint8_t FunTestData3[] = {0x01, 0x84, 0x0c, 0x95, 0x01};
+    TestBitOffsets(12, 10, FunTestData3, 5);
+
+    static __xdata uint8_t FunTestData4[] = {0x01, 0x08, 0x19, 0x2A, 0x03};
+    TestBitOffsets(12, 11, FunTestData4, 5);*/
 
 
+    static __xdata uint8_t FunTestData5[] = {0x01, 0x10, 0x32, 0x54, 0x76};
+    TestBitOffsets(16, 8, FunTestData5, 5);
 
+    static __xdata uint8_t FunTestData6[] = {0x01, 0x20, 0x64, 0xA8, 0xEC, 0x00}; //needs a 6th byte so it's blank coz it'll shift
+    TestBitOffsets(16, 9, FunTestData6, 6);
 
     printf("Parser tests passed\n");
 

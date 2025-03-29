@@ -50,10 +50,6 @@ __at(0xF000) __code Settings DefSettings = {
     MODE_PS2
 };
 
-void CH559UART1SendByte(UINT8 SendDat){
-
-}
-
 __xdata volatile uint16_t SoftWatchdog = 0;
 
 void Menu_Press_Key(uint8_t key)
@@ -145,7 +141,7 @@ bool TestDescriptors(
                 return 1;
             }
             EA = 1;	 // enable all interrupts
-            /*while(1) {
+            while(1) {
                 ParseReport(pInterface, 8 * 8, KeyboardTestDataD);
                 iters++;
                 ParseReport(pInterface, 8 * 8, KeyboardTestDataU);
@@ -155,7 +151,7 @@ bool TestDescriptors(
                     printf("i : %d\n", iters);
                     iters = 0;
                 }
-            }*/
+            }
 
             while(1){
                 ParseReport(pInterface, 8 * 8, KovaTestData);

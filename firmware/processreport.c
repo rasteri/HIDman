@@ -27,8 +27,6 @@ __xdata volatile uint8_t RepeatKey = 0x00;
 __xdata int16_t RepeatDelay = 7500;
 __xdata int16_t RepeatRate = -1000;
 
-__xdata char lastKeyboardHID[8];
-
 __xdata uint8_t LEDDelayMs = 0;
 
 // Mouse buffer needed for handling multi-byte commands and intellimouse detection 
@@ -125,11 +123,7 @@ uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 	if (shiftbits) {
 		// first byte will always be shifted right
 		value |= ((uint32_t)(*currByte)) >> (uint32_t)(shiftbits);
-		/*printf ("sh0:-%d ", shiftbits);
-		printf ("b4rb0:%d ", remainingbits);
-		printf ("v0:%lX ", value);*/
 		remainingbits -= 8 - shiftbits;
-		//printf ("afrb0:%d \n", remainingbits);
 		// everything else will be shifted left by the remaining bits (plus 8 each time)
 		shiftbits = 8 - shiftbits;
 
@@ -140,24 +134,15 @@ uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 	while(remainingbits >= 8) {
 		
 		value |= (((uint32_t)(*currByte)) ) << (uint32_t)shiftbits;
-		/*printf ("sh1:%d ", shiftbits);
-		printf ("rb1:%d ", remainingbits);
-		printf ("v1:%lX ", value);*/
 
 		currByte++;
 		shiftbits += 8;
 		remainingbits -= 8;
-		//printf ("afrb0:%d \n", remainingbits);
 	}
 
 	//final byte masks off upper bits
 	if (remainingbits > 0){
-		
 		value |= ((((uint32_t)(*currByte))) & (bitMasks[remainingbits]) ) << (uint32_t)shiftbits;
-
-		/*printf ("sh2:%d ", shiftbits);
-		printf ("rb2:%d ", remainingbits);
-		printf ("v2:%lX \n", value);*/
 	}
 
 

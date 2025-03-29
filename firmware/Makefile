@@ -64,6 +64,8 @@ $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/mouse.rel \
 $(OBJDIR)/ps2.rel \
 $(OBJDIR)/delay.rel \
+$(OBJDIR)/uart.rel \
+$(OBJDIR)/uart1.rel \
 $(OBJDIR)/usbdata.rel
 
 ifndef FREQ_SYS

@@ -1,7 +1,7 @@
 
 #include "defs.h"
 #include "type.h"
-/*
+
 __code uint8_t PS4ReportDescriptor[] =
 {
     0x05, 0x01,    	// Usage Page (Generic Desktop Ctrls)
@@ -761,7 +761,7 @@ __code uint8_t QMKKeyboardReportDescriptor[] = {
 
 };
 
-__code uint8_t QMKKeyboardReportPressA[] = {
+__xdata uint8_t QMKKeyboardReportPressA[] = {
 0x06,        
 0x00,        
 0x10, 0x00, 0x00, 0x00, 
@@ -795,7 +795,7 @@ __code uint8_t QMKKeyboardReportPressA[] = {
 };
 
 
-__code uint8_t QMKKeyboardReportReleaseA[] = {
+__xdata uint8_t QMKKeyboardReportReleaseA[] = {
 0x06,        
 0x00,        
 0x00, 
@@ -830,7 +830,7 @@ __code uint8_t QMKKeyboardReportReleaseA[] = {
 0x00        
 // 32 bytes
 };
-*/
+
 
 __code uint8_t KeychronWirelessKeyboardDeviceDescriptor[] = {
 0x12,        // bLength

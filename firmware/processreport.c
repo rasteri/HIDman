@@ -147,7 +147,7 @@ uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 
 
 
-	return value;
+	return value; 
 }
 
 void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata uint8_t *data)
@@ -158,9 +158,27 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 	uint8_t *currByte;
 	uint8_t pressed = 0;
 	int16_t tmpl;
+	uint16_t tmpu;
 
 	if (currSeg->InputType == MAP_TYPE_BITFIELD)
 	{
+
+		// special case for if we can just copy the whole bitfield into the keyboard buffer
+		if (
+			(currSeg->OutputChannel == MAP_KEYBOARD)
+		)
+		{
+			cnt = currSeg->startBit & 0x07;
+			endbit = currSeg->reportCount & 0x07;
+			tmpu = currSeg->OutputControl & 0x07;
+
+			if (cnt == 0 && endbit == 0 && tmpu == 0){
+				data += (currSeg->startBit / 8);
+				memcpy(report->KeyboardKeyMap + (currSeg->OutputControl / 8), data, (currSeg->reportCount / 8) );
+				return;
+			}
+
+		}
 
 		endbit = currSeg->startBit + currSeg->reportCount;
 		tmp = currSeg->OutputControl;
@@ -298,7 +316,6 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 						MouseMove(tmpl, 0, 0);
 					}
 					else{
-						//printf("a %lX\n", value);
 						MouseMove((int32_t)value, 0, 0);
 					}
 
@@ -316,14 +333,12 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 						MouseMove(0, tmpl, 0);
 					}
 					else{
-						//printf("b %lX\n", value);
 						MouseMove(0, (int32_t)value, 0);
 					}
 
 					break;
 				case MAP_MOUSE_WHEEL:
 
-					//printf("c %lX\n", value);
 					MouseMove(0, 0, (int32_t)value);
 
 					break;
@@ -423,7 +438,7 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 								Menu_Press_Key(hidcode);
 							else
 							{
-								//DEBUGOUT("\nSendn %x\n", hidcode);
+								DEBUGOUT("\nSendn %x\n", hidcode);
 								// Make
 
 								SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[hidcode] : HIDtoSET1_Make[hidcode]);

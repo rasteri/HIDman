@@ -140,20 +140,21 @@ bool TestDescriptors(
                 printf("Can't parse Report Descriptor\n");
                 return 1;
             }
+            DumpHID(pInterface);
             EA = 1;	 // enable all interrupts
             while(1) {
-                ParseReport(pInterface, 8 * 8, KeyboardTestDataD);
+                ParseReport(pInterface, 32 * 8, QMKKeyboardReportPressA); 
                 iters++;
-                ParseReport(pInterface, 8 * 8, KeyboardTestDataU);
+                ParseReport(pInterface, 32 * 8, QMKKeyboardReportReleaseA);
                 iters++;
                 if (updateiters){
                     updateiters = 0;
-                    printf("i : %d\n", iters);
+                    printf("i : %u\n", iters);
                     iters = 0;
                 }
             }
 
-            while(1){
+            /*while(1){
                 ParseReport(pInterface, 8 * 8, KovaTestData);
                 iters++;
                 if (updateiters){
@@ -161,7 +162,7 @@ bool TestDescriptors(
                     printf("i : %d\n", iters);
                     iters = 0;
                 }
-            }
+            }*/
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -259,11 +260,18 @@ void main()
 
     //testlinkedlist();
 
-    TestDescriptors (
+    /*TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         StandardKeyboardDescriptor, 63,
         8
+    );*/
+
+    TestDescriptors (
+        QMKKeyboardDeviceDescriptor, 18,
+        QMKKeyboardConfigDescriptor, 59,
+        QMKKeyboardReportDescriptor, 109,
+        2
     );
 
     /*TestDescriptors (
@@ -287,12 +295,7 @@ void main()
         13
     );
 
-    TestDescriptors (
-        QMKKeyboardDeviceDescriptor, 18,
-        QMKKeyboardConfigDescriptor, 59,
-        QMKKeyboardReportDescriptor, 109,
-        2
-    );
+
 
     TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,

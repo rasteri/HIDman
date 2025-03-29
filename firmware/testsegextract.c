@@ -86,7 +86,7 @@ bool TestExtractValue(uint8_t reportSize, uint16_t startBit){
     
     testSeg.startBit = startBit;
     testSeg.reportSize = reportSize;
-    
+
     //DumpHID(pInterface);
 
     static __xdata uint32_t ogtestdata;

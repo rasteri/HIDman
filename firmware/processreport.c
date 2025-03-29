@@ -313,7 +313,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 						MouseMove(tmpl, 0, 0);
 					}
 					else{
-						printf("a %lX\n", value);
+						//printf("a %lX\n", value);
 						MouseMove((int32_t)value, 0, 0);
 					}
 
@@ -331,14 +331,14 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 						MouseMove(0, tmpl, 0);
 					}
 					else{
-						printf("b %lX\n", value);
+						//printf("b %lX\n", value);
 						MouseMove(0, (int32_t)value, 0);
 					}
 
 					break;
 				case MAP_MOUSE_WHEEL:
 
-					printf("c %lX\n", value);
+					//printf("c %lX\n", value);
 					MouseMove(0, 0, (int32_t)value);
 
 					break;
@@ -438,7 +438,7 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 								Menu_Press_Key(hidcode);
 							else
 							{
-								DEBUGOUT("\nSendn %x\n", hidcode);
+								//DEBUGOUT("\nSendn %x\n", hidcode);
 								// Make
 
 								SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[hidcode] : HIDtoSET1_Make[hidcode]);
@@ -455,7 +455,7 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 							{
 								// break
 
-								DEBUGOUT("\nBreakn %x\n", hidcode);
+								//DEBUGOUT("\nBreakn %x\n", hidcode);
 								// if the key we just released is the one that's repeating then stop
 								if (hidcode == RepeatKey)
 								{

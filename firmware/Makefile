@@ -127,8 +127,8 @@ clean:
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 
-test: $(TESTOBJS) $(OBJDIR)/testsegextract.rel $(OBJDIR)/testdata.rel
-	$(CC) $(TESTOBJS) $(OBJDIR)/testsegextract.rel $(OBJDIR)/testdata.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
+test: $(TESTOBJS) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel
+	$(CC) $(TESTOBJS) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
 	s51 -g -s - build/test 
 
 datagen: 

@@ -19,6 +19,7 @@
 #include "test.h"
 #include "usbll.h"
 #include "linkedlist.h"
+#include "processreport.h"
 #define TESTVERBOSE
 
 /*
@@ -33,15 +34,37 @@ Probably gonna need seperate executables for different tests because of limited 
  
 */
 
-void UART_Init()
+
+// Who says you can't do dependency injection in C
+__xdata bool MenuActive = 0;
+
+__at(0xF000) __code Settings DefSettings = {
+    0x54178008,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    MODE_PS2
+};
+
+void MouseSet(uint8_t Button, uint8_t value)
 {
-    SCON = 0x50; /* configure serial */
-    TMOD = 0x20; /* configure timer */
-    TH1 = 0xE6;  /* baud rate 1200 */
-    TL1 = 0xE6;  /* baud rate 1200 */
-    TR1 = 1;     /* enable timer */
-    TI = 1;      /* enable transmitting */
-    RI = 0;      /* waiting to receive */
+}
+
+bool SendKeyboard(__code uint8_t *chunk)
+{
+    return 1;
+}
+
+void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ){
+}
+
+void Menu_Press_Key(uint8_t key)
+{
+
 }
 
 static USB_HUB_PORT __xdata TestPort;

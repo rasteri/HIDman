@@ -42,6 +42,7 @@ $(OBJDIR)/linkedlist.rel \
 $(OBJDIR)/scancode.rel \
 $(OBJDIR)/usbdata.rel \
 $(OBJDIR)/processreport.rel \
+$(OBJDIR)/delay.rel \
 $(OBJDIR)/xt.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)
@@ -59,6 +60,10 @@ $(OBJDIR)/linkedlist.rel \
 $(OBJDIR)/scancode.rel \
 $(OBJDIR)/testcommon.rel \
 $(OBJDIR)/processreport.rel \
+$(OBJDIR)/ps2protocol.rel \
+$(OBJDIR)/mouse.rel \
+$(OBJDIR)/ps2.rel \
+$(OBJDIR)/delay.rel \
 $(OBJDIR)/usbdata.rel
 
 ifndef FREQ_SYS

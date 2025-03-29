@@ -278,7 +278,7 @@ void HandleReceived(uint8_t port)
 			}
 		}
 		
-		if (HMSettings.Intellimouse){
+		if (FlashSettings->Intellimouse){
 			// enable intellimouse support if driver tried to to detect it
 			if (memcmp(MouseBuffer, "\x50\xF3\x64\xF3\xC8\xF3", 6) == 0)
 			{

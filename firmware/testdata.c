@@ -1574,7 +1574,7 @@ __code uint8_t KovaReportDescriptor[] = {
 };
 
 
-__code uint8_t G304DeviceDescriptor []= {
+__code uint8_t FakeG304DeviceDescriptor []= {
     0x12,        // bLength
     0x01,        // bDescriptorType (Device)
     0x10, 0x01,  // bcdUSB 1.10
@@ -1594,7 +1594,7 @@ __code uint8_t G304DeviceDescriptor []= {
 
 };
 
-__code uint8_t G304ConfigDescriptor[] = {
+__code uint8_t FakeG304ConfigDescriptor[] = {
     0x09,        // bLength
     0x02,        // bDescriptorType (Configuration)
     0x22, 0x00,  // wTotalLength 34
@@ -1633,7 +1633,7 @@ __code uint8_t G304ConfigDescriptor[] = {
 
 };
 
-__code uint8_t G304ReportDescriptor[] = {
+__code uint8_t FakeG304ReportDescriptor[] = {
     0x06, 0xB5, 0xFF,  // Usage Page (Vendor Defined 0xFFB5)
     0x09, 0x01,        // Usage (0x01)
     0xA1, 0x01,        // Collection (Application)

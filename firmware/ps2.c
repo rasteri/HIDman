@@ -68,10 +68,10 @@ bool ReadPS2Data(uint8_t port)
 void SimonSaysSendKeyboard(const uint8_t *chunk)
 {
 	if (chunk != NULL &&														 // chunk is valid
-		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
+		((ports[PORT_KEY].sendBuffEnd + 1)  & 0x3F) != ports[PORT_KEY].sendBuffStart) // not full
 	{
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
-		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
+		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) & 0x3F;
 	}
 }
 
@@ -94,10 +94,10 @@ bool SendKeyboard(__code uint8_t *chunk)
 	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 
 	if (!ports[PORT_KEY].sendDisabled &&										 // send disabled by timer task, better not step on its toes
-		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
+		((ports[PORT_KEY].sendBuffEnd + 1) & 0x3F) != ports[PORT_KEY].sendBuffStart) // not full
 	{
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
-		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
+		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) & 0x3F;
 		TR0 = 1; // re-enable timer interrupt
 		return 1;
 	}
@@ -304,7 +304,7 @@ void PS2ProcessPort(uint8_t port)
 					{
 						// move onto next chunk
 						//DEBUG_OUT("Consumed %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
-						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 64;
+						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) & 0x3F;
 						ports[port].bytenum = 0;
 					}
 					else
@@ -326,7 +326,7 @@ void PS2ProcessPort(uint8_t port)
 					{
 						// move onto next chonk
 						//DEBUG_OUT("Consumed %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
-						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 8;
+						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) & 0x07;
 						ports[port].bytenum = 0;
 					}
 					else

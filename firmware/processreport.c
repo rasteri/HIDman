@@ -111,9 +111,9 @@ uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 
 	// bits may be across any byte alignment
 	// so do the neccesary shifting to get it to all fit in an array
-	uint8_t shiftbits = (currSeg->startBit % 8);
+	uint8_t shiftbits = (currSeg->startBit & 0x07);
 
-	uint8_t startbyte = currSeg->startBit / 8;
+	uint8_t startbyte = currSeg->startBit >> 3;
 	
 	currByte = data + startbyte;
 
@@ -150,6 +150,13 @@ uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 	return value; 
 }
 
+void Dumphex(__xdata uint8_t * hex, uint8_t len){
+	for (uint8_t c = 0; c < len; c++){
+		printf("%02X ", *(hex++));
+	}
+	printf("\n");
+}
+
 void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata uint8_t *data)
 {
 	bool make = 0;
@@ -173,8 +180,12 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 			tmpu = currSeg->OutputControl & 0x07;
 
 			if (cnt == 0 && endbit == 0 && tmpu == 0){
-				data += (currSeg->startBit / 8);
-				memcpy(report->KeyboardKeyMap + (currSeg->OutputControl / 8), data, (currSeg->reportCount / 8) );
+				
+				data += (currSeg->startBit >> 3);
+				
+				memcpy(report->KeyboardKeyMap + (currSeg->OutputControl >> 3), data, (currSeg->reportCount >> 3) );
+
+				report->keyboardUpdated = 1;
 				return;
 			}
 
@@ -418,11 +429,13 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 	if(descReport->keyboardUpdated)
 	{
+		uint8_t *keybyte = descReport->KeyboardKeyMap;
 		// for each byte in the report
 		for (uint8_t d = 0; d < 32; d++) 
 		{
 			// XOR to see if any bits are different
-			uint8_t xorred = descReport->KeyboardKeyMap[d] ^ descReport->oldKeyboardKeyMap[d];
+
+			uint8_t xorred = *keybyte ^ descReport->oldKeyboardKeyMap[d];
 
 			if (xorred) {
 
@@ -432,13 +445,13 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 					{
 						uint8_t hidcode = (d << 3) | c;
 
-						if (descReport->KeyboardKeyMap[d] & (1 << c)) // set in current but not prev
+						if (*keybyte & (1 << c)) // set in current but not prev
 						{
 							if (MenuActive)
 								Menu_Press_Key(hidcode);
 							else
 							{
-								DEBUGOUT("\nSendn %x\n", hidcode);
+								//DEBUGOUT("\nSendn %x\n", hidcode);
 								// Make
 
 								SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[hidcode] : HIDtoSET1_Make[hidcode]);
@@ -475,6 +488,7 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 					
 				}
 			}
+			keybyte++;
 		}
 		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 32);
 		descReport->keyboardUpdated = 0;

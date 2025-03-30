@@ -38,6 +38,7 @@ void InitMice(void)
 __xdata uint8_t updates = 0;
 void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
 {
+
     for (int x = 0; x < 2; x++)
     {
         MOUSE *m = &OutputMice[x];
@@ -190,9 +191,9 @@ void Ps2MouseSetReporting(bool Reporting) {
 
 void Ps2MouseSetDefaults(void) {
 	Ps2MouseSetRate(100);
-	Ps2MouseSetResolution(MOUSE_PS2_RESOLUTION_4CMM);
-	Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);
-	Ps2MouseSetReporting(MOUSE_PS2_REPORTING_OFF);
+	Ps2MouseSetResolution(MOUSE_PS2_RESOLUTION_8CMM);
+	Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);		
+	Ps2MouseSetReporting(MOUSE_PS2_REPORTING_ON);
 	Ps2MouseSetMode(MOUSE_PS2_MODE_STREAM);
 } 
 
@@ -207,7 +208,7 @@ void HandleMouse(void) {
 		uint8_t Buttons;
 		// Send PS/2 Mouse Packet if necessary
 		// make sure there's space in the buffer before we pop any mouse updates
-		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
+		if (((ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07) != ports[PORT_MOUSE].sendBuffStart)
 		{
 			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Z, &Buttons, (ps2Mouse->Ps2Scaling==MOUSE_PS2_SCALING_2X), (3-ps2Mouse->Ps2Resolution)))
 			{

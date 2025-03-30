@@ -254,14 +254,16 @@ int main(void)
 	// main loop
 	while (1)
 	{
+
 		// reset watchdog
 		SoftWatchdog = 0;
 		if (MenuActive)
 			Menu_Task();
 		ProcessUsbHostPort();
+		HandleMouse();
 		ProcessKeyboardLed();
 		HandleRepeats();
-		HandleMouse();
+		P0 ^= 0b00100000;
 		
 	}
 }

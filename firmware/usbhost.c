@@ -306,7 +306,7 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 	static int endpointNum;
 
 	static UINT16 len;
-
+				P0 |= 0b00100000;
 	s = 0;
 	interfaceNum = pUsbDevice->InterfaceNum;
 	for (i = 0; i < interfaceNum; i++)
@@ -321,23 +321,31 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 				ENDPOINT *pEndPoint = &pInterface->Endpoint[j];
 				if (pEndPoint->EndpointDir == ENDPOINT_IN)
 				{
+					P0 |= 0b00001000;
 					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 0);
+					P0 &= ~0b00001000;
 					if (s == ERR_SUCCESS)
 					{
+						
 						//TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
+						
 						ParseReport(pInterface, len * 8, ReceiveDataBuffer);
+						
+
 						if (KeyboardDebugOutput || FlashSettings->SerialDebugOutput) {
 							DEBUGOUT("I%hX L%X- ", i, len);
 							DumpHex(ReceiveDataBuffer, len);
 						}
+						
 					}
+					
 				}
 			}
 		}
 	}
-
+		P0 &= ~0b00100000;
 	return (s);
 }
 

@@ -63,6 +63,7 @@ uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, in
 void MouseClick(uint8_t Button);
 void MouseUnclick(uint8_t Button);
 void MouseSet(uint8_t Button, uint8_t value);
+void MouseSetAll(uint8_t Buttons);
 
 void Ps2MouseSetDelta(uint8_t DeltaX, uint8_t DeltaY, uint8_t DeltaZ);
 void Ps2MouseSetType(uint8_t Type);

@@ -16,6 +16,7 @@
 #include "settings.h"
 #include "system.h"
 #include "scancode.h"
+#include "usbdef.h"
 
 // repeatState -
 // if positive, we're delaying - count up to repeatDelay then go negative
@@ -171,24 +172,25 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 	{
 
 		// special case for if we can just copy the whole bitfield into the keyboard buffer
-		if (
-			(currSeg->OutputChannel == MAP_KEYBOARD)
-		)
+		if (currSeg->OutputChannel == MAP_KEYBOARD)
 		{
-			cnt = currSeg->startBit & 0x07;
-			endbit = currSeg->reportCount & 0x07;
-			tmpu = currSeg->OutputControl & 0x07;
-
-			if (cnt == 0 && endbit == 0 && tmpu == 0){
-				
+			if (!(currSeg->startBit & 0x07) && !(currSeg->reportCount & 0x07) && !(currSeg->OutputControl & 0x07)){
 				data += (currSeg->startBit >> 3);
-				
 				memcpy(report->KeyboardKeyMap + (currSeg->OutputControl >> 3), data, (currSeg->reportCount >> 3) );
-
 				report->keyboardUpdated = 1;
 				return;
 			}
 
+		}
+
+		// another special case where it's just mouse buttons
+		if (currSeg->OutputChannel == MAP_MOUSE && currSeg->OutputControl == 1)
+		{
+			data += (currSeg->startBit >> 3);
+			MouseSetAll(*data);
+			
+			return;
+			
 		}
 
 		endbit = currSeg->startBit + currSeg->reportCount;
@@ -249,8 +251,9 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 	}
 	else if (currSeg->InputType) //i.e. not MAP_TYPE_NONE
 	{
+
 		uint32_t value = SegExtractValue(currSeg, data);
-		
+
 		// if it's a signed integer we need to extend the sign
 		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
 			value = SIGNEX(value, currSeg->reportSize - 1);
@@ -392,7 +395,8 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 #endif
 	LEDDelayMs = 33;
 
-
+	
+	
 
 	if (interface->usesReports)
 	{
@@ -418,15 +422,24 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 	currSegNode = descReport->HidSegments;
 
-	// clear key map as all pressed keys should be present in report
-	memset(descReport->KeyboardKeyMap, 0, 32);
+	if (interface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD){
+		// clear key map as all pressed keys should be present in report
+		//only need to clear chars up to 0x94 (or byte 12)
+		memset(descReport->KeyboardKeyMap, 0, 12);
 
-	while (currSegNode != NULL)
-	{
-		processSeg((__xdata HID_SEG *)(currSegNode->data), descReport, report);
-		currSegNode = currSegNode->next;
+		//and also E0-EF
+		descReport->KeyboardKeyMap[28] = 0;
 	}
 
+	
+	
+	while (currSegNode != NULL)
+	{			
+		processSeg((__xdata HID_SEG *)(currSegNode->data), descReport, report);
+		currSegNode = currSegNode->next;
+				
+	}
+	
 	if(descReport->keyboardUpdated)
 	{
 		uint8_t *keybyte = descReport->KeyboardKeyMap;

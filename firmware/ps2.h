@@ -169,7 +169,7 @@ void PS2ProcessPort(uint8_t port);
 
 
 #define WritePS2Clock(port, val)    \
-	if (port == PORT_KEY) {       	\
+	if (0) {       	\
 			KEY_CLOCK = val;         \
 			if (FlashSettings->EnableAUXPS2) KEYAUX_CLOCK = val;		\
 	}	\
@@ -184,7 +184,7 @@ void PS2ProcessPort(uint8_t port);
 #if defined(BOARD_AXP) || defined(BOARD_MINI)
 //P4 dir should be 1 (output) when low, 0 (input) when high
 #define WritePS2Data(port, val)     \
-	if (port == PORT_KEY){        \
+	if (0){        \
 		KEY_DATA = val;            \
 		if (FlashSettings->EnableAUXPS2) KEYAUX_DATA = val;\
 	} \
@@ -200,7 +200,7 @@ void PS2ProcessPort(uint8_t port);
 	}
 #else
 #define WritePS2Data(port, val)     \
-	if (port == PORT_KEY){        \
+	if (0){        \
 			KEY_DATA = val;          \
 			if (FlashSettings->EnableAUXPS2) KEYAUX_DATA = val;}		\
 	else if (port == PORT_MOUSE){ \

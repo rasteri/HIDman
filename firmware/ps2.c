@@ -145,6 +145,7 @@ void PS2ProcessPort(uint8_t port)
 			break;
 
 		case S_IDLE:
+
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
 			if (!ReadPS2Clock(port))
 			{
@@ -179,6 +180,7 @@ void PS2ProcessPort(uint8_t port)
 						chonk = ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffStart];
 						ports[PORT_MOUSE].data = chonk[ports[PORT_MOUSE].bytenum + 1];
 						//DEBUG_OUT("Consuming %x %x %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd, chonk[0], ports[port].data);
+									
 						ports[PORT_MOUSE].state = S_SEND_CLOCK_HIGH;
 						//reEnter = 1;
 					}

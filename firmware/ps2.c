@@ -263,9 +263,9 @@ void PS2ProcessPort(uint8_t port)
 		// clock was already low when we tried to send it low, pause until it goes high again
 		case S_MIDSEND_PAUSE:
 			
-			// this seems to be required on PS/2-to-USB adapters
-			// god knows if it'll break other stuff
-			ports[port].bytenum = 0;
+			// I don't believe the entire chunk should be re-sent on a pause
+			// uncomment if this is incorrect
+			//ports[port].bytenum = 0;
 
 			// wait for host to release clock
 			if (ReadPS2Clock(port))
@@ -449,7 +449,9 @@ void PS2ProcessPort(uint8_t port)
 		// i.e. pause
 		case S_PAUSE:
 
-			ports[port].bytenum = 0; // will this work?
+			// I don't believe the entire chunk should be re-sent on a pause
+			// uncomment if this is incorrect
+			// ports[port].bytenum = 0;
 
 			// wait for host to release clock
 			if (ReadPS2Clock(port))

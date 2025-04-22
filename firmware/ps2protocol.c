@@ -120,7 +120,7 @@ void HandleReceived(uint8_t port)
 				SimonSaysSendKeyboard(KEY_ACK);
 				TypematicDefaults();
 				// Start a 500ms countdown then send BAT OK (happens in main.c)
-				BatCounter = 500;
+				KeyBatCounter = 500;
 				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 

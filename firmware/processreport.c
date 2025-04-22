@@ -103,7 +103,8 @@ void HandleRepeats(void)
 
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 
-uint16_t BatCounter = 0;
+uint16_t KeyBatCounter = 0;
+uint16_t MouseBatCounter = 0;
 
 uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 

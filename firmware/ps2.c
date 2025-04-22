@@ -139,11 +139,13 @@ void PS2ProcessPort(uint8_t port)
 		// PS2 bit-bang state machine
 		switch (ports[port].state)
 		{
-		case S_INIT:
+		// Poweron State, should probably be setting ports to default states, but poweron should have already done this
+		case S_INIT: 
 			ports[port].state = S_IDLE;
 			reEnter = 1;
 			break;
 
+		// We're not (currently) sending anything or recieving anything, check if we need to
 		case S_IDLE:
 
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
@@ -236,8 +238,8 @@ void PS2ProcessPort(uint8_t port)
 				// make sure clock/data are high so we can detect it if it goes low
 				WritePS2Data(port, 1);
 				WritePS2Clock(port, 1);
-				ports[port].state = S_INHIBIT;
-				/*// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
+
+				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
 				if (sb == 1)
 				{
 					ports[port].sendbit--; // we will need to resend so go back one bit
@@ -247,7 +249,7 @@ void PS2ProcessPort(uint8_t port)
 				else
 				{
 					ports[port].state = S_INHIBIT;
-				}*/
+				}
 			}
 			else
 			{
@@ -260,6 +262,10 @@ void PS2ProcessPort(uint8_t port)
 
 		// clock was already low when we tried to send it low, pause until it goes high again
 		case S_MIDSEND_PAUSE:
+			
+			// this seems to be required on PS/2-to-USB adapters
+			// god knows if it'll break other stuff
+			ports[port].bytenum = 0;
 
 			// wait for host to release clock
 			if (ReadPS2Clock(port))
@@ -439,7 +445,11 @@ void PS2ProcessPort(uint8_t port)
 			ports[port].state = S_IDLE;
 			break;
 
+		// we're currently idle and host has put clock low
+		// i.e. pause
 		case S_PAUSE:
+
+			ports[port].bytenum = 0; // will this work?
 
 			// wait for host to release clock
 			if (ReadPS2Clock(port))
@@ -460,6 +470,7 @@ void PS2ProcessPort(uint8_t port)
 			break;
 
 		case S_INHIBIT:
+
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
 			ports[port].sendbit = 0;
 			/*if (port == PORT_KEY)*/ ports[port].bytenum = 0; // different devices disagree on whether this applies to mice or not...

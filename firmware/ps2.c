@@ -65,7 +65,7 @@ bool ReadPS2Data(uint8_t port)
 
 }
 
-void SimonSaysSendKeyboard(const uint8_t *chunk)
+void SimonSaysSendKeyboard(__code uint8_t *chunk)
 {
 	if (chunk != NULL &&														 // chunk is valid
 		((ports[PORT_KEY].sendBuffEnd + 1)  & 0x3F) != ports[PORT_KEY].sendBuffStart) // not full
@@ -236,8 +236,8 @@ void PS2ProcessPort(uint8_t port)
 				// make sure clock/data are high so we can detect it if it goes low
 				WritePS2Data(port, 1);
 				WritePS2Clock(port, 1);
-
-				// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
+				ports[port].state = S_INHIBIT;
+				/*// if interrupted before we've even sent the first bit then just pause, no need to resend current chunk
 				if (sb == 1)
 				{
 					ports[port].sendbit--; // we will need to resend so go back one bit
@@ -247,7 +247,7 @@ void PS2ProcessPort(uint8_t port)
 				else
 				{
 					ports[port].state = S_INHIBIT;
-				}
+				}*/
 			}
 			else
 			{
@@ -462,7 +462,7 @@ void PS2ProcessPort(uint8_t port)
 		case S_INHIBIT:
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
 			ports[port].sendbit = 0;
-			if (port == PORT_KEY) ports[port].bytenum = 0;
+			/*if (port == PORT_KEY)*/ ports[port].bytenum = 0; // different devices disagree on whether this applies to mice or not...
 			ports[port].parity = 1;
 
 			// wait for host to release clock

@@ -306,7 +306,7 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 	static int endpointNum;
 
 	static UINT16 len;
-				P0 |= 0b00100000;
+				//P0 |= 0b00100000;
 	s = 0;
 	interfaceNum = pUsbDevice->InterfaceNum;
 	for (i = 0; i < interfaceNum; i++)
@@ -321,9 +321,9 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 				ENDPOINT *pEndPoint = &pInterface->Endpoint[j];
 				if (pEndPoint->EndpointDir == ENDPOINT_IN)
 				{
-					P0 |= 0b00001000;
+					//P3 ^= 0b10000000;
 					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 0);
-					P0 &= ~0b00001000;
+					
 					if (s == ERR_SUCCESS)
 					{
 						
@@ -345,7 +345,7 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 			}
 		}
 	}
-		P0 &= ~0b00100000;
+		//P0 &= ~0b00100000;
 	return (s);
 }
 

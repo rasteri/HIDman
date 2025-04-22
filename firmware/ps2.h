@@ -106,7 +106,7 @@ bool ReadPS2Data(unsigned char port);
 bool SendKeyboard(__code uint8_t *chunk);
 //void SendMouse();
 
-void SimonSaysSendKeyboard(const uint8_t *chunk);
+void SimonSaysSendKeyboard(__code uint8_t *chunk);
 void SimonSaysSendMouse(void);
 void PressKey(uint8_t currchar);
 void ReleaseKey(uint8_t currchar);
@@ -169,7 +169,7 @@ void PS2ProcessPort(uint8_t port);
 
 
 #define WritePS2Clock(port, val)    \
-	if (0) {       	\
+	if (port == PORT_KEY) {       	\
 			KEY_CLOCK = val;         \
 			if (FlashSettings->EnableAUXPS2) KEYAUX_CLOCK = val;		\
 	}	\
@@ -184,7 +184,7 @@ void PS2ProcessPort(uint8_t port);
 #if defined(BOARD_AXP) || defined(BOARD_MINI)
 //P4 dir should be 1 (output) when low, 0 (input) when high
 #define WritePS2Data(port, val)     \
-	if (0){        \
+	if (port == PORT_KEY){        \
 		KEY_DATA = val;            \
 		if (FlashSettings->EnableAUXPS2) KEYAUX_DATA = val;\
 	} \
@@ -200,7 +200,7 @@ void PS2ProcessPort(uint8_t port);
 	}
 #else
 #define WritePS2Data(port, val)     \
-	if (0){        \
+	if (port == PORT_KEY){        \
 			KEY_DATA = val;          \
 			if (FlashSettings->EnableAUXPS2) KEYAUX_DATA = val;}		\
 	else if (port == PORT_MOUSE){ \

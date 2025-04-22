@@ -263,7 +263,7 @@ int main(void)
 		HandleMouse();
 		ProcessKeyboardLed();
 		HandleRepeats();
-		P0 ^= 0b00100000;
+		//P0 ^= 0b00100000;
 		
 	}
 }

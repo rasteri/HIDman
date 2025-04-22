@@ -39,7 +39,7 @@ void InitSettings(bool SafeMode) {
         HMSettings.Magic = 0x54178008;
 
         //if (!SafeMode) HMSettings.Intellimouse = 1;
-        HMSettings.Intellimouse = 1;
+        //HMSettings.Intellimouse = 1;
         //HMSettings.EnableAUXPS2 = 1;
         //HMSettings.SerialDebugOutput = 1;
         if (SyncSettings()) {

@@ -38,15 +38,16 @@ void InitMice(void)
 __xdata uint8_t updates = 0;
 void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
 {
-	
-    for (int x = 0; x < 2; x++)
-    {
-        MOUSE *m = &OutputMice[x];
-        m->DeltaX += DeltaX;
-        m->DeltaY += DeltaY;
-        m->DeltaZ += DeltaZ;
-        m->NeedsUpdating = 1;
-    }
+	if (DeltaX || DeltaY || DeltaZ) {
+		for (int x = 0; x < 2; x++)
+		{
+			MOUSE *m = &OutputMice[x];
+			m->DeltaX += DeltaX;
+			m->DeltaY += DeltaY;
+			m->DeltaZ += DeltaZ;
+			m->NeedsUpdating = 1;
+		}
+	}
 }
 
 
@@ -146,10 +147,16 @@ void MouseSet(uint8_t Button, uint8_t value)
 
 void MouseSetAll(uint8_t Buttons)
 {
-	OutputMice[0].Buttons = Buttons;
-	OutputMice[1].Buttons = Buttons;
-	OutputMice[0].NeedsUpdating = 1;
-	OutputMice[1].NeedsUpdating = 1;
+	if (OutputMice[0].Buttons != Buttons) 
+	{
+		OutputMice[0].Buttons = Buttons;
+		OutputMice[0].NeedsUpdating = 1;
+	}
+	if (OutputMice[1].Buttons != Buttons) 
+	{
+		OutputMice[1].Buttons = Buttons;
+		OutputMice[1].NeedsUpdating = 1;
+	}
 }
 
 void Ps2MouseSetDelta(uint8_t DeltaX, uint8_t DeltaY, uint8_t DeltaZ)

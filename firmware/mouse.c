@@ -77,11 +77,11 @@ uint8_t GetMouseUpdate(uint8_t MouseNo, int16_t Min, int16_t Max, int16_t *X, in
 {
     MOUSE *m = &OutputMice[MouseNo];
 	
-	/*if (MouseNo == MOUSE_PORT_PS2 && m->Ps2DataReporting == MOUSE_PS2_REPORTING_OFF)
+	if (MouseNo == MOUSE_PORT_PS2 && m->Ps2DataReporting == MOUSE_PS2_REPORTING_OFF)
 	{
 		// ps2 mouse and data reporting is off - no matter if update is needed or not, we do not give one
 		return 0;
-	}*/
+	}
     
 	if (m->NeedsUpdating)
     {

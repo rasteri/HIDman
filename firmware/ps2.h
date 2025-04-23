@@ -9,8 +9,8 @@
 
 // increase to reduce maximum rate bytes can be sent
 // units are in 60khz
-#define PS2_RATE_LIMIT 0
-#define XT_RATE_LIMIT 1000
+#define PS2_RATE_LIMIT 60
+#define XT_RATE_LIMIT 120 // need to make menu system asynchronous for this low value to work
 
 void InitPS2Ports(void);
 

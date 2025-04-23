@@ -79,7 +79,7 @@ __xdata char buf[100];
 
 bool SendKeyboard(__code uint8_t *chunk)
 {
-	// reset watchdog timer, this routine blocks. It shouldn't really
+	// reset watchdog timer, most calls of this routine block. They shouldn't really
 	SoftWatchdog = 0;
 	// chunk is null, pretend we sent it
 	if (chunk == NULL)

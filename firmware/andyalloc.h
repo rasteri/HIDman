@@ -3,7 +3,7 @@
 
 #include "defs.h"
 
-#define MEMPOOLMAXSIZE 3600
+#define MEMPOOLMAXSIZE 3200
 void __xdata *andyalloc(size_t size);
 void andyclearmem(void);
 

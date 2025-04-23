@@ -35,7 +35,89 @@ __xdata bool MenuActive = 0;
 
 __xdata uint8_t sendBufferState = SEND_STATE_IDLE;
 
+__xdata char * __xdata currchar;
 
+bool Sendbuffer_Task()
+{
+    // keep re-entering letters if there is space in the buffer
+    bool reEnter = 0;
+    do
+    {
+        reEnter = 0;
+        switch (sendBufferState)
+        {
+        case SEND_STATE_IDLE:
+            if (*currchar)
+            {
+                sendBufferState = SEND_STATE_SHIFTON;
+                reEnter = 1;
+            }
+            //printf("I");
+            break;
+        case SEND_STATE_SHIFTON:
+            if (*currchar)
+            {
+                if (*currchar >= 0x41 && *currchar <= 0x5A)
+                {
+                    if (SendKeyboard((FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
+                    {
+                        sendBufferState = SEND_STATE_MAKE;
+                        reEnter = 1;
+                    }
+                }
+                else
+                {
+                    sendBufferState = SEND_STATE_MAKE;
+                    reEnter = 1;
+                }
+            }
+            else
+            {
+                sendBufferState = SEND_STATE_IDLE;
+            }
+            //printf("S");
+            break;
+
+        case SEND_STATE_MAKE:
+            if(SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[ASCIItoHID[*currchar]] : HIDtoSET1_Make[ASCIItoHID[*currchar]]))
+            {
+                sendBufferState = SEND_STATE_BREAK;
+                reEnter = 1;
+            }
+            //printf("M");
+            break;
+
+        case SEND_STATE_BREAK:
+            if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[ASCIItoHID[*currchar]] : HIDtoSET1_Break[ASCIItoHID[*currchar]]))
+            {
+                sendBufferState = SEND_STATE_SHIFTOFF;
+                reEnter = 1;
+            }
+            //printf("B");
+            break;
+
+        case SEND_STATE_SHIFTOFF:
+            if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
+            {
+                currchar++;
+                sendBufferState = SEND_STATE_SHIFTON;
+                reEnter = 1;
+            }
+            //printf("s");
+            break;
+        }
+    } while(reEnter);
+}
+
+__xdata char heh[] = 
+    "\n\n--\nAdvanced\n\n"
+    "1. Factory Reset\n"
+    "2. Log HID Data\n"
+    "3. PS2 mouse status\n"
+    "4. Serial Log - Yes\n"
+    "5. PS2 AUX Output - Yes\n"
+    "6. Memory Test\n"
+    "\nESC main menu\n";
 
 void SendKeyboardBuffer(void)
 {
@@ -98,8 +180,20 @@ void YesNo(bool x)
     }
 }
 
+uint8_t firsttime = 1;
+
+
+
 void Menu_Task(void)
 {
+    if (firsttime){
+        currchar = heh;
+        firsttime = 0;
+    }
+    
+    Sendbuffer_Task();
+    return;
+
     switch (menuState)
     {
         case MENU_STATE_INIT:

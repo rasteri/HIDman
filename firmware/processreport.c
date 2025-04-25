@@ -396,9 +396,6 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 #endif
 	LEDDelayMs = 33;
 
-	
-	
-
 	if (interface->usesReports)
 	{
 		// first byte of report will be the report number
@@ -425,15 +422,13 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 	if (interface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD){
 		// clear key map as all pressed keys should be present in report
-		//only need to clear chars up to 0x94 (or byte 12)
-		memset(descReport->KeyboardKeyMap, 0, 12);
+		//only need to clear chars up to 0x94 (or byte 0x12)
+		memset(descReport->KeyboardKeyMap, 0, 0x13);
 
 		//and also E0-EF
 		descReport->KeyboardKeyMap[28] = 0;
 	}
 
-	
-	
 	while (currSegNode != NULL)
 	{			
 		processSeg((__xdata HID_SEG *)(currSegNode->data), descReport, report);
@@ -452,12 +447,13 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 			uint8_t xorred = *keybyte ^ descReport->oldKeyboardKeyMap[d];
 
 			if (xorred) {
-
+				
 				for (uint8_t c = 0; c < 8; c++)
 				{
 					if (xorred & (1 << c)) 
 					{
 						uint8_t hidcode = (d << 3) | c;
+						
 
 						if (*keybyte & (1 << c)) // set in current but not prev
 						{

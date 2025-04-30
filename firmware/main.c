@@ -260,8 +260,9 @@ int main(void)
 	DEBUGOUT("ok\n");
 
 	// after 750ms output a BAT OK code on keyboard and mouse
-	MouseBatCounter = 600;
-	KeyBatCounter = 600;
+	// there's a 500ms delay earlier so do 250 now
+	MouseBatCounter = 250;
+	KeyBatCounter = 250;
 
 	// main loop
 	while (1)

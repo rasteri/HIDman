@@ -475,7 +475,7 @@ void PS2ProcessPort(uint8_t port)
 
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
 			ports[port].sendbit = 0;
-			/*if (port == PORT_KEY)*/ ports[port].bytenum = 0; // different devices disagree on whether this applies to mice or not...
+			if (port == PORT_KEY) ports[port].bytenum = 0; // different devices disagree on whether this applies to mice or not...
 			ports[port].parity = 1;
 
 			// wait for host to release clock

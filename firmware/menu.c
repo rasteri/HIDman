@@ -23,6 +23,8 @@
 #include "scancode.h"
 
 __xdata char SendBuffer[255];
+__xdata char KeyboardPrintfBuffer[80];
+
 
 __xdata bool KeyboardDebugOutput = 0;
 __xdata bool MenuActive = 0;
@@ -97,16 +99,26 @@ bool Sendbuffer_Task()
             break;
 
         case SEND_STATE_SHIFTOFF:
-            if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
+            if (*currchar >= 0x41 && *currchar <= 0x5A)
             {
+                if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
+                {
+                    currchar++;
+                    sendBufferState = SEND_STATE_SHIFTON;
+                    reEnter = 1;
+                }
+            }
+            else {
                 currchar++;
                 sendBufferState = SEND_STATE_SHIFTON;
                 reEnter = 1;
             }
+
+
             //printf("s");
             break;
         }
-    } while(reEnter);
+    } while(0);//(reEnter);
 }
 
 __xdata char heh[] = 
@@ -240,13 +252,13 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_KEYBOARD){
                 SendBuffer[0] = 0;
                 SendKeyboardString("\n\Keyboard\n\n");
-                SendKeyboardString("1. Advanced USB - ");
+                SendKeyboardString("1. Adv. USB - ");
                 YesNo(FlashSettings->KeyboardReportMode);
 
                 SendKeyboardString("2. 83 Key Mode - ");
                 YesNo(FlashSettings->XT83Keys);
 
-                SendKeyboardString("\nESC. Main Menu\n");
+                SendKeyboardString("\nESC Main Menu\n");
                 currchar = SendBuffer;
                 lastMenuState = menuState;
             }
@@ -262,13 +274,13 @@ void Menu_Task(void)
             {
                 SendBuffer[0] = 0;
                 SendKeyboardString("\n\Mouse\n\n");
-                SendKeyboardString("1. Advanced USB - ");
+                SendKeyboardString("1. Adv. USB - ");
                 YesNo(FlashSettings->MouseReportMode);
 
                 SendKeyboardString("2. Intellimouse - ");
                 YesNo(FlashSettings->Intellimouse);
 
-                SendKeyboardString("\nESC. Main Menu\n");
+                SendKeyboardString("\nESC Main Menu\n");
                 currchar = SendBuffer;
                 lastMenuState = menuState;
             }
@@ -306,7 +318,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_DEBUG)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n\n--\nAdvanced\n\n");
+                SendKeyboardString("\nAdvanced\n\n");
                 SendKeyboardString("1. Factory Reset\n");
                 SendKeyboardString("2. Log HID Data\n");
                 SendKeyboardString("3. PS2 mouse status\n");
@@ -336,21 +348,22 @@ void Menu_Task(void)
                     menuState = MENU_STATE_DUMPING;
                     break;
 
-                /*case KEY_3:
-                    SendKeyboardString("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
-                    SendKeyboardString("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
-                    SendKeyboardString("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
-                    SendKeyboardString("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
-                    SendKeyboardString("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
-                    SendKeyboardString("\nCommand buffer\n");
+                case KEY_3:
+                    SendBuffer[0] = 0;
+                    KeyboardPrintf("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
+                    KeyboardPrintf("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
+                    KeyboardPrintf("Resolution     %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Resolution);
+                    KeyboardPrintf("Scaling        %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Scaling);
+                    KeyboardPrintf("Data reporting %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2DataReporting);
+                    KeyboardPrintf("\nCommand buffer\n");
                     for (UINT8 i = 0; i < MOUSE_BUFFER_SIZE; i++)
                     {
                         if (!(i & 0x000F))
-                            SendKeyboardString("\n");
-                        SendKeyboardString("%02X ", MouseBuffer[i]);
+                            KeyboardPrintf("\n");
+                        KeyboardPrintf("%02X ", MouseBuffer[i]);
                     }
-                    menuState = MENU_STATE_INIT;
-                    break;*/
+                    currchar = SendBuffer;
+                    break;
 
                 case KEY_4:     HMSettings.SerialDebugOutput ^= 1;  SyncSettings(); lastMenuState = 0; break;
                 case KEY_5:     HMSettings.EnableAUXPS2 ^= 1;       SyncSettings(); lastMenuState = 0; break;

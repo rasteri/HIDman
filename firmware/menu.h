@@ -27,7 +27,7 @@ void inputProcess(void);
 //#define DEBUGOUT(...) 
 
 #define SendKeyboardString(bum) {strcat(SendBuffer, bum);}
-
+#define KeyboardPrintf(...) {sprintf(KeyboardPrintfBuffer, __VA_ARGS__);strcat(SendBuffer, KeyboardPrintfBuffer);}
 
 extern __xdata bool KeyboardDebugOutput;
 

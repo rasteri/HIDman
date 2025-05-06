@@ -90,6 +90,10 @@ void EveryMillisecond(void) {
 		}
 	}
 
+	if (MenuRateLimit) {
+		MenuRateLimit--;
+	}
+
 
 	// Turn current LED on if we haven't seen any activity in a while
 	if (LEDDelayMs) {

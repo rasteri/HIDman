@@ -39,6 +39,9 @@ typedef struct Settings {
     // What type of computer the keyboard is plugged into (i.e. PS2 or XT)
     uint8_t KeyboardMode;
 
+    // Whether or not the menu should be rate limited
+    uint8_t MenuRateLimit;
+
 } Settings;
 
 #define FlashSettings ((__code Settings*)0xF000)

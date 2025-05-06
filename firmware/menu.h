@@ -9,7 +9,7 @@
 #define MENU_STATE_KEYBOARD 3
 #define MENU_STATE_MOUSE 4
 #define MENU_STATE_GAME 5
-#define MENU_STATE_DEBUG 6
+#define MENU_STATE_ADVANCED 6
 
 void Menu_Press_Key(uint8_t key);
 extern __xdata bool MenuActive;
@@ -23,6 +23,8 @@ void SendKeyboardBuffer(void);
 void Menu_Task(void);
 extern __xdata uint8_t menuState;
 void inputProcess(void);
+
+extern uint16_t MenuRateLimit;
 
 //#define DEBUGOUT(...) 
 

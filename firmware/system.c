@@ -11,9 +11,6 @@ __xdata volatile uint16_t SoftWatchdog = 0;
 FunctionReference runBootloader = (FunctionReference)0xF400;
 __xdata volatile bool OutputsEnabled = 0;
 
-
-
-
 int putcharserial(int c)
 {
 	while (!TI)
@@ -23,7 +20,10 @@ int putcharserial(int c)
 	return c;
 }
 
+//#define IntDelay(ms) {MenuRateLimit = ms; while(MenuRateLimit){ SoftWatchdog = 0; P3 ^= 0x80; } }
 
+//#define KeyDelay() { mDelaymS(1); }
+#define KeyDelay() 
 /**
  * stdio printf directed to UART0 and/or keyboard port using putchar and getchar
  */
@@ -31,7 +31,7 @@ int putcharserial(int c)
 int putchar(int c)
 {
 	#if !defined(BOARD_MICRO)
-	if (FlashSettings->SerialDebugOutput){
+	if (FlashSettings->SerialDebugOutput) {
 		while (!TI)
 			;
 		TI = 0;
@@ -42,22 +42,30 @@ int putchar(int c)
 	if (KeyboardDebugOutput)
 	{
 		// capitals, hold shift first
-		if (c >= 0x41 && c <= 0x5A)
+		if (c >= 0x41 && c <= 0x5A){
 			while (!SendKeyboard(
 				(FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
 				;
+			KeyDelay();
+		}
+		
 
 		// press the key
 		PressKey(c);
 
+		KeyDelay();
+
 		// release the key
 		ReleaseKey(c);
+
+		KeyDelay();
 
 		// release shift
 		if (c >= 0x41 && c <= 0x5A)
 		{
 			while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
 				;
+			KeyDelay();
 		}
 	}
 	return c;

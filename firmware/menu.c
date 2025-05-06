@@ -36,100 +36,88 @@ __xdata bool MenuActive = 0;
 #define SEND_STATE_SHIFTOFF 4
 
 __xdata uint8_t sendBufferState = SEND_STATE_IDLE;
+__xdata uint8_t oldSendBufferState = SEND_STATE_IDLE;
 
  char *currchar;
 
-bool Sendbuffer_Task()
+uint16_t MenuRateLimit = 0;
+
+
+void Sendbuffer_Task()
 {
-    // keep re-entering letters if there is space in the buffer
-    bool reEnter = 0;
-    do
+    // currently limiting, don't send anything yet
+    if (MenuRateLimit)
+        return;
+
+    oldSendBufferState = sendBufferState;
+
+    switch (sendBufferState)
     {
-        reEnter = 0;
-        switch (sendBufferState)
+    case SEND_STATE_IDLE:
+        if (*currchar)
         {
-        case SEND_STATE_IDLE:
-            if (*currchar)
+            sendBufferState = SEND_STATE_SHIFTON;
+        }
+        break;
+    case SEND_STATE_SHIFTON:
+        if (*currchar)
+        {
+            if (*currchar >= 0x41 && *currchar <= 0x5A)
             {
-                sendBufferState = SEND_STATE_SHIFTON;
-                reEnter = 1;
-            }
-            //printf("I");
-            break;
-        case SEND_STATE_SHIFTON:
-            if (*currchar)
-            {
-                if (*currchar >= 0x41 && *currchar <= 0x5A)
-                {
-                    if (SendKeyboard((FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
-                    {
-                        sendBufferState = SEND_STATE_MAKE;
-                        reEnter = 1;
-                    }
-                }
-                else
+                if (SendKeyboard((FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
                 {
                     sendBufferState = SEND_STATE_MAKE;
-                    reEnter = 1;
                 }
             }
             else
             {
-                sendBufferState = SEND_STATE_IDLE;
+                sendBufferState = SEND_STATE_MAKE;
             }
-            //printf("S");
-            break;
+        }
+        else
+        {
+            sendBufferState = SEND_STATE_IDLE;
+        }
+        break;
 
-        case SEND_STATE_MAKE:
-            if(SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[ASCIItoHID[*currchar]] : HIDtoSET1_Make[ASCIItoHID[*currchar]]))
-            {
-                sendBufferState = SEND_STATE_BREAK;
-                reEnter = 1;
-            }
-            //printf("M");
-            break;
+    case SEND_STATE_MAKE:
+        if(SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[ASCIItoHID[*currchar]] : HIDtoSET1_Make[ASCIItoHID[*currchar]]))
+        {
+            sendBufferState = SEND_STATE_BREAK;
+        }
+        break;
 
-        case SEND_STATE_BREAK:
-            if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[ASCIItoHID[*currchar]] : HIDtoSET1_Break[ASCIItoHID[*currchar]]))
-            {
-                sendBufferState = SEND_STATE_SHIFTOFF;
-                reEnter = 1;
-            }
-            //printf("B");
-            break;
+    case SEND_STATE_BREAK:
+        if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[ASCIItoHID[*currchar]] : HIDtoSET1_Break[ASCIItoHID[*currchar]]))
+        {
+            sendBufferState = SEND_STATE_SHIFTOFF;
+        }
+        break;
 
-        case SEND_STATE_SHIFTOFF:
-            if (*currchar >= 0x41 && *currchar <= 0x5A)
+    case SEND_STATE_SHIFTOFF:
+        if (*currchar >= 0x41 && *currchar <= 0x5A)
+        {
+            if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
             {
-                if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
-                {
-                    currchar++;
-                    sendBufferState = SEND_STATE_SHIFTON;
-                    reEnter = 1;
-                }
-            }
-            else {
                 currchar++;
                 sendBufferState = SEND_STATE_SHIFTON;
-                reEnter = 1;
             }
-
-
-            //printf("s");
-            break;
         }
-    } while(0);//(reEnter);
-}
+        else {
+            currchar++;
+            sendBufferState = SEND_STATE_SHIFTON;
+        }
 
-__xdata char heh[] = 
-    "\n\n--\nAdvanced\n\n"
-    "1. Factory Reset\n"
-    "2. Log HID Data\n"
-    "3. PS2 mouse status\n"
-    "4. Serial Log - Yes\n"
-    "5. PS2 AUX Output - Yes\n"
-    "6. Memory Test\n"
-    "\nESC main menu\n";
+        break;
+    }
+
+    if (
+        (oldSendBufferState != sendBufferState) &&
+        (FlashSettings->MenuRateLimit || FlashSettings->KeyboardMode == MODE_XT)
+        )
+        MenuRateLimit = 25;
+    
+}
 
 void SendKeyboardBuffer(void)
 {
@@ -219,12 +207,12 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_MAIN)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n\nHIDman v1.1.5h\n\n");
+                SendKeyboardString("\n--\nHIDman v1.1.5h\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");
                 SendKeyboardString("\n4. Adv.\n\n");
-                SendKeyboardString("ESC to exit menu\n\n");
+                SendKeyboardString("ESC. Exit\n\n");
                 currchar = SendBuffer;
                 lastMenuState = menuState;
             }
@@ -234,7 +222,7 @@ void Menu_Task(void)
                 case KEY_1:     menuState = MENU_STATE_KEYBOARD; break;
                 case KEY_2:     menuState = MENU_STATE_MOUSE; break;
                 case KEY_3:     menuState = MENU_STATE_GAME; break;
-                case KEY_4:     menuState = MENU_STATE_DEBUG; break;
+                case KEY_4:     menuState = MENU_STATE_ADVANCED; break;
 
                 case KEY_ESC:
                     SendBuffer[0] = 0;
@@ -251,7 +239,7 @@ void Menu_Task(void)
         case MENU_STATE_KEYBOARD:
             if (lastMenuState != MENU_STATE_KEYBOARD){
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n\Keyboard\n\n");
+                SendKeyboardString("\n--\nKeyboard\n\n");
                 SendKeyboardString("1. Adv. USB - ");
                 YesNo(FlashSettings->KeyboardReportMode);
 
@@ -273,7 +261,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_MOUSE)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n\Mouse\n\n");
+                SendKeyboardString("\n--\nMouse\n\n");
                 SendKeyboardString("1. Adv. USB - ");
                 YesNo(FlashSettings->MouseReportMode);
 
@@ -297,7 +285,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_GAME)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n\Game Controllers\n\n");
+                SendKeyboardString("\n--\nGame Controllers\n\n");
                 SendKeyboardString("1. Use as Mouse - ");
                 YesNo(FlashSettings->GameControllerAsMouse);
 
@@ -314,11 +302,11 @@ void Menu_Task(void)
             }
             break;
 
-        case MENU_STATE_DEBUG:
-            if (lastMenuState != MENU_STATE_DEBUG)
+        case MENU_STATE_ADVANCED:
+            if (lastMenuState != MENU_STATE_ADVANCED)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\nAdvanced\n\n");
+                SendKeyboardString("\n--\nAdvanced\n\n");
                 SendKeyboardString("1. Factory Reset\n");
                 SendKeyboardString("2. Log HID Data\n");
                 SendKeyboardString("3. PS2 mouse status\n");
@@ -326,6 +314,8 @@ void Menu_Task(void)
                 YesNo(FlashSettings->SerialDebugOutput);
                 SendKeyboardString("5. PS2 AUX Output - ");
                 YesNo(FlashSettings->EnableAUXPS2);
+                SendKeyboardString("6. Menu Rate Limit - ");
+                YesNo(FlashSettings->MenuRateLimit);
 
                 //SendKeyboardString("5. Memory Test\n\n");
                 SendKeyboardString("\nESC main menu\n");
@@ -341,9 +331,9 @@ void Menu_Task(void)
                     break;
 
                 case KEY_2:
-                    SendBuffer[0] = 0;
+                    /*SendBuffer[0] = 0;
                     SendKeyboardString("Logging. Press ESC to stop, R to redetect...\n");
-                    currchar = SendBuffer;
+                    currchar = SendBuffer;*/
                     KeyboardDebugOutput = 1;
                     menuState = MENU_STATE_DUMPING;
                     break;
@@ -367,6 +357,7 @@ void Menu_Task(void)
 
                 case KEY_4:     HMSettings.SerialDebugOutput ^= 1;  SyncSettings(); lastMenuState = 0; break;
                 case KEY_5:     HMSettings.EnableAUXPS2 ^= 1;       SyncSettings(); lastMenuState = 0; break;
+                case KEY_6:     HMSettings.MenuRateLimit ^= 1;       SyncSettings(); lastMenuState = 0; break;
 
                 case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
 

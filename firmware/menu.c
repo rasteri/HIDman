@@ -119,6 +119,8 @@ void Sendbuffer_Task()
     
 }
 
+__xdata bool MenuExiting = 0;
+
 void SendKeyboardBuffer(void)
 {
     uint8_t currchar;
@@ -217,6 +219,14 @@ void Menu_Task(void)
                 lastMenuState = menuState;
             }
 
+            // if we've finished printing "Goodbye", disable menu
+            if (sendBufferState == SEND_STATE_IDLE && MenuExiting){
+                menuState = MENU_STATE_INIT;
+                MenuActive = 0;
+                lastMenuState = 0;
+                MenuExiting = 0;
+            }
+
             switch (menuKey)
             {
                 case KEY_1:     menuState = MENU_STATE_KEYBOARD; break;
@@ -228,11 +238,10 @@ void Menu_Task(void)
                     SendBuffer[0] = 0;
                     SendKeyboardString("Goodbye\n");
                     currchar = SendBuffer;
-                    menuState = MENU_STATE_INIT;
-                    MenuActive = 0;
-                    lastMenuState = 0;
+                    MenuExiting = 1;
                     break;
             }
+            
             
             break;
 
@@ -331,11 +340,11 @@ void Menu_Task(void)
                     break;
 
                 case KEY_2:
-                    /*SendBuffer[0] = 0;
-                    SendKeyboardString("Logging. Press ESC to stop, R to redetect...\n");
-                    currchar = SendBuffer;*/
+                    SendBuffer[0] = 0;
+                    SendKeyboardString("ESC to stop, R to redetect\n");
+                    currchar = SendBuffer;
                     KeyboardDebugOutput = 1;
-                    menuState = MENU_STATE_DUMPING;
+
                     break;
 
                 case KEY_3:

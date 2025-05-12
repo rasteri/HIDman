@@ -209,7 +209,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_MAIN)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n--\nHIDman v1.1.5h\n\n");
+                SendKeyboardString("\n--\nHIDman v1.1.5i\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");

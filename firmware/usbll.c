@@ -107,23 +107,7 @@ void DisableRootHubPort(UINT8 RootHubIndex)
 	}
 }
 
-void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
-{
-	pUsbHubPort->HubPortStatus = PORT_DEVICE_NONE;
-	pUsbHubPort->DeviceClass = USB_DEV_CLASS_RESERVED;
-	pUsbHubPort->MaxPacketSize0 = DEFAULT_ENDP0_SIZE;
 
-	pUsbHubPort->VendorID = 0x0000;
-	pUsbHubPort->ProductID = 0x0000;
-	pUsbHubPort->bcdDevice = 0x0000;
-
-	pUsbHubPort->DeviceAddress = 0;
-	pUsbHubPort->DeviceSpeed = FULL_SPEED;
-	pUsbHubPort->InterfaceNum = 0;
-	pUsbHubPort->Interfaces = NULL;
-
-	pUsbHubPort->HubPortNum = 0;
-}
 
 void InitRootHubPortData(UINT8 rootHubIndex)
 {
@@ -224,7 +208,118 @@ void InitUsbHost(void)
 	USB_INT_EN = bUIE_TRANSFER | bUIE_DETECT;
 }
 
-UINT8 USBHostTransact(UINT8 endp_pid, UINT8 tog, UINT16 timeout)
+UINT8   USBHostTransact( UINT8 endp_pid, UINT8 tog, UINT16 timeout )
+{
+    UINT8   TransRetry;
+    UINT8   s, r;
+    UINT16  i;
+    UH_RX_CTRL = tog;
+    UH_TX_CTRL =tog ;
+    TransRetry = 0;
+    do
+    {
+        UH_EP_PID = endp_pid;                                    // 指定令牌PID和目的端点号
+        UIF_TRANSFER = 0;                                        // 允许传输
+
+        for ( i = WAIT_USB_TOUT_200US; i != 0 && UIF_TRANSFER == 0; i -- )
+        {
+            ;
+        }
+        UH_EP_PID = 0x00;                                        // 停止USB传输
+
+        if ( UIF_TRANSFER == 0 )
+        {
+            return( ERR_USB_UNKNOWN );
+        }
+
+        if ( UIF_TRANSFER )                                      // 传输完成
+        {
+            if ( U_TOG_OK )
+            {
+                return( ERR_SUCCESS );
+            }
+            r = USB_INT_ST & MASK_UIS_H_RES;                     // USB设备应答状态
+            if ( r == USB_PID_STALL )
+            {
+                //printf("USB_PID_STALL\n");
+                return( r | ERR_USB_TRANSFER );
+            }
+            if ( r == USB_PID_NAK )
+            {
+                if ( timeout == 0 )
+                {
+                    //printf("USB_PID_NAK timeout\n");
+                    return( r | ERR_USB_TRANSFER );
+                }
+                if ( timeout < 0xFFFF )
+                {
+                    timeout --;
+                }
+                -- TransRetry;
+            }
+            else switch ( endp_pid >> 4 )
+                {
+                case USB_PID_SETUP:
+                case USB_PID_OUT:
+                    if ( U_TOG_OK )
+                    {
+                        return( ERR_SUCCESS );
+                    }
+                    if ( r == USB_PID_ACK )
+                    {
+                        return( ERR_SUCCESS );
+                    }
+                    if ( r == USB_PID_STALL || r == USB_PID_NAK )
+                    {
+                        //printf("USB PID OUT : USB_PID_STALL or USB_PID_NAK timeout %x\n", r);
+                        return( r | ERR_USB_TRANSFER );
+                    }
+                    if ( r )
+                    {
+                        //printf("USB PID OUT : ERR_USB_TRANSFER unexpected answer %x\n", r);
+                        return( r | ERR_USB_TRANSFER );          // Not a timeout/error, unexpected answer
+                    }
+                    break;                                       // 超时重试
+                case USB_PID_IN:
+                    if ( U_TOG_OK )
+                    {
+                        return( ERR_SUCCESS );
+                    }
+                    if ( tog ? r == USB_PID_DATA1 : r == USB_PID_DATA0 )
+                    {
+                        return( ERR_SUCCESS );
+                    }
+                    if ( r == USB_PID_STALL || r == USB_PID_NAK )
+                    {
+                        //printf("USB_PID_IN : USB_PID_STALL or USB_PID_NAK%x\n", r);
+                        return( r | ERR_USB_TRANSFER );
+                    }
+                    if ( r == USB_PID_DATA0 && r == USB_PID_DATA1 )// 不同步则需丢弃后重试
+                    {
+                    }                                            // 不同步重试
+                    else if ( r )
+                    {
+                        //printf("USB_PID_IN : ERR_USB_TRANSFER unexpected answer %x\n", r);
+                        return( r | ERR_USB_TRANSFER );          // 不是超时/出错,意外应答
+                    }
+                    break;                                       // 超时重试
+                default:
+                    //printf("unknown err\n");
+                    return( ERR_USB_UNKNOWN );                   // 不可能的情况
+                    break;
+                }
+        }
+        else                                                     // 其它中断,不应该发生的情况
+        {
+            USB_INT_FG = 0xFF;                                   //清中断标志
+        }
+        mDelayuS( 15 );
+    }
+    while ( ++ TransRetry < 3 );
+    return( ERR_USB_TRANSFER );                                  // 应答超时
+}
+
+/*UINT8 USBHostTransact(UINT8 endp_pid, UINT8 tog, UINT16 timeout)
 {
 	UINT8 TransRetry;
 	UINT8 r;
@@ -345,7 +440,7 @@ UINT8 USBHostTransact(UINT8 endp_pid, UINT8 tog, UINT16 timeout)
 	TRACE1("quit at line %d\r\n", (UINT16)__LINE__);
 
 	return (ERR_USB_TRANSFER); // Ӧ��ʱ
-}
+}*/
 
 UINT8 HostCtrlTransfer(USB_SETUP_REQ *pSetupReq, UINT8 MaxPacketSize0, PUINT8 DataBuf, PUINT16 RetLen)
 {

@@ -76,10 +76,22 @@ void EveryMillisecond(void) {
 
 	// Deal with BAT (which requires a delay)
 
-	if (BatCounter){
-		BatCounter--;
-		if (!BatCounter)
+	if (KeyBatCounter){
+		KeyBatCounter--;
+		if (!KeyBatCounter)
 			SimonSaysSendKeyboard(KEY_BATCOMPLETE);
+	}
+
+	if (MouseBatCounter){
+		MouseBatCounter--;
+		if (!MouseBatCounter) {
+			SimonSaysSendMouse1(0xAA); // POST OK
+			SimonSaysSendMouse1(0x00); // Squeek Squeek I'm a mouse
+		}
+	}
+
+	if (MenuRateLimit) {
+		MenuRateLimit--;
 	}
 
 
@@ -251,17 +263,24 @@ int main(void)
 
 	DEBUGOUT("ok\n");
 
+	// after 750ms output a BAT OK code on keyboard and mouse
+	// there's a 500ms delay earlier so do 250 now
+	MouseBatCounter = 250;
+	KeyBatCounter = 250;
+
 	// main loop
 	while (1)
 	{
+
 		// reset watchdog
 		SoftWatchdog = 0;
 		if (MenuActive)
 			Menu_Task();
 		ProcessUsbHostPort();
+		HandleMouse();
 		ProcessKeyboardLed();
 		HandleRepeats();
-		HandleMouse();
+		//P0 ^= 0b00100000;
 		
 	}
 }

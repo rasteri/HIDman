@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "type.h"
 #include "ch559.h"
 #include "system.h"
@@ -18,17 +19,47 @@
 #include "test.h"
 #include "usbll.h"
 #include "linkedlist.h"
+#include "processreport.h"
 #define TESTVERBOSE
 
-void UART_Init()
+/*
+Things we might want to test:
+- HID report parsing. Rather than counting segs, search for segs that are the correct type, in the correct startbit, etc
+- HID report processing. Can actually dig the bits out and get a sensible result at the end
+- Ring buffer functions (when we write them lol)
+- Presskey/releasekey actually gives a sensible result out of the ringbuffer at the end
+- Test entire thing - parse a report, send some events, make sure they come out of ringbuffer at end
+
+Probably gonna need seperate executables for different tests because of limited code space
+ 
+*/
+
+
+// Who says you can't do dependency injection in C
+__xdata bool MenuActive = 0;
+
+__at(0xF000) __code Settings DefSettings = {
+    0x54178008,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    MODE_PS2
+};
+
+__xdata volatile uint16_t SoftWatchdog = 0;
+
+void Menu_Press_Key(uint8_t key)
 {
-    SCON = 0x50; /* configure serial */
-    TMOD = 0x20; /* configure timer */
-    TH1 = 0xE6;  /* baud rate 1200 */
-    TL1 = 0xE6;  /* baud rate 1200 */
-    TR1 = 1;     /* enable timer */
-    TI = 1;      /* enable transmitting */
-    RI = 0;      /* waiting to receive */
+
+}
+
+void SetKeyboardLedStatusFromPS2(UINT8 ps2led)
+{
+
 }
 
 static USB_HUB_PORT __xdata TestPort;
@@ -109,11 +140,23 @@ bool TestDescriptors(
                 printf("Can't parse Report Descriptor\n");
                 return 1;
             }
+            DumpHID(pInterface);
             EA = 1;	 // enable all interrupts
-            while(1) {
-                ParseReport(pInterface, 8 * 8, KeyboardTestDataD);
+            /*while(1) {
+                ParseReport(pInterface, 32 * 8, QMKKeyboardReportPressA); 
                 iters++;
-                ParseReport(pInterface, 8 * 8, KeyboardTestDataU);
+                ParseReport(pInterface, 32 * 8, QMKKeyboardReportReleaseA);
+                iters++;
+                if (updateiters){
+                    updateiters = 0;
+                    printf("i : %u\n", iters);
+                    iters = 0;
+                }
+            }*/
+
+            while(1){
+                ParseReport(pInterface, 8 * 8, KovaTestData);
+                HandleMouse();
                 iters++;
                 if (updateiters){
                     updateiters = 0;
@@ -121,11 +164,6 @@ bool TestDescriptors(
                     iters = 0;
                 }
             }
-
-            /*while(1){
-                ParseReport(pInterface, 8 * 8, KovaTestData);
-                iters++;
-            }*/
 
             #ifdef TESTVERBOSE 
                 if (DumpHID(pInterface) != ExpectedSegments){
@@ -223,19 +261,26 @@ void main()
 
     //testlinkedlist();
 
-    TestDescriptors (
+    /*TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         StandardKeyboardDescriptor, 63,
         8
-    );
+    );*/
 
     /*TestDescriptors (
+        QMKKeyboardDeviceDescriptor, 18,
+        QMKKeyboardConfigDescriptor, 59,
+        QMKKeyboardReportDescriptor, 109,
+        2
+    );*/
+
+    TestDescriptors (
         CheapoKeyboardDeviceDescriptor, 18,
         CheapoKeyboardConfigDescriptor, 59,
         KovaReportDescriptor, 232,
         8
-    );*/
+    );
 
     /*TestDescriptors (
         PS4DeviceDescriptor, 18,
@@ -251,12 +296,7 @@ void main()
         13
     );
 
-    TestDescriptors (
-        QMKKeyboardDeviceDescriptor, 18,
-        QMKKeyboardConfigDescriptor, 59,
-        QMKKeyboardReportDescriptor, 109,
-        2
-    );
+
 
     TestDescriptors (
         QMKKeyboardDeviceDescriptor, 18,

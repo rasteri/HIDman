@@ -1,4 +1,3 @@
-
 #include "type.h"
 #include "ch559.h"
 #include "system.h"
@@ -12,112 +11,6 @@ __xdata volatile uint16_t SoftWatchdog = 0;
 FunctionReference runBootloader = (FunctionReference)0xF400;
 __xdata volatile bool OutputsEnabled = 0;
 
-/*******************************************************************************
- * Function Name  : mDelayus(UNIT16 n)
- * Description    : us��ʱ����
- * Input          : UNIT16 n
- * Output         : None
- * Return         : None
- *******************************************************************************/
-void mDelayuS(UINT16 n) // ��uSΪ��λ��ʱ
-{
-	while (n)
-	{				// total = 12~13 Fsys cycles, 1uS @Fsys=12MHz
-		++SAFE_MOD; // 2 Fsys cycles, for higher Fsys, add operation here
-#ifdef FREQ_SYS
-#if FREQ_SYS >= 14000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 16000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 18000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 20000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 22000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 24000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 26000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 28000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 30000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 32000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 34000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 36000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 38000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 40000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 42000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 44000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 46000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 48000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 50000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 52000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 54000000
-		++SAFE_MOD;
-#endif
-#if FREQ_SYS >= 56000000
-		++SAFE_MOD;
-#endif
-#endif
-		--n;
-	}
-}
-
-/*******************************************************************************
- * Function Name  : mDelayms(UNIT16 n)
- * Description    : ms��ʱ����
- * Input          : UNIT16 n
- * Output         : None
- * Return         : None
- *******************************************************************************/
-void mDelaymS(UINT16 n) // ��mSΪ��λ��ʱ
-{
-	// reset watchdog, as this function is only used by USB routines that sometimes take a while to return
-	SoftWatchdog = 0;
-
-	while (n)
-	{
-		mDelayuS(1000);
-		--n;
-	}
-
-	SoftWatchdog = 0;
-}
-
-
 int putcharserial(int c)
 {
 	while (!TI)
@@ -127,7 +20,10 @@ int putcharserial(int c)
 	return c;
 }
 
+//#define IntDelay(ms) {MenuRateLimit = ms; while(MenuRateLimit){ SoftWatchdog = 0; P3 ^= 0x80; } }
 
+//#define KeyDelay() { mDelaymS(1); }
+#define KeyDelay() 
 /**
  * stdio printf directed to UART0 and/or keyboard port using putchar and getchar
  */
@@ -135,7 +31,7 @@ int putcharserial(int c)
 int putchar(int c)
 {
 	#if !defined(BOARD_MICRO)
-	if (FlashSettings->SerialDebugOutput){
+	if (FlashSettings->SerialDebugOutput) {
 		while (!TI)
 			;
 		TI = 0;
@@ -146,22 +42,30 @@ int putchar(int c)
 	if (KeyboardDebugOutput)
 	{
 		// capitals, hold shift first
-		if (c >= 0x41 && c <= 0x5A)
+		if (c >= 0x41 && c <= 0x5A){
 			while (!SendKeyboard(
 				(FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
 				;
+			KeyDelay();
+		}
+		
 
 		// press the key
 		PressKey(c);
 
+		KeyDelay();
+
 		// release the key
 		ReleaseKey(c);
+
+		KeyDelay();
 
 		// release shift
 		if (c >= 0x41 && c <= 0x5A)
 		{
 			while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
 				;
+			KeyDelay();
 		}
 	}
 	return c;

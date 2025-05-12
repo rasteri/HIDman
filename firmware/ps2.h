@@ -9,8 +9,8 @@
 
 // increase to reduce maximum rate bytes can be sent
 // units are in 60khz
-#define PS2_RATE_LIMIT 0
-#define XT_RATE_LIMIT 1000
+#define PS2_RATE_LIMIT 60
+#define XT_RATE_LIMIT 120 // need to make menu system asynchronous for this low value to work
 
 void InitPS2Ports(void);
 
@@ -103,51 +103,51 @@ extern __xdata ps2port ports[];
 bool ReadPS2Clock(unsigned char port);
 bool ReadPS2Data(unsigned char port);
 
-bool SendKeyboard(const uint8_t *chunk);
+bool SendKeyboard(__code uint8_t *chunk);
 //void SendMouse();
 
-void SimonSaysSendKeyboard(const uint8_t *chunk);
+void SimonSaysSendKeyboard(__code uint8_t *chunk);
 void SimonSaysSendMouse(void);
 void PressKey(uint8_t currchar);
 void ReleaseKey(uint8_t currchar);
 void PS2ProcessPort(uint8_t port);
 
 #define SimonSaysSendMouse1(one)                                                    \
-	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart) \
+	if (((ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07) != ports[PORT_MOUSE].sendBuffStart) \
 	{                                                                               \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 1;    \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;  \
-		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8;    \
+		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07;    \
 	}
 
 #define SimonSaysSendMouse2(one, two)                                               \
-	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart) \
+	if (((ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07) != ports[PORT_MOUSE].sendBuffStart) \
 	{                                                                               \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 2;    \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;  \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][2] = two;  \
-		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8;    \
+		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07;    \
 	}
 
 #define SimonSaysSendMouse3(one, two, three)                                         \
-	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)  \
+	if (((ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07) != ports[PORT_MOUSE].sendBuffStart)  \
 	{                                                                                \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 3;     \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;   \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][2] = two;   \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][3] = three; \
-		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8;     \
+		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07;     \
 	}
 
 #define SimonSaysSendMouse4(one, two, three, four)                                   \
-	if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)  \
+	if (((ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07) != ports[PORT_MOUSE].sendBuffStart)  \
 	{                                                                                \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][0] = 4;     \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][1] = one;   \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][2] = two;   \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][3] = three; \
 		ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffEnd][4] = four;  \
-		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) % 8;     \
+		ports[PORT_MOUSE].sendBuffEnd = (ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07;     \
 	}
 
 #define SendMouse1(...)               \

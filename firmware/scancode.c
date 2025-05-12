@@ -758,7 +758,7 @@ __code unsigned char KEY_SET1_WWWFAVE_BREAK[] = { 0x02, 0xE0, 0xE6, };
 __code unsigned char KEY_SET2_WWWFAVE_MAKE[] = { 0x02, 0xE0, 0x18, };
 __code unsigned char KEY_SET2_WWWFAVE_BREAK[] = { 0x03, 0xE0, 0xF0, 0x18, };
 
-const unsigned char * const HIDtoSET1_Make[] = {
+__code unsigned char * __code HIDtoSET1_Make[] = {
 NULL,
 NULL,
 NULL,
@@ -1017,7 +1017,7 @@ NULL,
 NULL,
 };
 
-const unsigned char * const HIDtoSET1_Break[] = {
+__code unsigned char * __code HIDtoSET1_Break[] = {
 NULL,
 NULL,
 NULL,
@@ -1276,7 +1276,7 @@ NULL,
 NULL,
 };
 
-const unsigned char * const HIDtoSET2_Make[] = {
+__code unsigned char * __code HIDtoSET2_Make[] = {
 NULL,
 NULL,
 NULL,
@@ -1535,7 +1535,7 @@ NULL,
 NULL,
 };
 
-const unsigned char * const HIDtoSET2_Break[] = {
+__code unsigned char * __code HIDtoSET2_Break[] = {
 NULL,
 NULL,
 NULL,

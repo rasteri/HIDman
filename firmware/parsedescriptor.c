@@ -219,14 +219,11 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterfa
 
 	while ((start = FetchItem(start, end, &item)) != NULL)
 	{
-		//printf("i");
-		//mDelaymS(100);
 		if (item.format != HID_ITEM_FORMAT_SHORT)
 		{
 			goto ERR;
 		}
-		//printf("o\n");
-		//mDelaymS(100);
+
 		switch (item.type)
 		{
 		case TYPE_MAIN:

@@ -40,12 +40,33 @@ $(OBJDIR)/preset.rel \
 $(OBJDIR)/ps2mapping.rel \
 $(OBJDIR)/linkedlist.rel \
 $(OBJDIR)/scancode.rel \
+$(OBJDIR)/usbdata.rel \
+$(OBJDIR)/processreport.rel \
+$(OBJDIR)/delay.rel \
 $(OBJDIR)/xt.rel
 
 ifneq ($(BOARD_TYPE), BOARD_MICRO)
 	COMMON += $(OBJDIR)/uart.rel
 	COMMON += $(OBJDIR)/uart1.rel
 endif
+
+TESTOBJS = \
+$(OBJDIR)/parsedescriptor.rel \
+$(OBJDIR)/data.rel \
+$(OBJDIR)/andyalloc.rel \
+$(OBJDIR)/preset.rel \
+$(OBJDIR)/ps2mapping.rel \
+$(OBJDIR)/linkedlist.rel \
+$(OBJDIR)/scancode.rel \
+$(OBJDIR)/testcommon.rel \
+$(OBJDIR)/processreport.rel \
+$(OBJDIR)/ps2protocol.rel \
+$(OBJDIR)/mouse.rel \
+$(OBJDIR)/ps2.rel \
+$(OBJDIR)/delay.rel \
+$(OBJDIR)/uart.rel \
+$(OBJDIR)/uart1.rel \
+$(OBJDIR)/usbdata.rel
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -113,9 +134,9 @@ clean:
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 
-test: $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel
-	$(CC) $(COMMON) $(OBJDIR)/test.rel $(OBJDIR)/testdata.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
-	s51 -s - build/test 
+test: $(TESTOBJS) $(OBJDIR)/testendtoend.rel $(OBJDIR)/testdata.rel
+	$(CC) $(TESTOBJS) $(OBJDIR)/testendtoend.rel $(OBJDIR)/testdata.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
+	s51 -g -s - build/test 
 
 datagen: 
 	$(GCC) ../data/datagen.c -o datagen

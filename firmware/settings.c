@@ -28,7 +28,7 @@ uint8_t SyncSettings(void) {
     return 1;
 }
 
-void InitSettings(bool SafeMode){
+void InitSettings(bool SafeMode) {
 
     // magic value not present (or we're in safe mode), initialize flash data
     if (SafeMode || FlashSettings->Magic != 0x54178008) {
@@ -40,7 +40,9 @@ void InitSettings(bool SafeMode){
 
         //if (!SafeMode) HMSettings.Intellimouse = 1;
         HMSettings.Intellimouse = 1;
-        
+        //HMSettings.EnableAUXPS2 = 1;
+        //HMSettings.SerialDebugOutput = 1;
+        //HMSettings.MouseReportMode = 1;
         if (SyncSettings()) {
             DEBUGOUT("Writin failed\n");
         }

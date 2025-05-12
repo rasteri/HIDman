@@ -65,21 +65,21 @@ bool ReadPS2Data(uint8_t port)
 
 }
 
-void SimonSaysSendKeyboard(const uint8_t *chunk)
+void SimonSaysSendKeyboard(__code uint8_t *chunk)
 {
 	if (chunk != NULL &&														 // chunk is valid
-		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
+		((ports[PORT_KEY].sendBuffEnd + 1)  & 0x3F) != ports[PORT_KEY].sendBuffStart) // not full
 	{
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
-		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
+		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) & 0x3F;
 	}
 }
 
 __xdata char buf[100];
 
-bool SendKeyboard(const uint8_t *chunk)
+bool SendKeyboard(__code uint8_t *chunk)
 {
-	// reset watchdog timer, this routine blocks. It shouldn't really
+	// reset watchdog timer, most calls of this routine block. They shouldn't really
 	SoftWatchdog = 0;
 	// chunk is null, pretend we sent it
 	if (chunk == NULL)
@@ -94,10 +94,10 @@ bool SendKeyboard(const uint8_t *chunk)
 	TR0 = 0; //disable timer0  so send is not disabled while we're in the middle of buffer shuffling
 
 	if (!ports[PORT_KEY].sendDisabled &&										 // send disabled by timer task, better not step on its toes
-		(ports[PORT_KEY].sendBuffEnd + 1) % 64 != ports[PORT_KEY].sendBuffStart) // not full
+		((ports[PORT_KEY].sendBuffEnd + 1) & 0x3F) != ports[PORT_KEY].sendBuffStart) // not full
 	{
 		ports[PORT_KEY].sendBuff.chunky[ports[PORT_KEY].sendBuffEnd] = chunk;
-		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) % 64;
+		ports[PORT_KEY].sendBuffEnd = (ports[PORT_KEY].sendBuffEnd + 1) & 0x3F;
 		TR0 = 1; // re-enable timer interrupt
 		return 1;
 	}
@@ -139,12 +139,15 @@ void PS2ProcessPort(uint8_t port)
 		// PS2 bit-bang state machine
 		switch (ports[port].state)
 		{
-		case S_INIT:
+		// Poweron State, should probably be setting ports to default states, but poweron should have already done this
+		case S_INIT: 
 			ports[port].state = S_IDLE;
 			reEnter = 1;
 			break;
 
+		// We're not (currently) sending anything or recieving anything, check if we need to
 		case S_IDLE:
+
 			// check to see if host is trying to inhibit (i.e. pulling clock low)
 			if (!ReadPS2Clock(port))
 			{
@@ -179,6 +182,7 @@ void PS2ProcessPort(uint8_t port)
 						chonk = ports[PORT_MOUSE].sendBuff.chonky[ports[PORT_MOUSE].sendBuffStart];
 						ports[PORT_MOUSE].data = chonk[ports[PORT_MOUSE].bytenum + 1];
 						//DEBUG_OUT("Consuming %x %x %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd, chonk[0], ports[port].data);
+									
 						ports[PORT_MOUSE].state = S_SEND_CLOCK_HIGH;
 						//reEnter = 1;
 					}
@@ -258,6 +262,10 @@ void PS2ProcessPort(uint8_t port)
 
 		// clock was already low when we tried to send it low, pause until it goes high again
 		case S_MIDSEND_PAUSE:
+			
+			// I don't believe the entire chunk should be re-sent on a pause
+			// uncomment if this is incorrect
+			//ports[port].bytenum = 0;
 
 			// wait for host to release clock
 			if (ReadPS2Clock(port))
@@ -304,7 +312,7 @@ void PS2ProcessPort(uint8_t port)
 					{
 						// move onto next chunk
 						//DEBUG_OUT("Consumed %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
-						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 64;
+						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) & 0x3F;
 						ports[port].bytenum = 0;
 					}
 					else
@@ -326,7 +334,7 @@ void PS2ProcessPort(uint8_t port)
 					{
 						// move onto next chonk
 						//DEBUG_OUT("Consumed %x %x\n", ports[port].sendBuffStart, ports[port].sendBuffEnd);
-						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) % 8;
+						ports[port].sendBuffStart = (ports[port].sendBuffStart + 1) & 0x07;
 						ports[port].bytenum = 0;
 					}
 					else
@@ -437,7 +445,13 @@ void PS2ProcessPort(uint8_t port)
 			ports[port].state = S_IDLE;
 			break;
 
+		// we're currently idle and host has put clock low
+		// i.e. pause
 		case S_PAUSE:
+
+			// I don't believe the entire chunk should be re-sent on a pause
+			// uncomment if this is incorrect
+			// ports[port].bytenum = 0;
 
 			// wait for host to release clock
 			if (ReadPS2Clock(port))
@@ -458,9 +472,10 @@ void PS2ProcessPort(uint8_t port)
 			break;
 
 		case S_INHIBIT:
+
 			// reset bit/byte indexes, as whole chunk will need to be re-sent if interrupted
 			ports[port].sendbit = 0;
-			if (port == PORT_KEY) ports[port].bytenum = 0;
+			if (port == PORT_KEY) ports[port].bytenum = 0; // different devices disagree on whether this applies to mice or not...
 			ports[port].parity = 1;
 
 			// wait for host to release clock

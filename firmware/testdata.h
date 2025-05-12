@@ -10,8 +10,8 @@ extern __code uint8_t QMKKeyboardReportDescriptor[];
 extern __code uint8_t QMKKeyboardDeviceDescriptor[];
 extern __code uint8_t QMKKeyboardConfigDescriptor[];
 
-extern __code uint8_t QMKKeyboardReportPressA[];
-extern __code uint8_t QMKKeyboardReportReleaseA[];
+extern __xdata uint8_t QMKKeyboardReportPressA[];
+extern __xdata uint8_t QMKKeyboardReportReleaseA[];
 
 extern __code uint8_t KeychronWirelessKeyboardReportDescriptor[];
 extern __code uint8_t KeychronWirelessReportPressA[];
@@ -32,3 +32,7 @@ extern __code uint8_t Mouse16BitReportDescriptor[];
 
 extern __code uint8_t Mouse16BitTestData[];
 extern __code uint8_t KovaReportDescriptor[];
+
+extern __code uint8_t FakeG304DeviceDescriptor[];
+extern __code uint8_t FakeG304ConfigDescriptor[];
+extern __code uint8_t FakeG304ReportDescriptor[];

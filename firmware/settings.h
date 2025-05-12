@@ -33,8 +33,14 @@ typedef struct Settings {
     // Output debug info to serial port
     bool SerialDebugOutput;
 
+    // blocks garbage packets that broken USB devices emit
+    bool USBFilter;
+
     // What type of computer the keyboard is plugged into (i.e. PS2 or XT)
     uint8_t KeyboardMode;
+
+    // Whether or not the menu should be rate limited
+    uint8_t MenuRateLimit;
 
 } Settings;
 

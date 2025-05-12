@@ -38,14 +38,16 @@ void InitMice(void)
 __xdata uint8_t updates = 0;
 void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
 {
-    for (int x = 0; x < 2; x++)
-    {
-        MOUSE *m = &OutputMice[x];
-        m->DeltaX += DeltaX;
-        m->DeltaY += DeltaY;
-        m->DeltaZ += DeltaZ;
-        m->NeedsUpdating = 1;
-    }
+	if (DeltaX || DeltaY || DeltaZ) {
+		for (int x = 0; x < 2; x++)
+		{
+			MOUSE *m = &OutputMice[x];
+			m->DeltaX += DeltaX;
+			m->DeltaY += DeltaY;
+			m->DeltaZ += DeltaZ;
+			m->NeedsUpdating = 1;
+		}
+	}
 }
 
 
@@ -143,6 +145,20 @@ void MouseSet(uint8_t Button, uint8_t value)
     }
 }
 
+void MouseSetAll(uint8_t Buttons)
+{
+	if (OutputMice[0].Buttons != Buttons) 
+	{
+		OutputMice[0].Buttons = Buttons;
+		OutputMice[0].NeedsUpdating = 1;
+	}
+	if (OutputMice[1].Buttons != Buttons) 
+	{
+		OutputMice[1].Buttons = Buttons;
+		OutputMice[1].NeedsUpdating = 1;
+	}
+}
+
 void Ps2MouseSetDelta(uint8_t DeltaX, uint8_t DeltaY, uint8_t DeltaZ)
 {
 	MOUSE *m = &OutputMice[MOUSE_PORT_PS2];
@@ -190,9 +206,9 @@ void Ps2MouseSetReporting(bool Reporting) {
 
 void Ps2MouseSetDefaults(void) {
 	Ps2MouseSetRate(100);
-	Ps2MouseSetResolution(MOUSE_PS2_RESOLUTION_4CMM);
-	Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);
-	Ps2MouseSetReporting(MOUSE_PS2_REPORTING_OFF);
+	Ps2MouseSetResolution(MOUSE_PS2_RESOLUTION_8CMM);
+	Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);		
+	Ps2MouseSetReporting(MOUSE_PS2_REPORTING_ON);
 	Ps2MouseSetMode(MOUSE_PS2_MODE_STREAM);
 } 
 
@@ -201,16 +217,18 @@ __xdata uint8_t PrevButtons = 0;
 __xdata MOUSE *ps2Mouse = &OutputMice[MOUSE_PORT_PS2];
 
 void HandleMouse(void) {
-	
+
 		int16_t X, Y, Z;
 		uint8_t byte1, byte2, byte3, byte4;
 		uint8_t Buttons;
+
 		// Send PS/2 Mouse Packet if necessary
 		// make sure there's space in the buffer before we pop any mouse updates
-		if ((ports[PORT_MOUSE].sendBuffEnd + 1) % 8 != ports[PORT_MOUSE].sendBuffStart)
+		if (((ports[PORT_MOUSE].sendBuffEnd + 1) & 0x07) != ports[PORT_MOUSE].sendBuffStart)
 		{
 			if (GetMouseUpdate(0, -255, 255, &X, &Y, &Z, &Buttons, (ps2Mouse->Ps2Scaling==MOUSE_PS2_SCALING_2X), (3-ps2Mouse->Ps2Resolution)))
 			{
+				
 				// ps2 is inverted compared to USB
 				Y = -Y;
 
@@ -284,5 +302,6 @@ void HandleMouse(void) {
 				}
 			}
 		}
+
 #endif
 }

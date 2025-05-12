@@ -37,26 +37,7 @@ void DumpHex(uint8_t *buffa, uint16_t len)
 }
 
 
-void InitInterface(INTERFACE* Interface)
-{
-	memset(Interface, 0, sizeof(INTERFACE));
 
-	Interface->InterfaceClass = USB_DEV_CLASS_RESERVED;
-	Interface->InterfaceProtocol = USB_PROTOCOL_NONE;
-	Interface->ReportSize = 0;
-	Interface->EndpointNum = 0;
-
-
-	for (int j = 0; j < MAX_ENDPOINT_NUM; j++)
-	{
-		Interface->Endpoint[j].EndpointAddr = 0;
-		Interface->Endpoint[j].MaxPacketSize = 0;
-		Interface->Endpoint[j].EndpointDir = ENDPOINT_IN;
-		Interface->Endpoint[j].TOG = FALSE;
-	}
-
-	Interface->usesReports = 0;
-}
 
 
 void FillSetupReq(USB_SETUP_REQ *pSetupReq, UINT8 type, UINT8 req, UINT16 value, UINT16 index, UINT16 length)
@@ -325,7 +306,7 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 	static int endpointNum;
 
 	static UINT16 len;
-
+				//P0 |= 0b00100000;
 	s = 0;
 	interfaceNum = pUsbDevice->InterfaceNum;
 	for (i = 0; i < interfaceNum; i++)
@@ -340,23 +321,31 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 				ENDPOINT *pEndPoint = &pInterface->Endpoint[j];
 				if (pEndPoint->EndpointDir == ENDPOINT_IN)
 				{
+					//P3 ^= 0b10000000;
 					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 0);
+					
 					if (s == ERR_SUCCESS)
 					{
+						
 						//TRACE1("interface %d data:", (UINT16)i);
 						// HIS IS WHERE THE FUN STUFF GOES
 						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
+						
 						ParseReport(pInterface, len * 8, ReceiveDataBuffer);
+						
+
 						if (KeyboardDebugOutput || FlashSettings->SerialDebugOutput) {
 							DEBUGOUT("I%hX L%X- ", i, len);
 							DumpHex(ReceiveDataBuffer, len);
 						}
+						
 					}
+					
 				}
 			}
 		}
 	}
-
+		//P0 &= ~0b00100000;
 	return (s);
 }
 

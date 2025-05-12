@@ -124,7 +124,7 @@ void AmstradProcessPort(void)
 				{
 					// move onto next chunk
 					//DEBUG_OUT("Consumed %x %x\n", ports[PORT_KEY].sendBuffStart, ports[PORT_KEY].sendBuffEnd);
-					ports[PORT_KEY].sendBuffStart = (ports[PORT_KEY].sendBuffStart + 1) % 64;
+					ports[PORT_KEY].sendBuffStart = (ports[PORT_KEY].sendBuffStart + 1) & 0x3F;
 					ports[PORT_KEY].bytenum = 0;
 				}
 				else

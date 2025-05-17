@@ -209,7 +209,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_MAIN)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n--\nHIDman v1.1.5i\n\n");
+                SendKeyboardString("\n--\nHIDman v1.1.5j\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");
@@ -344,7 +344,7 @@ void Menu_Task(void)
                     SendKeyboardString("ESC to stop, R to redetect\n");
                     currchar = SendBuffer;
                     KeyboardDebugOutput = 1;
-
+                    menuState = MENU_STATE_DUMPING;
                     break;
 
                 case KEY_3:

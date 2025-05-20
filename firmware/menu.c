@@ -113,7 +113,7 @@ void Sendbuffer_Task()
 
     if (
         (oldSendBufferState != sendBufferState) &&
-        (FlashSettings->MenuRateLimit || FlashSettings->KeyboardMode == MODE_XT)
+        (FlashSettings->MenuRateLimit || FlashSettings->KeyboardMode == MODE_XT || FlashSettings->KeyboardMode == MODE_AMSTRAD)
         )
         MenuRateLimit = 25;
     
@@ -209,7 +209,7 @@ void Menu_Task(void)
             if (lastMenuState != MENU_STATE_MAIN)
             {
                 SendBuffer[0] = 0;
-                SendKeyboardString("\n--\nHIDman v1.1.5j\n\n");
+                SendKeyboardString("\n--\nHIDman v1.1.5\n\n");
                 SendKeyboardString("1. Key\n");
                 SendKeyboardString("2. Mouse\n");
                 SendKeyboardString("3. Game\n");

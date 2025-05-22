@@ -158,6 +158,7 @@ void TestStandardKeyboard(void){
 
     __xdata HID_REPORT *report = (__xdata HID_REPORT *)ListGetData(pInterface->Reports, 0);
 
+    assert(report != NULL);
     assert(report->length == 64);
     assert(report->appUsagePage == REPORT_USAGE_PAGE_GENERIC);
     assert(report->appUsage == REPORT_USAGE_KEYBOARD);
@@ -477,12 +478,6 @@ void TestPSXAdapter(void) {
     assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDU));
     HandleMouse();
     chonk = GetNextChonk();
-    assert(chonk != NULL);
-    assert(chonk[2] == 0xF9)
-
-    printf("ch %X - %X\n", chonk[2], chonk[3]);
-
-
 
 
     assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDD));
@@ -526,11 +521,11 @@ void main()
     while(1);*/
 
     //TestG304();
-    //TestStandardKeyboard();
-    //TestStandardMouse();
+    TestStandardKeyboard();
+    TestStandardMouse();
     //TestSegExtracts();  
-    //TestFakeG304();
-    //TestCheapoGamepad();
+    TestFakeG304();
+    TestCheapoGamepad();
     TestPSXAdapter();
 
     printf("ALL TESTS PASSED\n");

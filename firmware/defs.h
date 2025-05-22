@@ -280,10 +280,15 @@ typedef struct _HID_REPORT
 	uint16_t length;
 
 	bool keyboardUpdated;
+	bool MouseUpdated;
 
 	// bit map for currently pressed keys (0-256)
 	uint8_t KeyboardKeyMap[32];
 	uint8_t oldKeyboardKeyMap[32];
+
+	// bit map for currently pressed mouse buts
+	uint8_t MouseButMap;
+	uint8_t oldMouseButMap;
 
 	__xdata LinkedList *HidSegments;
 } HID_REPORT;

@@ -97,9 +97,12 @@ void HandleRepeats(void)
 }
 
 
-#define SetKey(key,report) (report->KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07))
+#define SetKey(key,report) report->KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07)
 
-#define GetOldKey(key,report) (report->oldKeyboardKeyMap[key >> 3] & (1 << (key & 0x07)))
+#define GetOldKey(key,report) report->oldKeyboardKeyMap[key >> 3] & (1 << (key & 0x07))
+
+#define SetMouseButBit(buttn,report) report->MouseButMap |= (1 << buttn)
+#define GetOldMouseButBit(buttn,report) report->oldMouseButMap & (1 << buttn)
 
 __code uint8_t bitMasks[] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1F, 0x3F, 0x7F, 0xFF};
 
@@ -192,14 +195,21 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		if (currSeg->OutputChannel == MAP_MOUSE && currSeg->OutputControl == 1)
 		{
 			data += (currSeg->startBit >> 3);
-			MouseSetAll(*data);
-			
+			//MouseSetAll(*data);
+
+			if (report->oldMouseButMap != *data){
+				report->MouseUpdated = 1;
+			}
+
+			report->MouseButMap = *data;
+
 			return;
 			
 		}
 
 		endbit = currSeg->startBit + currSeg->reportCount;
 		tmp = currSeg->OutputControl;
+
 		for (cnt = currSeg->startBit; cnt < endbit; cnt++)
 		{	
 			pressed = 0;
@@ -213,39 +223,30 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
-				if (pressed)
-				{
+				if (pressed) {
 					SetKey(tmp, report);
-					if (!GetOldKey(tmp, report)) {
+					if (!GetOldKey(tmp, report))
 						report->keyboardUpdated = 1;
-					}
 				}
-				else
-				{
-					if (GetOldKey(tmp, report)) {
+				else {
+					if (GetOldKey(tmp, report))
 						report->keyboardUpdated = 1;
-					}
 				}
 			}
-			else
+			else // mouse
 			{
-				switch (tmp)
-				{
-				case MAP_MOUSE_BUTTON1:
-					MouseSet(0, pressed);
-					break;
-				case MAP_MOUSE_BUTTON2:
-					MouseSet(1, pressed);
-					break;
-				case MAP_MOUSE_BUTTON3:
-					MouseSet(2, pressed);
-					break;
-				case MAP_MOUSE_BUTTON4:
-					MouseSet(3, pressed);
-					break;
-				case MAP_MOUSE_BUTTON5:
-					MouseSet(4, pressed);
-					break;
+				if (tmp >= 1 && tmp <= 5) {
+
+					if (pressed){
+						SetMouseButBit(tmp - 1, report);
+						if (!GetOldMouseButBit(tmp-1, report))
+							report->MouseUpdated = 1;
+					}
+					else {
+						if (GetOldMouseButBit(tmp-1, report))
+							report->MouseUpdated = 1;
+					}
+
 				}
 			}
 
@@ -266,6 +267,9 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 			report->keyboardUpdated = 1;
 
+		if (currSeg->OutputChannel == MAP_MOUSE)
+			report->MouseUpdated = 1;
+
 		if (currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE && value > currSeg->InputParam)
 		{
 			make = 1;
@@ -284,34 +288,16 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		{
 			make = 0;
 		}
-		// hack for mouse, as it needs to explicity switch on and off
-		// this needs rewritten
-		if (currSeg->OutputChannel == MAP_MOUSE && currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE) {
-			switch (currSeg->OutputControl)
-				{
-				case MAP_MOUSE_BUTTON1:
-					MouseSet(0, value);
-					break;
-				case MAP_MOUSE_BUTTON2:
-					MouseSet(1, value);
-					break;
-				case MAP_MOUSE_BUTTON3:
-					MouseSet(2, value);
-					break;
-				case MAP_MOUSE_BUTTON4:
-					MouseSet(3, value);
-					break;
-				case MAP_MOUSE_BUTTON5:
-					MouseSet(4, value);
-					break;
-				}
-		}
-		else if (make)
+
+		if (make)
 		{
-			if (currSeg->OutputChannel == MAP_KEYBOARD)
-			{
+			if (currSeg->OutputChannel == MAP_KEYBOARD) {
 				SetKey(currSeg->OutputControl, report);
 			}
+			else { // if mouse
+				SetMouseButBit(currSeg->OutputControl, report);
+			}
+			
 		}
 		else if (currSeg->InputType == MAP_TYPE_SCALE)
 		{
@@ -426,8 +412,12 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 	currSegNode = descReport->HidSegments;
 
-	if (interface->InterfaceProtocol != HID_PROTOCOL_MOUSE) {
 
+	if (interface->InterfaceProtocol != HID_PROTOCOL_KEYBOARD) { //i.e. MOUSE or NONE (game controller)
+		descReport->MouseButMap = 0;
+	}
+	
+	if (interface->InterfaceProtocol != HID_PROTOCOL_MOUSE) { //i.e. KEYBOARD or NONE (game controller)
 		// clear key map as all pressed keys should be present in report
 		//only need to clear chars up to 0x94 (or byte 0x12)
 		memset(descReport->KeyboardKeyMap, 0, 0x13);
@@ -442,10 +432,14 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 		currSegNode = currSegNode->next;
 				
 	}
+
+	uint8_t xorred;
+	uint8_t hidcode;
+	uint8_t *keybyte;
 	
 	if(descReport->keyboardUpdated)
 	{
-		uint8_t *keybyte = descReport->KeyboardKeyMap;
+		keybyte = descReport->KeyboardKeyMap;
 
 		// for each byte in the report
 		for (uint8_t d = 0; d < 32; d++) 
@@ -462,9 +456,8 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 				{
 					if (xorred & (1 << c)) 
 					{
-						uint8_t hidcode = (d << 3) | c;
+						hidcode = (d << 3) | c;
 						
-
 						if (*keybyte & (1 << c)) // set in current but not prev
 						{
 							if (MenuActive)
@@ -510,9 +503,33 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 			}
 			keybyte++;
 		}
-		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 32);
-		descReport->keyboardUpdated = 0;
+
+		//only need to copy chars up to 0x94 (or byte 0x12)
+		memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 0x13);
+
+		//and also E0-EF
+		descReport->oldKeyboardKeyMap[28] = descReport->KeyboardKeyMap[28];
 	}
+
+	if(descReport->MouseUpdated)
+	{
+		// Do the whole rigmarole again but for mice
+		// it only tracks the button status of the most recent mouse to have its buttons changed
+		// complex stuff but it makes sense
+		keybyte = descReport->MouseButMap;
+		uint8_t xorred = *keybyte ^ descReport->oldMouseButMap;
+
+		if (xorred) {
+			MouseSetAll(*keybyte);
+		}
+
+		// copy BitMap to oldBitMap
+		descReport->oldMouseButMap = descReport->MouseButMap;
+
+	}
+
+	descReport->keyboardUpdated = 0;
+	descReport->MouseUpdated = 0;
 
 	return 1;
 }

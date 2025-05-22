@@ -123,7 +123,6 @@ __xdata HID_SEG * FindSegByStartBit(__xdata HID_REPORT * descReport, uint16_t St
     assert(descReport != NULL);
 
 	__xdata LinkedList *currSegNode = descReport->HidSegments;
-
 	while (currSegNode != NULL)
 	{
 		if (((__xdata HID_SEG *)(currSegNode->data))->startBit == StartBit)

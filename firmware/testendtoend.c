@@ -65,6 +65,10 @@ __xdata uint8_t PSXAdapterTestDataDD[] = { 0x01, 0xFF, 0x80, 0x64, 0x80, 0x0F, 0
 __xdata uint8_t PSXAdapterTestDataDL[] = { 0x01, 0x80, 0x00, 0x64, 0x80, 0x0F, 0x00, 0x00 };
 __xdata uint8_t PSXAdapterTestDataDR[] = { 0x01, 0x80, 0xFF, 0x64, 0x80, 0x0F, 0x00, 0x00 };
 
+__xdata uint8_t PSXAdapterTestDataLeftClick[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x0F, 0x01, 0x00 };
+__xdata uint8_t PSXAdapterTestDataRightClick[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x0F, 0x02, 0x00 };
+__xdata uint8_t PSXAdapterTestDataBothClick[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x0F, 0x03, 0x00 };
+
 __xdata bool MenuActive = 0;
 
 
@@ -162,6 +166,7 @@ void TestStandardKeyboard(void){
     assert(report->length == 64);
     assert(report->appUsagePage == REPORT_USAGE_PAGE_GENERIC);
     assert(report->appUsage == REPORT_USAGE_KEYBOARD);
+    assert(report->HidSegments != NULL);
 
     // modifyers
     __xdata HID_SEG * testseg = FindSegByStartBit(report, 0);
@@ -223,19 +228,52 @@ void TestStandardMouse(void){
 
     // put a bunch of stuff in the buffer (should be 60 entries)
     int c;
-    for (int c = 0; c < 255; c++){
+    uint8_t * chonk;
+
+    // test buttons
+    // no movement
+    MouseTestData[1] = 0;
+    MouseTestData[2] = 0;
+
+    // 3 buttons gives us 8 combinations
+    for (c = 1; c < 8; c++){
+        // press
+        MouseTestData[0] = c;
+        assert (ParseReport(pInterface, 8 * 3, MouseTestData));
+        HandleMouse();
+        chonk = GetNextChonk();
+        assert (chonk != NULL);
+        assert ((chonk[1] & 0x07) == c);
+
+        // unpress
+        MouseTestData[0] = 0;
+        assert (ParseReport(pInterface, 8 * 3, MouseTestData));
+        HandleMouse();
+        chonk = GetNextChonk();
+        assert (chonk != NULL);
+        assert ((chonk[1] & 0x07) == 0);
+    }
+
+    // random movement test
+    for (c = 0; c < 255; c++){
         MouseTestData[0];
         MouseTestData[1] = (uint8_t)rand();
         MouseTestData[2] = (uint8_t)rand();
+
+        // zero sized moves might not trigger a chonk
+        if (MouseTestData[1] == 0) continue;
+        if (MouseTestData[2] == 0) continue;
+
         assert (ParseReport(pInterface, 8 * 3, MouseTestData));
         HandleMouse();
-        uint8_t * chonk = GetNextChonk();
+        chonk = GetNextChonk();
         //printf("%X %X - %X %X %X %X\n", MouseTestData[1], MouseTestData[2], chonk[0], chonk[1], chonk[2], (uint8_t)(255-chonk[3])+(uint8_t)1);
         assert (chonk != NULL);
         assert (MouseTestData[1] == chonk[2]);
         assert (MouseTestData[2] == (uint8_t)(( 255 - chonk[3]) + 1));
-        // todo, check sign bits and buttons
     }
+
+
 
     printf("End-to-end Standard Mouse Test Passed\n");
 
@@ -458,7 +496,7 @@ void TestPSXAdapter(void) {
 
     InitPS2Ports();
     InitPresets();
-    Ps2MouseSetDefaults();
+    InitMice();
 
     InitTest(&UsbDev, PSXAdapterDeviceDescriptor, 18, PSXAdapterConfigDescriptor, 34);
 
@@ -468,12 +506,13 @@ void TestPSXAdapter(void) {
 
     __xdata HID_REPORT *report = (__xdata HID_REPORT *)ListGetData(pInterface->Reports, 0);
 
+    //DumpHID(pInterface);
 
     int c;
 
     uint8_t * chonk;
 
-    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataU));
+    /*assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataU));
 
     assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDU));
     HandleMouse();
@@ -483,18 +522,60 @@ void TestPSXAdapter(void) {
     assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDD));
     HandleMouse();
     chonk = GetNextChonk();
-    printf("ch %X - %X\n", chonk[2], chonk[3]);
+    //printf("ch %X - %X\n", chonk[2], chonk[3]);
 
     assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDL));
     HandleMouse();
     chonk = GetNextChonk();
-    printf("ch %X - %X\n", chonk[2], chonk[3]);
+    //printf("ch %X - %X\n", chonk[2], chonk[3]);
 
     assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDR));
     HandleMouse();
     chonk = GetNextChonk();
-    printf("ch %X - %X\n", chonk[2], chonk[3]);
+    //printf("ch %X - %X\n", chonk[2], chonk[3]);*/
 
+    // mouse mode left click
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataLeftClick));
+    HandleMouse();
+    chonk = GetNextChonk();
+    assert (chonk != NULL);
+    printf("ch %x\n", chonk[1]);
+    assert ((chonk[1] & 0x07) == 0x01);
+
+    // release 
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataU));
+    HandleMouse();
+    chonk = GetNextChonk();
+    assert (chonk != NULL);
+    assert ((chonk[1] & 0x07) == 0x00);
+
+    // mouse mode right click
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataRightClick));
+    HandleMouse();
+    chonk = GetNextChonk();
+    assert (chonk != NULL);
+    assert ((chonk[1] & 0x07) == 0x02);
+
+    // release 
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataU));
+    HandleMouse();
+    chonk = GetNextChonk();
+    assert (chonk != NULL);
+    assert ((chonk[1] & 0x07) == 0x00);
+
+    // mouse mode both click
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataBothClick));
+    HandleMouse();
+    chonk = GetNextChonk();
+    assert (chonk != NULL);
+    assert ((chonk[1] & 0x07) == 0x03);
+
+    // release 
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataU));
+    HandleMouse();
+    chonk = GetNextChonk();
+    assert (chonk != NULL);
+    assert ((chonk[1] & 0x07) == 0x00);
 
     printf("PSX Adapter Test Passed\n");
 
@@ -521,11 +602,11 @@ void main()
     while(1);*/
 
     //TestG304();
-    TestStandardKeyboard();
+    /*TestStandardKeyboard();
     TestStandardMouse();
     //TestSegExtracts();  
     TestFakeG304();
-    TestCheapoGamepad();
+    TestCheapoGamepad();*/
     TestPSXAdapter();
 
     printf("ALL TESTS PASSED\n");

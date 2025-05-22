@@ -295,7 +295,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 				SetKey(currSeg->OutputControl, report);
 			}
 			else { // if mouse
-				SetMouseButBit(currSeg->OutputControl, report);
+				SetMouseButBit((currSeg->OutputControl - 1), report);
 			}
 			
 		}
@@ -516,11 +516,12 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 		// Do the whole rigmarole again but for mice
 		// it only tracks the button status of the most recent mouse to have its buttons changed
 		// complex stuff but it makes sense
-		keybyte = descReport->MouseButMap;
-		uint8_t xorred = *keybyte ^ descReport->oldMouseButMap;
+		uint8_t butbyte = descReport->MouseButMap;
+		uint8_t xorred = butbyte ^ descReport->oldMouseButMap;
 
 		if (xorred) {
-			MouseSetAll(*keybyte);
+
+			MouseSetAll(butbyte);
 		}
 
 		// copy BitMap to oldBitMap

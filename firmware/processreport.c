@@ -126,8 +126,13 @@ uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 		// first byte will always be shifted right
 		value |= ((uint32_t)(*currByte)) >> (uint32_t)(shiftbits);
 		remainingbits -= 8 - shiftbits;
+		
 		// everything else will be shifted left by the remaining bits (plus 8 each time)
 		shiftbits = 8 - shiftbits;
+
+		// mask off top bits if necessary
+		if (remainingbits <= 0)
+			value &= bitMasks[currSeg->reportSize];
 
 		currByte++;
 	}
@@ -146,7 +151,6 @@ uint32_t SegExtractValue(__xdata HID_SEG *currSeg, __xdata uint8_t *data) {
 	if (remainingbits > 0){
 		value |= ((((uint32_t)(*currByte))) & (bitMasks[remainingbits]) ) << (uint32_t)shiftbits;
 	}
-
 
 
 	return value; 
@@ -197,8 +201,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		endbit = currSeg->startBit + currSeg->reportCount;
 		tmp = currSeg->OutputControl;
 		for (cnt = currSeg->startBit; cnt < endbit; cnt++)
-		{
-
+		{	
 			pressed = 0;
 
 			// find byte
@@ -219,7 +222,6 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 				}
 				else
 				{
-					
 					if (GetOldKey(tmp, report)) {
 						report->keyboardUpdated = 1;
 					}
@@ -259,12 +261,15 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
 			value = SIGNEX(value, currSeg->reportSize - 1);
 
+		
+
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 			report->keyboardUpdated = 1;
 
 		if (currSeg->InputType == MAP_TYPE_THRESHOLD_ABOVE && value > currSeg->InputParam)
 		{
 			make = 1;
+			
 		}
 		else if (currSeg->InputType == MAP_TYPE_THRESHOLD_BELOW && value < currSeg->InputParam)
 		{
@@ -420,7 +425,8 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 	currSegNode = descReport->HidSegments;
 
-	if (interface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD){
+	if (interface->InterfaceProtocol != HID_PROTOCOL_MOUSE){
+
 		// clear key map as all pressed keys should be present in report
 		//only need to clear chars up to 0x94 (or byte 0x12)
 		memset(descReport->KeyboardKeyMap, 0, 0x13);
@@ -439,12 +445,15 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 	if(descReport->keyboardUpdated)
 	{
 		uint8_t *keybyte = descReport->KeyboardKeyMap;
+
 		// for each byte in the report
 		for (uint8_t d = 0; d < 32; d++) 
 		{
 			// XOR to see if any bits are different
 
 			uint8_t xorred = *keybyte ^ descReport->oldKeyboardKeyMap[d];
+
+			
 
 			if (xorred) {
 				

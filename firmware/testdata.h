@@ -6,6 +6,10 @@ extern __code uint8_t CheapoGamepadReportDescriptor[];
 extern __code uint8_t CheapoGamepadDeviceDescriptor[];
 extern __code uint8_t CheapoGamepadConfigDescriptor[];
 
+extern __code uint8_t PSXAdapterReportDescriptor[];
+extern __code uint8_t PSXAdapterDeviceDescriptor[];
+extern __code uint8_t PSXAdapterConfigDescriptor[];
+
 extern __code uint8_t QMKKeyboardReportDescriptor[];
 extern __code uint8_t QMKKeyboardDeviceDescriptor[];
 extern __code uint8_t QMKKeyboardConfigDescriptor[];

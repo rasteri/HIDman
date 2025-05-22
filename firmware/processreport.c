@@ -172,7 +172,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 	uint8_t pressed = 0;
 	int16_t tmpl;
 	uint16_t tmpu;
-
+	
 	if (currSeg->InputType == MAP_TYPE_BITFIELD)
 	{
 
@@ -315,6 +315,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		}
 		else if (currSeg->InputType == MAP_TYPE_SCALE)
 		{
+
 			if (currSeg->OutputChannel == MAP_MOUSE)
 			{
 
@@ -324,7 +325,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 				{
 				// TODO scaling
 				case MAP_MOUSE_X:
-					if (currSeg->InputParam == INPUT_PARAM_SIGNED_SCALEDOWN){
+					if (currSeg->InputParam == INPUT_PARAM_UNSIGNED_SCALEDOWN) {
 
 						tmpl = ((int8_t)((value + 8) >> 4) - 0x08);
 
@@ -341,9 +342,9 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 
 					break;
 				case MAP_MOUSE_Y:
-					if (currSeg->InputParam == INPUT_PARAM_SIGNED_SCALEDOWN) {
+					if (currSeg->InputParam == INPUT_PARAM_UNSIGNED_SCALEDOWN) {
 
-						tmpl = ((int8_t)((currSeg->value + 8) >> 4) - 0x08);
+						tmpl = ((int8_t)((value + 8) >> 4) - 0x08);
 
 						// deadzone
 						if (tmpl <= -DEADZONE) tmpl+= DEADZONE;
@@ -352,7 +353,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 
 						MouseMove(0, tmpl, 0);
 					}
-					else{
+					else {
 						MouseMove(0, (int32_t)value, 0);
 					}
 
@@ -425,7 +426,7 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 	currSegNode = descReport->HidSegments;
 
-	if (interface->InterfaceProtocol != HID_PROTOCOL_MOUSE){
+	if (interface->InterfaceProtocol != HID_PROTOCOL_MOUSE) {
 
 		// clear key map as all pressed keys should be present in report
 		//only need to clear chars up to 0x94 (or byte 0x12)

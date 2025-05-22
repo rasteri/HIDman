@@ -43,7 +43,7 @@ __code JoyPreset ConfigGameMouse[] = {
         MAP_MOUSE,                 // Output Channel
         MAP_MOUSE_X,               // Output Control
         MAP_TYPE_SCALE,            // InputType
-        INPUT_PARAM_SIGNED_SCALEDOWN                          // Input Param
+        INPUT_PARAM_UNSIGNED_SCALEDOWN                          // Input Param
     },
     {
         1,                         // Number
@@ -52,7 +52,7 @@ __code JoyPreset ConfigGameMouse[] = {
         MAP_MOUSE,                 // Output Channel
         MAP_MOUSE_Y,               // Output Control
         MAP_TYPE_SCALE,            // InputType
-        INPUT_PARAM_SIGNED_SCALEDOWN                          // Input Param
+        INPUT_PARAM_UNSIGNED_SCALEDOWN                          // Input Param
     },
     // null to signify end
     {

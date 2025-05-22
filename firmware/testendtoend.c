@@ -50,22 +50,20 @@ __xdata uint8_t FakeG304TestData3[] = { 0x02 , 0x00 , 0x01 , 0x80 , 0x04 , 0x00 
 //__xdata uint8_t FakeG304TestData3[] = { 0x02, 0x00, 0x02 , 0xB0 , 0xFF , 0x00 , 0x00 };
 
 __xdata uint8_t CheapoGamepadTestDataU[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x0F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataD1[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x1F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataD2[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x2F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataD3[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x4F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataD4[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x8F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataDL[] = { 0x01, 0x80, 0x80, 0x00, 0x7F, 0x0F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataDR[] = { 0x01, 0x80, 0x80, 0xFF, 0x7F, 0x0F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataDU[] = { 0x01, 0x80, 0x80, 0x7F, 0x00, 0x0F, 0x00, 0x00 };
-
 __xdata uint8_t CheapoGamepadTestDataDD[] = { 0x01, 0x80, 0x80, 0x7F, 0xFF, 0x0F, 0x00, 0x00 };
+
+__xdata uint8_t PSXAdapterTestDataU[] =  { 0x01, 0x80, 0x80, 0x64, 0x80, 0x0F, 0x00, 0x00 };
+__xdata uint8_t PSXAdapterTestDataDU[] = { 0x01, 0x00, 0x80, 0x64, 0x80, 0x0F, 0x00, 0x00 };
+__xdata uint8_t PSXAdapterTestDataDD[] = { 0x01, 0xFF, 0x80, 0x64, 0x80, 0x0F, 0x00, 0x00 };
+__xdata uint8_t PSXAdapterTestDataDL[] = { 0x01, 0x80, 0x00, 0x64, 0x80, 0x0F, 0x00, 0x00 };
+__xdata uint8_t PSXAdapterTestDataDR[] = { 0x01, 0x80, 0xFF, 0x64, 0x80, 0x0F, 0x00, 0x00 };
 
 __xdata bool MenuActive = 0;
 
@@ -81,15 +79,17 @@ __code uint32_t bitMasks32[] = {
  };
 
 __at(0xF000) __code Settings DefSettings = {
-    0x54178008,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    MODE_PS2
+    0x54178008, //magic
+    0, //KeyboardReportMode
+    0, //MouseReportMode
+    0, //EnableAUXPS2
+    0, //Intellimouse
+    0, //XT83Keys
+    1,//GameControllerAsMouse
+    0, //SerialDebugOutput
+    0, //USBFilter
+    MODE_PS2, //KeyboardMode
+    0 //MenuRateLimit
 };
 
 __xdata volatile uint16_t SoftWatchdog = 0;
@@ -103,6 +103,7 @@ void SetKeyboardLedStatusFromPS2(UINT8 ps2led)
 {
 
 }
+
 extern __code unsigned char KEY_SET2_A_MAKE[];
 extern __code unsigned char KEY_SET2_B_MAKE[];
 extern __code unsigned char KEY_SET2_C_MAKE[];
@@ -451,6 +452,60 @@ void TestCheapoGamepad(void) {
     //DumpHID(pInterface);
 }
 
+
+void TestPSXAdapter(void) {
+
+    InitPS2Ports();
+    InitPresets();
+    Ps2MouseSetDefaults();
+
+    InitTest(&UsbDev, PSXAdapterDeviceDescriptor, 18, PSXAdapterConfigDescriptor, 34);
+
+    __xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(UsbDev.Interfaces, 0);
+
+    assert(!InterfaceParseReportDescriptor(pInterface, PSXAdapterReportDescriptor, 202));
+
+    __xdata HID_REPORT *report = (__xdata HID_REPORT *)ListGetData(pInterface->Reports, 0);
+
+
+    int c;
+
+    uint8_t * chonk;
+
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataU));
+
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDU));
+    HandleMouse();
+    chonk = GetNextChonk();
+    assert(chonk != NULL);
+    assert(chonk[2] == 0xF9)
+
+    printf("ch %X - %X\n", chonk[2], chonk[3]);
+
+
+
+
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDD));
+    HandleMouse();
+    chonk = GetNextChonk();
+    printf("ch %X - %X\n", chonk[2], chonk[3]);
+
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDL));
+    HandleMouse();
+    chonk = GetNextChonk();
+    printf("ch %X - %X\n", chonk[2], chonk[3]);
+
+    assert (ParseReport(pInterface, 8 * 8, PSXAdapterTestDataDR));
+    HandleMouse();
+    chonk = GetNextChonk();
+    printf("ch %X - %X\n", chonk[2], chonk[3]);
+
+
+    printf("PSX Adapter Test Passed\n");
+
+    //DumpHID(pInterface);
+}
+
 void main()
 {
     // timer0 setup
@@ -475,7 +530,8 @@ void main()
     //TestStandardMouse();
     //TestSegExtracts();  
     //TestFakeG304();
-    TestCheapoGamepad();
+    //TestCheapoGamepad();
+    TestPSXAdapter();
 
     printf("ALL TESTS PASSED\n");
 

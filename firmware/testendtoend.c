@@ -602,11 +602,11 @@ void main()
     while(1);*/
 
     //TestG304();
-    /*TestStandardKeyboard();
+    TestStandardKeyboard();
     TestStandardMouse();
     //TestSegExtracts();  
     TestFakeG304();
-    TestCheapoGamepad();*/
+    TestCheapoGamepad();
     TestPSXAdapter();
 
     printf("ALL TESTS PASSED\n");

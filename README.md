@@ -127,7 +127,7 @@ python3 ch55xtool.py -f hidman_axp_v1.1.bin
 # Advanced Setups
 
 ## Combined PS/2 port
-HIDman actually outputs keyboard *and* mouse signals on **BOTH** PS/2 connectors. If you have a PC that can take advantage of this (typically Mini PCs or Laptops), you can keep the cabling neater by using only one cable.
+HIDman actually outputs keyboard *and* mouse signals on **BOTH** PS/2 connectors. If you have a PC that can take advantage of this (typically Mini PCs or Laptops), you can keep the cabling neater by using only one cable. **NOTE : You will need to enable "PS2 AUX Output" in the advanced menu.**
 
 <img src=/images/combined1.svg width=500/>
 

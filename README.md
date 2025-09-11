@@ -108,6 +108,8 @@ The next step is to put the HIDman in firmware update mode.
 2. Hold down HIDman's ⏻ power button.
 3. Use a USB A-to-A cable to connect HIDman's LOWER USB port to a USB port on your modern PC.
 
+If HIDman doesn't appear in your computers' device list, follow the instructions in the "Debricking" section below.
+
 After that, update instructions will depend on your operating system.
 
 ## Windows

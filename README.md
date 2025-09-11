@@ -35,6 +35,7 @@ Peripherals that support legacy PCs are becoming hard to find, especially for th
 * And the rear plate : https://www.pcbway.com/project/shareproject/Rear_Enclosure_for_HIDman_c0ff0b8a.html
 * And the enclosure : https://lincolnbinns.com/e-case-a-black-40mm.html
 * Don't forget 8x screws : https://lincolnbinns.com/e-case-screws.html (I suggest the thread former ones)
+* After assembling the unit, you will need to install firmware. See the "Firmware Update" section below.
 
 # Quickstart Guide
 
@@ -124,10 +125,20 @@ Pass the -f parameter to ch55xtool specify the firmware file to load. For exampl
 python3 ch55xtool.py -f hidman_axp_v1.1.bin
 ```
 
+## Debricking
+
+If this is your first time programming HIDman, or you accidentally program a corrupted firmware, you can force it into firmware update mode another way.
+
+<img src=/images/C5.png width=500/>
+
+1. Disassemble HIDman.
+2. Connecting the two pads of component C5 (shown above) together using a pair of tweezers or similar.
+3. Use a USB A-to-A cable to connect HIDman's LOWER USB port to a USB port on your modern PC.
+
 # Advanced Setups
 
 ## Combined PS/2 port
-HIDman actually outputs keyboard *and* mouse signals on **BOTH** PS/2 connectors. If you have a PC that can take advantage of this (typically Mini PCs or Laptops), you can keep the cabling neater by using only one cable.
+HIDman actually outputs keyboard *and* mouse signals on **BOTH** PS/2 connectors. If you have a PC that can take advantage of this (typically Mini PCs or Laptops), you can keep the cabling neater by using only one cable. **NOTE : You will need to enable "PS2 AUX Output" in the advanced menu.**
 
 <img src=/images/combined1.svg width=500/>
 

@@ -1,3 +1,28 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <assert.h>
+#include "type.h"
+#include "ch559.h"
+#include "system.h"
+#include "defs.h"
+#include "usbdef.h"
+#include "usbhost.h"
+#include "menu.h"
+#include "data.h"
+#include "settings.h"
+#include "andyalloc.h"
+#include "keyboardled.h"
+#include "parsedescriptor.h"
+#include "ps2.h"
+#include "ps2protocol.h"
+#include "testdata.h"
+#include "preset.h"
+#include "test.h"
+#include "usbll.h"
+#include "linkedlist.h"
+#include "testcommon.h"
+
 //__xdata uint8_t FakeG304TestData1[] = { 0x02, 0x00, 0x21, 0x43, 0x65, 0x00 };
 
 __xdata uint8_t FakeG304TestData1[] = { 0x02, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
@@ -124,7 +149,12 @@ __code uint8_t FakeG304ReportDescriptor[] = {
 };
 
 
-void TestFakeG304(){
+int main(){
+
+    TestSetup();
+
+    InitPS2Ports();
+
 
     InitTest(&UsbDev, FakeG304DeviceDescriptor, 18, FakeG304ConfigDescriptor, 34);
 
@@ -169,5 +199,6 @@ void TestFakeG304(){
     assert(testseg->OutputControl == MAP_MOUSE_WHEEL);
     assert(testseg->OutputChannel == MAP_MOUSE);
 
-    printf("Fake G304 Parser Test Passed\n");
+    printf("PASS\n");
+    halt();
 }

@@ -141,6 +141,7 @@ __code uint8_t CheapoKeyboardReportDescriptor[] = {
 };
 
 
+
 __xdata uint8_t KeyboardTestDataD[] = { 0, 0, 4, 5, 6, 7, 8, 9 };
 __xdata uint8_t KeyboardTestDataU[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -184,8 +185,6 @@ int main() {
         assert(testseg->InputType == MAP_TYPE_ARRAY);
     }
 
-    printf("Standard Keyboard Parser Test Passed\n");
-
     // put a bunch of stuff in the buffer (should be 60 entries)
     int c;
     for (int c = 0; c < 5; c++){
@@ -210,7 +209,6 @@ int main() {
         assert (GetNextChunk() == KEY_SET2_F_BREAK);
     }
 
-    printf("End-to-end Standard Keyboard Test Passed\n");
-
-    ((void (__code *) (void)) 0xFFFF) ();
+    printf("PASS\n");
+    halt();
 }

@@ -68,6 +68,12 @@ $(OBJDIR)/uart.rel \
 $(OBJDIR)/uart1.rel \
 $(OBJDIR)/usbdata.rel
 
+TESTS = \
+teststandardkeyboard \
+testcheapogamepad \
+testfakeg304 \
+teststandardmouse \
+
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
 endif
@@ -133,16 +139,30 @@ flash: $(OBJDIR)/$(TARGET).bin
 .DEFAULT_GOAL := all
 all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 
+$(TESTS) : %: test/%.c $(TESTOBJS)
+	$(CC) $(TESTOBJS) $(TESTCFLAGS) -o $(OBJDIR)/$@.ihx $<
+
+tests: $(TESTS)
+
 clean:
 	-rm -f $(OBJDIR)/*
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 
-test: FORCE $(TESTOBJS) $(OBJDIR)/test/testcommon.rel $(OBJDIR)/test/teststandardkeyboard.rel
-	$(CC) $(TESTOBJS) $(OBJDIR)/test/teststandardkeyboard.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
-	-rm success
-	s51 -s success -C test/testargs -G build/test
-	type success
+test: $(TESTS)
+	@echo "Running all tests..."
+	@for t in $(TESTS); do \
+		rm success; \
+		s51 -s success -e "set hardware simif xram 0xffff" -G build/$$t > /dev/null 2>&1; \
+		if grep -q 'PASS' success; then \
+			echo "$$t - PASS"; \
+		else \
+			echo "$$t - FAIL"; \
+			cat success; \
+			exit 1; \
+		fi;\
+	done
+	@echo "All tests passed!"
 
 datagen: 
 	$(GCC) ../data/datagen.c -o datagen

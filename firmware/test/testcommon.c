@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <assert.h>
 
 #include "type.h"
 #include "ch559.h"
@@ -161,7 +160,7 @@ void InitTest (
     USB_HUB_PORT *pUsbDevice,
     uint8_t *Dev, uint16_t DevLen, 
     uint8_t *Config, uint16_t ConfigLen
-){
+) {
 
     andyclearmem();
     InitPresets();
@@ -194,10 +193,54 @@ uint32_t rand32(void) {
     return ((uint32_t)(rand()) << 16) | (uint32_t)rand();
 }
 
+#define SIF_ADDRESS_SPACE_NAME	"xram"
+#define SIF_ADDRESS_SPACE	__xdata
+#define SIF_ADDRESS		0xffff
+
+volatile unsigned char SIF_ADDRESS_SPACE * sif;
+
+enum sif_command {
+  DETECT_SIGN	    = '!',	// answer to detect command
+  SIFCM_DETECT		= '_',	// command used to detect the interface
+  SIFCM_COMMANDS	= 'i',	// get info about commands
+  SIFCM_IFVER		= 'v',	// interface version
+  SIFCM_SIMVER		= 'V',	// simulator version
+  SIFCM_IFRESET		= '@',	// reset the interface
+  SIFCM_CMDINFO		= 'I',	// info about a command
+  SIFCM_CMDHELP		= 'h',	// help about a command
+  SIFCM_STOP		= 's',	// stop simulation
+  SIFCM_PRINT		= 'p',	// print character
+  SIFCM_FIN_CHECK	= 'f',	// check input file for input
+  SIFCM_READ		= 'r',	// read from input file
+  SIFCM_WRITE		= 'w',	// write to output file
+};
+
+char
+detect(void)
+{
+  *sif= SIFCM_DETECT;
+  printf("%x det\n", *sif);
+}
+
+void halt(void)
+{
+  *sif= SIFCM_STOP;
+}
+
+void __assert(const char *expression, const char *functionname, const char *filename, unsigned int linenumber)
+{
+	printf("Assert(%s) failed in function %s at line %u in file %s.\n",
+		expression, functionname, linenumber, filename);
+    halt();
+}
+
+
 void TestSetup()
 {
+    sif= (unsigned char SIF_ADDRESS_SPACE *) SIF_ADDRESS;
+
     // timer0 setup
-	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto reload)
+	TMOD = (TMOD & 0xf0) | 0x02; // mode 1 (8bit auto relo    printf("Standard Keyboard Parser Test - PASS\n");ad)
 	TH0 = 0x00;					 // I dunno
 
 	TR0 = 1; // start timer0
@@ -207,5 +250,5 @@ void TestSetup()
 
     UART_Init();
 
-    printstackpointer();
+    //printstackpointer();
 }

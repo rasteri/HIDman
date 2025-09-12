@@ -22,3 +22,9 @@ void TestSetup();
 uint8_t * GetNextChunk();
 uint8_t * GetNextChonk();
 
+void halt();
+
+/* Debugging enabled -- verify assertions at run time. */
+void __assert(const char *expression, const char *functionname, const char *filename, unsigned int linenumber);
+#define assert(...) ((__VA_ARGS__) ? (void)0 : __assert(#__VA_ARGS__, __func__, __FILE__, __LINE__))
+

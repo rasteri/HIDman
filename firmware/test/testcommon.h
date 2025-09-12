@@ -15,3 +15,10 @@ void InitTest (
 __xdata HID_SEG * FindSegByStartBit(__xdata HID_REPORT * descReport, uint16_t StartBit);
 
 uint32_t rand32(void);
+
+extern __xdata USB_HUB_PORT UsbDev;
+
+void TestSetup();
+uint8_t * GetNextChunk();
+uint8_t * GetNextChonk();
+

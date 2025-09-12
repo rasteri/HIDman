@@ -58,7 +58,7 @@ $(OBJDIR)/preset.rel \
 $(OBJDIR)/ps2mapping.rel \
 $(OBJDIR)/linkedlist.rel \
 $(OBJDIR)/scancode.rel \
-$(OBJDIR)/testcommon.rel \
+$(OBJDIR)/test/testcommon.rel \
 $(OBJDIR)/processreport.rel \
 $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/mouse.rel \
@@ -87,7 +87,7 @@ endif
 CFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
 	--code-size $(CODE_SIZE) \
-	-I/ -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
+	-I./inc -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
 	$(EXTRA_FLAGS)
 
 LFLAGS := $(CFLAGS)
@@ -95,16 +95,20 @@ LFLAGS := $(CFLAGS)
 TESTCFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size 0x8000 --xram-loc $(XRAM_LOC) \
 	--code-size 0xEFFF \
-	-I/ -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
+	-I./inc -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
 	$(EXTRA_FLAGS)
 
 print-%  : ; @echo $* = $($*)
 
 makebuilddir:
 	@-mkdir build
+	@-mkdir build/test
 
 $(OBJDIR)/%.rel : %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(OBJDIR)/test/%.rel : %.c
+	$(CC) -c $(TESTCFLAGS) -o $@ $<
 
 
 $(OBJDIR)/$(TARGET).ihx: makebuilddir $(COMMON) $(OBJDIR)/main.rel
@@ -134,9 +138,11 @@ clean:
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 
-test: $(TESTOBJS) $(OBJDIR)/testendtoend.rel $(OBJDIR)/testdata.rel
-	$(CC) $(TESTOBJS) $(OBJDIR)/testendtoend.rel $(OBJDIR)/testdata.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
-	s51 -g -s - build/test 
+test: FORCE $(TESTOBJS) $(OBJDIR)/test/testcommon.rel $(OBJDIR)/test/teststandardkeyboard.rel
+	$(CC) $(TESTOBJS) $(OBJDIR)/test/teststandardkeyboard.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
+	-rm success
+	s51 -s success -C test/testargs -G build/test
+	type success
 
 datagen: 
 	$(GCC) ../data/datagen.c -o datagen
@@ -144,3 +150,5 @@ datagen:
 
 mashpipe.exe:
 	$(DOSBOX) -conf ../mashpipe/dosbox.conf
+
+FORCE: ;

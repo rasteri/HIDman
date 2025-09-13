@@ -1,3 +1,4 @@
+
 BOARD_TYPE = BOARD_AXP
 #BOARD_TYPE = BOARD_PS2
 #BOARD_TYPE = BOARD_MINI
@@ -73,6 +74,7 @@ teststandardkeyboard \
 testcheapogamepad \
 testfakeg304 \
 teststandardmouse \
+testsegextracts 
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -139,8 +141,11 @@ flash: $(OBJDIR)/$(TARGET).bin
 .DEFAULT_GOAL := all
 all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 
-$(TESTS) : %: test/%.c $(TESTOBJS)
-	$(CC) $(TESTOBJS) $(TESTCFLAGS) -o $(OBJDIR)/$@.ihx $<
+$(OBJDIR)/test/%.ihx: $(OBJDIR)/test/%.rel $(COMMON) 
+	$(CC) $(TESTOBJS) $< $(TESTCFLAGS) -o $@ 
+
+$(TESTS) : %: $(OBJDIR)/test/%.ihx $(TESTOBJS)
+	
 
 tests: $(TESTS)
 

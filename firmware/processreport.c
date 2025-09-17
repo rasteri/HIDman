@@ -255,14 +255,11 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 	}
 	else if (currSeg->InputType) //i.e. not MAP_TYPE_NONE
 	{
-
 		uint32_t value = SegExtractValue(currSeg, data);
 
 		// if it's a signed integer we need to extend the sign
 		if (currSeg->InputParam & INPUT_PARAM_SIGNED)
 			value = SIGNEX(value, currSeg->reportSize - 1);
-
-		
 
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 			report->keyboardUpdated = 1;

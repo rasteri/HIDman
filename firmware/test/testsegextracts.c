@@ -56,6 +56,9 @@ bool TestExtractValue(uint8_t reportSize, uint16_t startBit){
         ogtestdata = rand32() & bitMasks32[reportSize];
         testdata = ogtestdata << startBit;
         afterdata = SegExtractValue(&testSeg, (__xdata uint8_t *)(&testdata));
+        if (ogtestdata != afterdata){
+            printf("%llx != %llx\n", ogtestdata, afterdata);
+        }
         assert(ogtestdata == afterdata);
     }
 
@@ -82,7 +85,7 @@ bool TestExtractValue(uint8_t reportSize, uint16_t startBit){
     return 1;
 }
 
-int main(){
+int main() {
 
     TestSetup();
 

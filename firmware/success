@@ -1,1 +1,4 @@
-PASS
+mm 0,0,0
+mm 0,-888,0
+mm -2031,0,0
+Assert(count < 3) failed in function main at line 191 in file test/testcw917.c.

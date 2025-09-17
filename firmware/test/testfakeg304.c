@@ -26,8 +26,8 @@
 //__xdata uint8_t FakeG304TestData1[] = { 0x02, 0x00, 0x21, 0x43, 0x65, 0x00 };
 
 __xdata uint8_t FakeG304TestData1[] = { 0x02, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
-__xdata uint8_t FakeG304TestData2[] = { 0x02, 0x00, 0x00, 0xE0, 0xFF, 0x00, 0x00  };
-__xdata uint8_t FakeG304TestData3[] = { 0x02 , 0x00 , 0x01 , 0x80 , 0x04 , 0x00 , 0x00 };
+__xdata uint8_t FakeG304TestData2[] = { 0x02, 0x00, 0xFE, 0xEF, 0xFF, 0x00, 0x00  };
+__xdata uint8_t FakeG304TestData3[] = { 0x02, 0x00, 0x01, 0x80, 0x04, 0x00, 0x00 };
 //__xdata uint8_t FakeG304TestData3[] = { 0x02 , 0x00 , 0x7F , 0x30 , 0x00 , 0x00 , 0x00  };
 //__xdata uint8_t FakeG304TestData3[] = { 0x02, 0x00, 0x02 , 0xB0 , 0xFF , 0x00 , 0x00 };
 
@@ -148,13 +148,16 @@ __code uint8_t FakeG304ReportDescriptor[] = {
 
 };
 
+__xdata uint8_t MouseTestData[] = { 0x02, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
 
-int main(){
+int main() {
+
+    uint8_t * chonk;
 
     TestSetup();
 
     InitPS2Ports();
-
+    InitMice();
 
     InitTest(&UsbDev, FakeG304DeviceDescriptor, 18, FakeG304ConfigDescriptor, 34);
 
@@ -198,6 +201,57 @@ int main(){
     assert(testseg->InputType == MAP_TYPE_SCALE);
     assert(testseg->OutputControl == MAP_MOUSE_WHEEL);
     assert(testseg->OutputChannel == MAP_MOUSE);
+
+    // random movement test
+    for (int c = 0; c < 200; c++) {
+
+        // generate 12 bits of randomness
+        uint32_t xrand = rand32() & 0xFFF;
+        uint32_t yrand = rand32() & 0xFFF;
+
+        int32_t xrands = (int32_t) SIGNEX(xrand, 11);
+        int32_t yrands = (int32_t) SIGNEX(yrand, 11);
+
+        // pack it into report
+        MouseTestData[2] = xrand & 0xFF;
+        MouseTestData[3] = ((xrand & 0xF00) >> 8) | ((yrand & 0x00F) << 4);
+        MouseTestData[4] = (yrand & 0xFF0) >> 4;
+
+
+        // zero sized moves might not trigger a chonk
+        if (MouseTestData[2] == 0) continue;
+        if (MouseTestData[3] == 0) continue;
+        if (MouseTestData[4] == 0) continue;
+
+
+        // parse the random mouse movement
+        assert (ParseReport(pInterface, 56, MouseTestData));
+        
+
+        //see if it comes out the other end with correct value
+        bool xzeroed = 0, yzeroed = 0;
+        uint8_t count = 0;
+
+        // because ps2 is limited to +-255, the result will come in several chonks, we have to accumulate them
+        while (xrands != 0 || yrands != 0) {
+
+            HandleMouse();
+            chonk = GetNextChonk();
+            assert (chonk != NULL);
+
+            uint32_t processedx = SIGNEX(chonk[2] | ((chonk[1] & 0x10) << 4), 8);
+            uint32_t processedy = - SIGNEX(chonk[3] | ((chonk[1] & 0x20) << 3), 8);
+
+            xrands -= processedx;
+            yrands -= processedy;
+
+            // give up after 32 goes
+            count++;
+            assert(count < 32);
+
+        }
+    }
+
 
     printf("PASS\n");
     halt();

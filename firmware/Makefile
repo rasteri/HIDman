@@ -70,10 +70,12 @@ $(OBJDIR)/uart1.rel \
 $(OBJDIR)/usbdata.rel
 
 TESTS = \
-teststandardkeyboard \
-testcheapogamepad \
+testcw917 \
 testfakeg304 \
 teststandardmouse \
+teststandardkeyboard \
+testintsizes \
+testcheapogamepad \
 testsegextracts 
 
 ifndef FREQ_SYS
@@ -158,7 +160,7 @@ test: $(TESTS)
 	@echo "Running all tests..."
 	@for t in $(TESTS); do \
 		rm success; \
-		s51 -s success -e "set hardware simif xram 0xffff" -G build/$$t > /dev/null 2>&1; \
+		s51 -s success -e "set hardware simif xram 0xffff" -G build/test/$$t > /dev/null 2>&1; \
 		if grep -q 'PASS' success; then \
 			echo "$$t - PASS"; \
 		else \

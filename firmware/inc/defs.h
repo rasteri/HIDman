@@ -157,6 +157,7 @@
 
 #define MAX_HID_DEVICES 8
 
+// SB should be one less than the total number of bits
 #define SIGNEX(v, sb) ((v) | (((v) & (1 << (sb))) ? ~((1 << (sb))-1) : 0))
 
 typedef struct _EndPoint

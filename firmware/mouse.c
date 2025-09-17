@@ -38,9 +38,9 @@ void InitMice(void)
 __xdata uint8_t updates = 0;
 void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
 {
-	/*printf("mm %ld,", DeltaX);
-	printf("%ld,", DeltaY);
-	printf("%ld\n", DeltaZ);*/
+	printf("mm %lld,", DeltaX);
+	printf("%lld,", DeltaY);
+	printf("%lld\n", DeltaZ);
 	if (DeltaX || DeltaY || DeltaZ) {
 		for (int x = 0; x < 2; x++)
 		{
@@ -235,7 +235,6 @@ void HandleMouse(void) {
 				// ps2 is inverted compared to USB
 				Y = -Y;
 
-				// TODO: construct bytes from real state
 				byte1 = 0b00001000 |			   //bit3 always set
 						((Y >> 10) & 0b00100000) | // Y sign bit
 						((X >> 11) & 0b00010000) | // X sign bit
@@ -243,6 +242,7 @@ void HandleMouse(void) {
 
 				byte2 = (X & 0xFF);
 				byte3 = (Y & 0xFF);
+
 
 
 				if (ps2Mouse->Ps2Type == MOUSE_PS2_TYPE_INTELLIMOUSE_3_BUTTON)

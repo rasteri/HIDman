@@ -130,13 +130,13 @@ python3 ch55xtool.py -f hidman_axp_v1.1.bin
 
 ## Debricking
 
-If this is your first time programming HIDman, or you accidentally program a corrupted firmware, you can force it into firmware update mode another way.
+If this is your first time programming HIDman, or you accidentally program a corrupted firmware, you can force it into firmware update mode another way. It can be a bit fiddly though.
 
 <img src=/images/C5.png width=500/>
 
 1. Disassemble HIDman.
-2. Connecting the two pads of component C5 (shown above) together using a pair of tweezers or similar.
-3. Use a USB A-to-A cable to connect HIDman's LOWER USB port to a USB port on your modern PC.
+2. Connect the two pads of component C5 (shown above) together using a pair of tweezers or similar.
+3. While keeping the pads connected, use a USB A-to-A cable to connect HIDman's LOWER USB port to a USB port on your modern PC.
 
 # Advanced Setups
 

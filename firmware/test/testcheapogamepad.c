@@ -24,7 +24,7 @@
 #include "linkedlist.h"
 #include "testcommon.h"
 
-__xdata uint8_t CheapoGamepadTestDataU[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x0F, 0x00, 0x00 };
+__xdata uint8_t CheapoGamepadTestDataU[] =  { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x0F, 0x00, 0x00 };
 __xdata uint8_t CheapoGamepadTestDataD1[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x1F, 0x00, 0x00 };
 __xdata uint8_t CheapoGamepadTestDataD2[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x2F, 0x00, 0x00 };
 __xdata uint8_t CheapoGamepadTestDataD3[] = { 0x01, 0x80, 0x80, 0x7F, 0x7F, 0x4F, 0x00, 0x00 };
@@ -160,27 +160,6 @@ int main(void) {
 
     __xdata HID_REPORT *report = (__xdata HID_REPORT *)ListGetData(pInterface->Reports, 0);
 
-    /*assert(report->length == 64);
-    assert(report->appUsagePage == REPORT_USAGE_PAGE_GENERIC);
-    assert(report->appUsage == REPORT_USAGE_KEYBOARD);
-
-    // modifyers
-    __xdata HID_SEG * testseg = FindSegByStartBit(report, 0);
-
-    assert(testseg != NULL);
-    assert(testseg->InputType == MAP_TYPE_BITFIELD);
-    assert(testseg->OutputChannel == MAP_KEYBOARD);
-    assert(testseg->OutputControl == 0xE0);
-
-    // scancode array
-    for( uint8_t x = 16; x < 64; x += 8){
-        testseg = FindSegByStartBit(report, x);
-        assert(testseg != NULL);
-        assert(testseg->OutputChannel == MAP_KEYBOARD);
-        assert(testseg->InputType == MAP_TYPE_ARRAY);
-    }
-
-    printf("Standard Keyboard Parser Test Passed\n");*/
 
     int c;
     for (int c = 0; c < 1; c++) {

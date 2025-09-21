@@ -38,9 +38,9 @@ void InitMice(void)
 __xdata uint8_t updates = 0;
 void MouseMove(int32_t DeltaX, int32_t DeltaY, int32_t DeltaZ)
 {
-	printf("mm %lld,", DeltaX);
+	/*printf("mm %lld,", DeltaX);
 	printf("%lld,", DeltaY);
-	printf("%lld\n", DeltaZ);
+	printf("%lld\n", DeltaZ);*/
 	if (DeltaX || DeltaY || DeltaZ) {
 		for (int x = 0; x < 2; x++)
 		{

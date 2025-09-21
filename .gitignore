@@ -30,3 +30,5 @@ fp-info-cache
 *.SWP
 
 *.lck
+
+firmware/success

@@ -1,3 +1,4 @@
+
 BOARD_TYPE = BOARD_AXP
 #BOARD_TYPE = BOARD_PS2
 #BOARD_TYPE = BOARD_MINI
@@ -58,7 +59,7 @@ $(OBJDIR)/preset.rel \
 $(OBJDIR)/ps2mapping.rel \
 $(OBJDIR)/linkedlist.rel \
 $(OBJDIR)/scancode.rel \
-$(OBJDIR)/testcommon.rel \
+$(OBJDIR)/test/testcommon.rel \
 $(OBJDIR)/processreport.rel \
 $(OBJDIR)/ps2protocol.rel \
 $(OBJDIR)/mouse.rel \
@@ -67,6 +68,15 @@ $(OBJDIR)/delay.rel \
 $(OBJDIR)/uart.rel \
 $(OBJDIR)/uart1.rel \
 $(OBJDIR)/usbdata.rel
+
+TESTS = \
+testcw917 \
+testfakeg304 \
+teststandardmouse \
+teststandardkeyboard \
+testintsizes \
+testcheapogamepad \
+testsegextracts 
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -87,7 +97,7 @@ endif
 CFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) \
 	--code-size $(CODE_SIZE) \
-	-I/ -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
+	-I./inc -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
 	$(EXTRA_FLAGS)
 
 LFLAGS := $(CFLAGS)
@@ -95,16 +105,20 @@ LFLAGS := $(CFLAGS)
 TESTCFLAGS := -V -mmcs51 --model-large --stack-auto \
 	--xram-size 0x8000 --xram-loc $(XRAM_LOC) \
 	--code-size 0xEFFF \
-	-I/ -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
+	-I./inc -DFREQ_SYS=$(FREQ_SYS) -D$(BOARD_TYPE) -D$(BOARD_OPTIONS) -D$(OSC_TYPE) \
 	$(EXTRA_FLAGS)
 
 print-%  : ; @echo $* = $($*)
 
 makebuilddir:
 	@-mkdir build
+	@-mkdir build/test
 
 $(OBJDIR)/%.rel : %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(OBJDIR)/test/%.rel : %.c
+	$(CC) -c $(TESTCFLAGS) -o $@ $<
 
 
 $(OBJDIR)/$(TARGET).ihx: makebuilddir $(COMMON) $(OBJDIR)/main.rel
@@ -129,14 +143,33 @@ flash: $(OBJDIR)/$(TARGET).bin
 .DEFAULT_GOAL := all
 all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 
+$(OBJDIR)/test/%.ihx: $(OBJDIR)/test/%.rel $(COMMON) 
+	$(CC) $(TESTOBJS) $< $(TESTCFLAGS) -o $@ 
+
+$(TESTS) : %: $(OBJDIR)/test/%.ihx $(TESTOBJS)
+	
+
+tests: $(TESTS)
+
 clean:
 	-rm -f $(OBJDIR)/*
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 
-test: $(TESTOBJS) $(OBJDIR)/testendtoend.rel $(OBJDIR)/testdata.rel
-	$(CC) $(TESTOBJS) $(OBJDIR)/testendtoend.rel $(OBJDIR)/testdata.rel $(TESTCFLAGS) -o $(OBJDIR)/test.ihx
-	s51 -g -s - build/test 
+test: $(TESTS)
+	@echo "Running all tests..."
+	@for t in $(TESTS); do \
+		rm success; \
+		s51 -s success -e "set hardware simif xram 0xffff" -G build/test/$$t > /dev/null 2>&1; \
+		if grep -q 'PASS' success; then \
+			echo "$$t - PASS"; \
+		else \
+			echo "$$t - FAIL"; \
+			cat success; \
+			exit 1; \
+		fi;\
+	done
+	@echo "All tests passed!"
 
 datagen: 
 	$(GCC) ../data/datagen.c -o datagen
@@ -144,3 +177,5 @@ datagen:
 
 mashpipe.exe:
 	$(DOSBOX) -conf ../mashpipe/dosbox.conf
+
+FORCE: ;

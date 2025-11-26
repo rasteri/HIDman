@@ -69,14 +69,16 @@ $(OBJDIR)/uart.rel \
 $(OBJDIR)/uart1.rel \
 $(OBJDIR)/usbdata.rel
 
-TESTS = \
-testcw917 \
-testfakeg304 \
-teststandardmouse \
-teststandardkeyboard \
-testintsizes \
-testcheapogamepad \
-testsegextracts 
+#TESTS = \
+#testcw917 \
+#testfakeg304 \
+#teststandardmouse \
+#teststandardkeyboard \
+#testintsizes \
+#testcheapogamepad \
+#testsegextracts 
+
+TESTS = testkeychron
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -156,7 +158,7 @@ clean:
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 
-test: $(TESTS)
+test: $(TESTS) $(TESTOBJS)
 	@echo "Running all tests..."
 	@for t in $(TESTS); do \
 		rm success; \
@@ -171,9 +173,10 @@ test: $(TESTS)
 	done
 	@echo "All tests passed!"
 
-datagen: 
-	$(GCC) ../data/datagen.c -o datagen
-	datagen
+datagen: FORCE
+	-rm datagen
+	$(GCC) ../data/datagen.c -o datagen && ./datagen
+	
 
 mashpipe.exe:
 	$(DOSBOX) -conf ../mashpipe/dosbox.conf

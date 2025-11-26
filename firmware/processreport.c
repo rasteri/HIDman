@@ -96,9 +96,7 @@ void HandleRepeats(void)
 	}
 }
 
-
-#define SetKey(key,report) report->KeyboardKeyMap[key >> 3] |= 1 << (key & 0x07)
-
+#define SetKey(key,report) report->KeyboardKeyMap[key >> 3] |= (1 << (key & 0x07))
 #define GetOldKey(key,report) report->oldKeyboardKeyMap[key >> 3] & (1 << (key & 0x07))
 
 #define SetMouseButBit(buttn,report) report->MouseButMap |= (1 << buttn)
@@ -166,6 +164,24 @@ void Dumphex(__xdata uint8_t * hex, uint8_t len){
 	printf("\n");
 }
 
+// return the position of the searched index
+uint8_t FindKey(EXTCHARLOOKUP * KeyTable, uint16_t HIDCode) {
+
+	if (HIDCode == 0)
+		return 0;
+
+	uint8_t index = 0;
+
+	while (KeyTable->HIDCode != 0 && KeyTable->ScanCode != 0) {
+		if (KeyTable->HIDCode == HIDCode){
+			return index;
+		}
+
+		KeyTable++;
+		index++;
+	}
+}
+
 void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata uint8_t *data)
 {
 	bool make = 0;
@@ -182,9 +198,14 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		// special case for if we can just copy the whole bitfield into the keyboard buffer
 		if (currSeg->OutputChannel == MAP_KEYBOARD)
 		{
-			if (!(currSeg->startBit & 0x07) && !(currSeg->reportCount & 0x07) && !(currSeg->OutputControl & 0x07)){
+			if (
+				!(currSeg->startBit & 0x07) // startbit is byte-aligned
+				&& !(currSeg->reportCount & 0x07) // count is also byte-aligned
+				&& !(currSeg->OutputControl & 0x07) // etc
+			)
+			{
 				data += (currSeg->startBit >> 3);
-				memcpy(report->KeyboardKeyMap + (currSeg->OutputControl >> 3), data, (currSeg->reportCount >> 3) );
+				memcpy(report->KeyboardKeyMap + (currSeg->OutputControl >> 3), data, (currSeg->reportCount >> 3));
 				report->keyboardUpdated = 1;
 				return;
 			}
@@ -207,11 +228,12 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 			
 		}
 
+		// otherwise, just gotta iterate through every bit like a chump
 		endbit = currSeg->startBit + currSeg->reportCount;
 		tmp = currSeg->OutputControl;
 
 		for (cnt = currSeg->startBit; cnt < endbit; cnt++)
-		{	
+		{
 			pressed = 0;
 
 			// find byte
@@ -298,7 +320,6 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		}
 		else if (currSeg->InputType == MAP_TYPE_SCALE)
 		{
-
 			if (currSeg->OutputChannel == MAP_MOUSE)
 			{
 
@@ -353,6 +374,7 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		{
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
+				FindKey(&HID0CtoSET1_Make[0], value);
 				SetKey(value, report);
 			}
 		}

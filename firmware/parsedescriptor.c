@@ -175,7 +175,7 @@ uint8_t DumpHID(INTERFACE *pInterface)
         {
             tmpsegNode = tr->HidSegments;
 
-            printf("Report %x, usage %x, length %u: \n", x, tr->appUsage, tr->length);
+            printf("Report %x, appusagepage %x, appusage %x, length %u: \n", x, tr->appUsagePage, tr->appUsage, tr->length);
 
             while (tmpsegNode != NULL)
             {
@@ -230,16 +230,24 @@ BOOL ParseReportDescriptor(uint8_t *pDescriptor, UINT16 len, INTERFACE *pInterfa
 			if (item.tag == HID_MAIN_ITEM_TAG_INPUT)
 			{
 				if (
-					HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC &&
 					(
-						HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || 
-						HIDParseState.appUsage == REPORT_USAGE_GAMEPAD ||
-						HIDParseState.appUsage == REPORT_USAGE_KEYBOARD ||
-						HIDParseState.appUsage == REPORT_USAGE_MOUSE
-						
+						HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC
+						&&
+						(
+							HIDParseState.appUsage == REPORT_USAGE_JOYSTICK || 
+							HIDParseState.appUsage == REPORT_USAGE_GAMEPAD ||
+							HIDParseState.appUsage == REPORT_USAGE_KEYBOARD ||
+							HIDParseState.appUsage == REPORT_USAGE_MOUSE
+							
+						)
+					) 
+					||
+					(
+						HIDParseState.appUsagePage == REPORT_USAGE_PAGE_CONSUMER && HIDParseState.appUsage == REPORT_USAGE_CONSUMER_CONTROL
 					)
 				
-				){
+				)
+				{
 					if (currHidReport == NULL)
 					{
 						pInterface->Reports = ListAdd(pInterface->Reports, sizeof(HID_REPORT), hidGlobalPnt->reportID);

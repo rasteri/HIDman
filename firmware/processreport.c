@@ -374,8 +374,8 @@ void processSeg(__xdata HID_SEG *currSeg, __xdata HID_REPORT *report, __xdata ui
 		{
 			if (currSeg->OutputChannel == MAP_KEYBOARD)
 			{
-				FindKey(&HID0CtoSET1_Make[0], value);
-				SetKey(value, report);
+				if (value)
+					SetKey(value, report);
 			}
 		}
 	}
@@ -388,7 +388,7 @@ bool BitPresent(uint8_t *bitmap, uint8_t bit)
 	else
 		return 0;
 }
- 
+
 bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *report)
 {
 	__xdata HID_REPORT *descReport;
@@ -443,39 +443,47 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 		//and also E0-EF
 		descReport->KeyboardKeyMap[28] = 0;
+
+		// If media keys, wipe all the rest too
+		if (descReport->appUsagePage == 0x0C) {
+			memset(descReport->KeyboardKeyMap, 0, 70);
+		}
 	}
 
 	while (currSegNode != NULL)
 	{			
 		processSeg((__xdata HID_SEG *)(currSegNode->data), descReport, report);
-		currSegNode = currSegNode->next;
-				
+		currSegNode = currSegNode->next;	
 	}
-
 	uint8_t xorred;
-	uint8_t hidcode;
+	uint16_t hidcode;
 	uint8_t *keybyte;
+
+
 	
-	if(descReport->keyboardUpdated)
-	{
+	if(descReport->keyboardUpdated) {
+
 		keybyte = descReport->KeyboardKeyMap;
 
+		uint8_t d = 0, end = 32;
+
+		// end at different place for media keys
+		if (descReport->appUsagePage == 0x0C)
+			end = 70;
+
 		// for each byte in the report
-		for (uint8_t d = 0; d < 32; d++) 
-		{
+		for (; d < end; d++) {
 			// XOR to see if any bits are different
 
 			uint8_t xorred = *keybyte ^ descReport->oldKeyboardKeyMap[d];
 
-			
-
 			if (xorred) {
 				
-				for (uint8_t c = 0; c < 8; c++)
-				{
-					if (xorred & (1 << c)) 
-					{
-						hidcode = (d << 3) | c;
+				for (uint8_t c = 0; c < 8; c++) {
+
+					if (xorred & (1 << c)) {
+
+						hidcode = (uint16_t)((uint16_t)d << 3) | (uint16_t)c;
 						
 						if (*keybyte & (1 << c)) // set in current but not prev
 						{
@@ -486,11 +494,31 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 								//DEBUGOUT("\nSendn %x\n", hidcode);
 								// Make
 
-								SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[hidcode] : HIDtoSET1_Make[hidcode]);
-								if (!(hidcode >= 0xE0 && hidcode <= 0xE7))
-								{
-									RepeatKey = hidcode;
-									SetRepeatState(1);
+								// media keys work different
+								// lookup a sparse table
+								if (descReport->appUsagePage == 0x0C) {
+
+									__code EXTCHARLOOKUP *currpnt = FlashSettings->KeyboardMode == MODE_PS2 ? HID0CtoSET2_Make : HID0CtoSET1_Make;
+
+									for (;;) {
+										if (currpnt->HIDCode == 0) break;
+
+										if (currpnt->HIDCode == hidcode) {
+											SendKeyboard(currpnt->ScanCode);
+										}
+
+										currpnt ++;
+									}
+								}
+								// non-media keys have a direct index for speed
+								else {
+									SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Make[hidcode] : HIDtoSET1_Make[hidcode]);
+									
+									if (!(hidcode >= 0xE0 && hidcode <= 0xE7))
+									{
+										RepeatKey = hidcode;
+										SetRepeatState(1);
+									}
 								}
 							}
 						}
@@ -499,20 +527,40 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 							if (!MenuActive)
 							{
 								// break
-
+								
 								//DEBUGOUT("\nBreakn %x\n", hidcode);
-								// if the key we just released is the one that's repeating then stop
-								if (hidcode == RepeatKey)
-								{
-									RepeatKey = 0;
-									SetRepeatState(0);
+								// media keys work different
+								// lookup a sparse table
+								if (descReport->appUsagePage == 0x0C) {
+
+									__code EXTCHARLOOKUP *currpnt = FlashSettings->KeyboardMode == MODE_PS2 ? HID0CtoSET2_Break : HID0CtoSET1_Break;
+
+									for (;;) {
+										if (currpnt->HIDCode == 0) break;
+
+										if (currpnt->HIDCode == hidcode) {
+											SendKeyboard(currpnt->ScanCode);
+										}
+
+										currpnt ++;
+									}
 								}
+								// non-media keys have a direct index for speed
+								else {
 
-								// Pause has no break for some reason
-								if (hidcode == 0x48)
-									continue;
+									// if the key we just released is the one that's repeating then stop
+									if (hidcode == RepeatKey)
+									{
+										RepeatKey = 0;
+										SetRepeatState(0);
+									}
 
-								SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[hidcode] : HIDtoSET1_Break[hidcode]);
+									// Pause has no break for some reason
+									if (hidcode == 0x48)
+										continue;
+									
+									SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? HIDtoSET2_Break[hidcode] : HIDtoSET1_Break[hidcode]);
+								}
 
 							}
 						}
@@ -528,6 +576,13 @@ bool ParseReport(__xdata INTERFACE *interface, uint32_t len, __xdata uint8_t *re
 
 		//and also E0-EF
 		descReport->oldKeyboardKeyMap[28] = descReport->KeyboardKeyMap[28];
+
+		// If media keys, copy all the rest too
+		if (descReport->appUsagePage == 0x0C) {
+			memcpy(descReport->oldKeyboardKeyMap, descReport->KeyboardKeyMap, 69);
+		}
+
+
 	}
 
 	if(descReport->MouseUpdated)

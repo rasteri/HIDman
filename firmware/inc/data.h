@@ -50,6 +50,8 @@ extern __code unsigned char KEY_SET2_UP_BREAK[];
 extern __code unsigned char KEY_SET2_DOWN_BREAK[];
 extern __code unsigned char KEY_SET2_LEFT_BREAK[];
 extern __code unsigned char KEY_SET2_RIGHT_BREAK[];
+extern __code unsigned char KEY_SET2_VOLUP_MAKE[];
+extern __code unsigned char KEY_SET2_VOLUP_BREAK[];
 
 extern const EXTCHARLOOKUP HID0CtoSET1_Make[];
 extern const EXTCHARLOOKUP HID0CtoSET1_Break[];

@@ -760,7 +760,7 @@ __code unsigned char KEY_SET1_WWWFAVE_BREAK[] = { 0x02, 0xE0, 0xE6, };
 __code unsigned char KEY_SET2_WWWFAVE_MAKE[] = { 0x02, 0xE0, 0x18, };
 __code unsigned char KEY_SET2_WWWFAVE_BREAK[] = { 0x03, 0xE0, 0xF0, 0x18, };
 
-const unsigned char * const HIDtoSET1_Make[] = {
+__code unsigned char * __code HIDtoSET1_Make[] = {
 	NULL, //0
 	NULL, //1
 	NULL, //2
@@ -1019,7 +1019,7 @@ const unsigned char * const HIDtoSET1_Make[] = {
 	NULL, //255
 };
 
-const unsigned char * const HIDtoSET1_Break[] = {
+__code unsigned char * __code HIDtoSET1_Break[] = {
 	NULL, //0
 	NULL, //1
 	NULL, //2
@@ -1278,7 +1278,7 @@ const unsigned char * const HIDtoSET1_Break[] = {
 	NULL, //255
 };
 
-const unsigned char * const HIDtoSET2_Make[] = {
+__code unsigned char * __code HIDtoSET2_Make[] = {
 	NULL, //0
 	NULL, //1
 	NULL, //2
@@ -1537,7 +1537,7 @@ const unsigned char * const HIDtoSET2_Make[] = {
 	NULL, //255
 };
 
-const unsigned char * const HIDtoSET2_Break[] = {
+__code unsigned char * __code HIDtoSET2_Break[] = {
 	NULL, //0
 	NULL, //1
 	NULL, //2
@@ -1815,6 +1815,7 @@ const EXTCHARLOOKUP HID0CtoSET1_Make[] = {
 	{550, KEY_SET1_WWWSTOP_MAKE}, //550
 	{551, KEY_SET1_WWWREFRESH_MAKE}, //551
 	{554, KEY_SET1_WWWFAVE_MAKE}, //554
+	{NULL, NULL}
 };
 
 const EXTCHARLOOKUP HID0CtoSET1_Break[] = {
@@ -1836,6 +1837,7 @@ const EXTCHARLOOKUP HID0CtoSET1_Break[] = {
 	{550, KEY_SET1_WWWSTOP_BREAK}, //550
 	{551, KEY_SET1_WWWREFRESH_BREAK}, //551
 	{554, KEY_SET1_WWWFAVE_BREAK}, //554
+	{NULL, NULL}
 };
 
 const EXTCHARLOOKUP HID0CtoSET2_Make[] = {
@@ -1857,6 +1859,7 @@ const EXTCHARLOOKUP HID0CtoSET2_Make[] = {
 	{550, KEY_SET2_WWWSTOP_MAKE}, //550
 	{551, KEY_SET2_WWWREFRESH_MAKE}, //551
 	{554, KEY_SET2_WWWFAVE_MAKE}, //554
+	{NULL, NULL}
 };
 
 const EXTCHARLOOKUP HID0CtoSET2_Break[] = {
@@ -1878,5 +1881,6 @@ const EXTCHARLOOKUP HID0CtoSET2_Break[] = {
 	{550, KEY_SET2_WWWSTOP_BREAK}, //550
 	{551, KEY_SET2_WWWREFRESH_BREAK}, //551
 	{554, KEY_SET2_WWWFAVE_BREAK}, //554
+	{NULL, NULL}
 };
 

@@ -287,8 +287,8 @@ typedef struct _HID_REPORT
 	bool MouseUpdated;
 
 	// bit map for currently pressed keys (0-256)
-	uint8_t KeyboardKeyMap[32];
-	uint8_t oldKeyboardKeyMap[32];
+	uint8_t KeyboardKeyMap[70];
+	uint8_t oldKeyboardKeyMap[70];
 
 	// bit map for currently pressed mouse buts
 	uint8_t MouseButMap;
@@ -301,7 +301,7 @@ typedef struct _HID_REPORT
 typedef struct _EXTCHARLOOKUP
 {
 	unsigned int HIDCode;
-	const unsigned char * ScanCode;
+	__code const unsigned char * ScanCode;
 } EXTCHARLOOKUP;
 
 #endif

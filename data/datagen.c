@@ -197,7 +197,7 @@ void PrintLookupTable(FILE *file, char which)
     if (which < 4) {
         UsagePage = 0x07;
         NumEntries = 256;
-        fprintf(file, "const unsigned char * const %s[] = {\n", TableName);
+        fprintf(file, "__code unsigned char * __code %s[] = {\n", TableName);
     }
     else
     {
@@ -244,8 +244,9 @@ void PrintLookupTable(FILE *file, char which)
             fprintf(file, "\tNULL, //%d\n", i);
     }
 
-    // Todo, print a sparser table for 0x0C usage page
-    // will use the EXTCHARLOOKUP struct in defs.h
+    // "End of table" marker
+    if (UsagePage == 0x0C) 
+        fprintf(file, "\t{NULL, NULL}\n");
 
     fprintf(file, "};\n\n");
 }

@@ -69,16 +69,15 @@ $(OBJDIR)/uart.rel \
 $(OBJDIR)/uart1.rel \
 $(OBJDIR)/usbdata.rel
 
-#TESTS = \
-#testcw917 \
-#testfakeg304 \
-#teststandardmouse \
-#teststandardkeyboard \
-#testintsizes \
-#testcheapogamepad \
-#testsegextracts 
-
-TESTS = testkeychron
+TESTS = \
+testcw917 \
+testfakeg304 \
+teststandardmouse \
+teststandardkeyboard \
+testkeychron \
+testintsizes \
+testcheapogamepad \
+testsegextracts 
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -145,7 +144,7 @@ flash: $(OBJDIR)/$(TARGET).bin
 .DEFAULT_GOAL := all
 all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 
-$(OBJDIR)/test/%.ihx: $(OBJDIR)/test/%.rel $(COMMON) 
+$(OBJDIR)/test/%.ihx: $(OBJDIR)/test/%.rel $(TESTOBJS) 
 	$(CC) $(TESTOBJS) $< $(TESTCFLAGS) -o $@ 
 
 $(TESTS) : %: $(OBJDIR)/test/%.ihx $(TESTOBJS)
@@ -155,6 +154,7 @@ tests: $(TESTS)
 
 clean:
 	-rm -f $(OBJDIR)/*
+	-rm -f $(OBJDIR)/test/*
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 

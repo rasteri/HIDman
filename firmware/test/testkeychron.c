@@ -22,7 +22,7 @@
 #include "usbll.h"
 #include "linkedlist.h"
 #include "testcommon.h"
-
+#include "scancode.h"
 
 
 
@@ -455,6 +455,9 @@ __xdata uint8_t KeyboardTestDataNKROU[] = { 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 
 __xdata uint8_t KeyboardMediaTestD[] = { 0x02, 0xE9, 0x00 }; 
 __xdata uint8_t KeyboardMediaTestU[] = { 0x02, 0x00, 0x00 };
 
+__xdata uint8_t KeyboardMediaTestD2[] = { 0x02, 0x27, 0x02 }; 
+__xdata uint8_t KeyboardMediaTestU2[] = { 0x02, 0x00, 0x00 };
+
 int main() {
 
     uint8_t * chonk;
@@ -476,11 +479,29 @@ int main() {
     assert(!InterfaceParseReportDescriptor(pInterface, KeyChronReportDescriptor2, 164));
     DumpHID(pInterface);
 
+
+
+    uint8_t *pnt; 
+
+/*    pnt = GetNextChunk();
+
+    printf("%x\n",pnt[0]);
+    printf("%x\n",pnt[1]);
+    printf("%x\n",pnt[2]);*/
+
     assert (ParseReport(pInterface, 3 * 8, KeyboardMediaTestD));
     assert (ParseReport(pInterface, 3 * 8, KeyboardMediaTestU));
 
-    /*assert (ParseReport(pInterface, 9 * 8, KeyboardTestDataD));
+    assert (GetNextChunk() == KEY_SET2_VOLUP_MAKE);
+    assert (GetNextChunk() == KEY_SET2_VOLUP_BREAK);
 
+    assert (ParseReport(pInterface, 3 * 8, KeyboardMediaTestD2));
+    assert (ParseReport(pInterface, 3 * 8, KeyboardMediaTestU2));
+
+    assert (GetNextChunk() == KEY_SET2_WWWREFRESH_MAKE);
+    assert (GetNextChunk() == KEY_SET2_WWWREFRESH_BREAK);
+
+    
     assert (ParseReport(pInterface, 9 * 8, KeyboardTestDataD));
     assert (ParseReport(pInterface, 21 * 8, KeyboardTestDataNKROD));
 
@@ -513,7 +534,9 @@ int main() {
     assert (GetNextChunk() == KEY_SET2_I_BREAK);
     assert (GetNextChunk() == KEY_SET2_J_BREAK);
     assert (GetNextChunk() == KEY_SET2_K_BREAK);
-    assert (GetNextChunk() == KEY_SET2_L_BREAK);*/
+    assert (GetNextChunk() == KEY_SET2_L_BREAK);
+
+
 
     
     //

@@ -166,7 +166,7 @@ __code uint8_t KeyChronConfigDescriptor[] = {
 
 };
 
-// Interface 1, Mouse endpoint
+// Interface 0, Mouse endpoint
 __code uint8_t KeyChronReportDescriptor0[] = {
     0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
     0x09, 0x02,        // Usage (Mouse)
@@ -212,7 +212,7 @@ __code uint8_t KeyChronReportDescriptor0[] = {
     // 81 bytes
 };
 
-// Interface 2, another mouse and some other stuff?
+// Interface 1, another mouse and some other stuff?
 __code uint8_t KeyChronReportDescriptor1[] = {
     0x06, 0xB5, 0xFF,  // Usage Page (Vendor Defined 0xFFB5)
     0x09, 0x01,        // Usage (0x01)
@@ -457,6 +457,12 @@ __xdata uint8_t KeyboardMediaTestU[] = { 0x02, 0x00, 0x00 };
 
 __xdata uint8_t KeyboardMediaTestD2[] = { 0x02, 0x27, 0x02 }; 
 __xdata uint8_t KeyboardMediaTestU2[] = { 0x02, 0x00, 0x00 };
+
+__xdata uint8_t WeirdPacket[] = { 0x54, 0xE2, 0x01, 0x01,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  0x00,  0x00 };           
+
+// 16 bytes
+
+// best guess: USB HID Report Descriptor
 
 int main() {
 

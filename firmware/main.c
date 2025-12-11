@@ -18,9 +18,7 @@
 #include "settings.h"
 #include "system.h"
 
-
 uint8_t UsbUpdateCounter = 0;
-
 
 void EveryMillisecond(void) {
 
@@ -271,7 +269,6 @@ int main(void)
 	// main loop
 	while (1)
 	{
-
 		// reset watchdog
 		SoftWatchdog = 0;
 		if (MenuActive)

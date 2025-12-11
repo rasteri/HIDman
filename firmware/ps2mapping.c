@@ -171,9 +171,14 @@ void CreateArrayMapping(__xdata INTERFACE *pHidSegStruct){
 
 	tempSB = HIDParseState.startBit;
 
-	if (HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC &&
-	HIDParseState.appUsage == REPORT_USAGE_KEYBOARD &&
-	HIDParseState.hidGlobal.usagePage == REPORT_USAGE_PAGE_KEYBOARD)
+	if (
+		(HIDParseState.appUsagePage == REPORT_USAGE_PAGE_GENERIC &&
+		HIDParseState.appUsage == REPORT_USAGE_KEYBOARD &&
+		HIDParseState.hidGlobal.usagePage == REPORT_USAGE_PAGE_KEYBOARD)
+		||
+		(HIDParseState.appUsagePage == REPORT_USAGE_PAGE_CONSUMER &&
+		HIDParseState.appUsage == REPORT_USAGE_CONSUMER_CONTROL)
+	)
 	{
 		
 		// need to make a seg for each report seg

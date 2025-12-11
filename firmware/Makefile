@@ -74,6 +74,7 @@ testcw917 \
 testfakeg304 \
 teststandardmouse \
 teststandardkeyboard \
+testkeychron \
 testintsizes \
 testcheapogamepad \
 testsegextracts 
@@ -143,7 +144,7 @@ flash: $(OBJDIR)/$(TARGET).bin
 .DEFAULT_GOAL := all
 all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 
-$(OBJDIR)/test/%.ihx: $(OBJDIR)/test/%.rel $(COMMON) 
+$(OBJDIR)/test/%.ihx: $(OBJDIR)/test/%.rel $(TESTOBJS) 
 	$(CC) $(TESTOBJS) $< $(TESTCFLAGS) -o $@ 
 
 $(TESTS) : %: $(OBJDIR)/test/%.ihx $(TESTOBJS)
@@ -153,10 +154,11 @@ tests: $(TESTS)
 
 clean:
 	-rm -f $(OBJDIR)/*
+	-rm -f $(OBJDIR)/test/*
 	-rm -f ../mashpipe/*.OBJ
 	-rm -f ../mashpipe/*.EXE
 
-test: $(TESTS)
+test: $(TESTS) $(TESTOBJS)
 	@echo "Running all tests..."
 	@for t in $(TESTS); do \
 		rm success; \
@@ -171,9 +173,10 @@ test: $(TESTS)
 	done
 	@echo "All tests passed!"
 
-datagen: 
-	$(GCC) ../data/datagen.c -o datagen
-	datagen
+datagen: FORCE
+	-rm datagen
+	$(GCC) ../data/datagen.c -o datagen && ./datagen
+	
 
 mashpipe.exe:
 	$(DOSBOX) -conf ../mashpipe/dosbox.conf

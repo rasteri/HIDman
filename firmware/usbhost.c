@@ -984,7 +984,7 @@ void RegrabDeviceReports(UINT8 port)
 	}
 }
 
-void ReenumerateAllPorts(void){
+void ReenumerateAllPorts(void) {
 	UINT8 i;
 	
 	if (!KeyboardDebugOutput)

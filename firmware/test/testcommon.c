@@ -24,7 +24,7 @@
 #include "testcommon.h"
 #include "scancode.h"
 #include "processreport.h"
-//#define TESTVERBOSE 1
+#define TESTVERBOSE 1
 
 /*
 Things we might want to test:
@@ -95,9 +95,8 @@ void UART_Init(void)
     TI = 1;      /* enable transmitting */
     RI = 0;      /* waiting to receive */
 }
-
+ 
 bool InterfaceParseReportDescriptor (__xdata INTERFACE * pInterface, uint8_t *Report, uint16_t ReportLen) {
-
     #ifdef TESTVERBOSE 
         printf("InterfaceClass=0x%02X - ", (UINT16)pInterface->InterfaceClass);
         printf("InterfaceProtocol=0x%02X\n", (UINT16)pInterface->InterfaceProtocol);
@@ -111,6 +110,7 @@ bool InterfaceParseReportDescriptor (__xdata INTERFACE * pInterface, uint8_t *Re
         }
         return 0;
     }
+    printf("Not a HID interface\n");
     return 1;
 }
 

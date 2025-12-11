@@ -127,7 +127,10 @@
 #define REPORT_USAGE_PAGE_KEYBOARD 0x07
 #define REPORT_USAGE_PAGE_LEDS 0x08
 #define REPORT_USAGE_PAGE_BUTTON 0x09
+#define REPORT_USAGE_PAGE_CONSUMER 0x0C
 #define REPORT_USAGE_PAGE_VENDOR 0xff00
+
+#define REPORT_USAGE_CONSUMER_CONTROL 0x01
 
 #define HID_LOCAL_ITEM_TAG_USAGE 0x00
 #define HID_LOCAL_ITEM_TAG_USAGE_MIN 0x01
@@ -284,8 +287,8 @@ typedef struct _HID_REPORT
 	bool MouseUpdated;
 
 	// bit map for currently pressed keys (0-256)
-	uint8_t KeyboardKeyMap[32];
-	uint8_t oldKeyboardKeyMap[32];
+	uint8_t KeyboardKeyMap[70];
+	uint8_t oldKeyboardKeyMap[70];
 
 	// bit map for currently pressed mouse buts
 	uint8_t MouseButMap;
@@ -294,5 +297,11 @@ typedef struct _HID_REPORT
 	__xdata LinkedList *HidSegments;
 } HID_REPORT;
 
+// Used for the 0C usage page where the mappings are too sparse for a lookup table (would take several KBs of memory otherwise)
+typedef struct _EXTCHARLOOKUP
+{
+	unsigned int HIDCode;
+	__code const unsigned char * ScanCode;
+} EXTCHARLOOKUP;
 
 #endif

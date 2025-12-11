@@ -13,6 +13,7 @@
 #include "dataflash.h"
 #include "system.h"
 #include "settings.h"
+#include "pwm.h"
 
 __xdata Settings HMSettings;
 
@@ -32,6 +33,12 @@ void InitSettings(bool SafeMode) {
 
     // magic value not present (or we're in safe mode), initialize flash data
     if (SafeMode || FlashSettings->Magic != 0x54178008) {
+
+        SetPWM1Dat(0x40);
+        SetPWM2Dat(0x00);
+        T3_FIFO_L = 0;
+        T3_FIFO_H = 0;
+        LEDDelayMs = 255;
 
         DEBUGOUT("Magic Missing\n");
 

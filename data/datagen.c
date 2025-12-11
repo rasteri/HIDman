@@ -168,23 +168,46 @@ void PrintHexBytes(FILE *file, uint8_t *bytes) {
 #define LU_SET2MAKE 2
 #define LU_SET2BREAK 3
 
+#define LU_0C_SET1MAKE 4
+#define LU_0C_SET1BREAK 5
+#define LU_0C_SET2MAKE 6
+#define LU_0C_SET2BREAK 7
+
 void PrintLookupTable(FILE *file, char which)
 {
 
     char TableName[100];
     char Formatting[100];
 
-    switch (which){
-        case LU_SET1MAKE: strcpy(TableName, "HIDtoSET1_Make"); strcpy(Formatting, "KEY_SET1_%s_MAKE,\n"); break;
-        case LU_SET1BREAK: strcpy(TableName, "HIDtoSET1_Break"); strcpy(Formatting, "KEY_SET1_%s_BREAK,\n"); break;
-        case LU_SET2MAKE: strcpy(TableName, "HIDtoSET2_Make"); strcpy(Formatting, "KEY_SET2_%s_MAKE,\n"); break;
-        case LU_SET2BREAK: strcpy(TableName, "HIDtoSET2_Break"); strcpy(Formatting, "KEY_SET2_%s_BREAK,\n"); break;
+    switch (which) {
+        case LU_SET1MAKE: strcpy(TableName, "HIDtoSET1_Make"); strcpy(Formatting, "KEY_SET1_%s_MAKE, //%d\n"); break;
+        case LU_SET1BREAK: strcpy(TableName, "HIDtoSET1_Break"); strcpy(Formatting, "KEY_SET1_%s_BREAK, //%d\n"); break;
+        case LU_SET2MAKE: strcpy(TableName, "HIDtoSET2_Make"); strcpy(Formatting, "KEY_SET2_%s_MAKE, //%d\n"); break;
+        case LU_SET2BREAK: strcpy(TableName, "HIDtoSET2_Break"); strcpy(Formatting, "KEY_SET2_%s_BREAK, //%d\n"); break;
+
+        case LU_0C_SET1MAKE: strcpy(TableName, "HID0CtoSET1_Make"); strcpy(Formatting, "KEY_SET1_%s_MAKE}, //%d\n"); break;
+        case LU_0C_SET1BREAK: strcpy(TableName, "HID0CtoSET1_Break"); strcpy(Formatting, "KEY_SET1_%s_BREAK}, //%d\n"); break;
+        case LU_0C_SET2MAKE: strcpy(TableName, "HID0CtoSET2_Make"); strcpy(Formatting, "KEY_SET2_%s_MAKE}, //%d\n"); break;
+        case LU_0C_SET2BREAK: strcpy(TableName, "HID0CtoSET2_Break"); strcpy(Formatting, "KEY_SET2_%s_BREAK}, //%d\n"); break;
     }
 
-    fprintf(file, "const unsigned char * const %s[] = {\n", TableName);
+    int UsagePage = 0;
+    int NumEntries = 0;
+
+    if (which < 4) {
+        UsagePage = 0x07;
+        NumEntries = 256;
+        fprintf(file, "__code unsigned char * __code %s[] = {\n", TableName);
+    }
+    else
+    {
+        UsagePage = 0x0C;
+        NumEntries = 1024;
+        fprintf(file, "const EXTCHARLOOKUP %s[] = {\n", TableName);
+    }
 
     // for each entry in the hid lookup table
-    for (int i = 0; i < 256; i++)
+    for (int i = 0; i < NumEntries; i++)
     {
         int found = 0;
         // search for entries in the DB that correspond to that
@@ -192,22 +215,38 @@ void PrintLookupTable(FILE *file, char which)
         {
             uint8_t *array;
 
-            switch (which){
-                case LU_SET1MAKE: array = keys[j].Set1Make; break;
-                case LU_SET1BREAK: array = keys[j].Set1Break; break;
-                case LU_SET2MAKE: array = keys[j].Set2Make; break;
-                case LU_SET2BREAK: array = keys[j].Set2Break; break;
+            
+
+            switch (which) {
+                case LU_SET1MAKE: case LU_0C_SET1MAKE: array = keys[j].Set1Make; break;
+                case LU_SET1BREAK: case LU_0C_SET1BREAK: array = keys[j].Set1Break; break;
+                case LU_SET2MAKE: case LU_0C_SET2MAKE: array = keys[j].Set2Make; break;
+                case LU_SET2BREAK: case LU_0C_SET2BREAK: array = keys[j].Set2Break; break;
             }
-            if (keys[j].UsagePage == 7 && keys[j].UsageID == i && array[0] != 0)
+
+
+
+            if (keys[j].UsagePage == UsagePage && keys[j].UsageID == i && array[0] != 0)
             {
-                fprintf(file, Formatting, keys[j].ShortName);
+                fprintf(file, "\t");
+
+                //0x0C table is sparse, print index field
+                if (UsagePage == 0x0C) 
+                    fprintf(file, "{%d, ", i);
+
+                fprintf(file, Formatting, keys[j].ShortName, i);
+
                 found = 1;
                 break;
             }
         }
-        if (!found)
-            fprintf(file, "NULL,\n");
+        if (!found && UsagePage == 0x07) // print a dummy entry if regular keys
+            fprintf(file, "\tNULL, //%d\n", i);
     }
+
+    // "End of table" marker
+    if (UsagePage == 0x0C) 
+        fprintf(file, "\t{NULL, NULL}\n");
 
     fprintf(file, "};\n\n");
 }
@@ -231,7 +270,7 @@ int main() {
     fclose(file);
 
     file = fopen("scancode.c", "w");
-    fprintf(file, "#include<stdio.h>\n#ifndef __SDCC\n#define __code\n#endif\n");
+    fprintf(file, "#include<stdio.h>\n#ifndef __SDCC\n#define __code\n#else\n#include\"defs.h\"\n#endif\n");
 
     //Make/break codes for SET1 and SET2
     //eg --  __code unsigned char KEY_SET1_LSHIFT_MAKE[] = {1, 0x2A};
@@ -278,6 +317,11 @@ int main() {
     PrintLookupTable(file, LU_SET1BREAK);
     PrintLookupTable(file, LU_SET2MAKE);
     PrintLookupTable(file, LU_SET2BREAK);
+
+    PrintLookupTable(file, LU_0C_SET1MAKE);
+    PrintLookupTable(file, LU_0C_SET1BREAK);
+    PrintLookupTable(file, LU_0C_SET2MAKE);
+    PrintLookupTable(file, LU_0C_SET2BREAK);
 
     fclose(file);
     file = fopen("../mashpipe/keydefs.c", "w");

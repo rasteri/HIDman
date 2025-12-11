@@ -48,4 +48,7 @@ extern __code uint8_t * __code HIDtoSET2_Break[];
 extern __code uint8_t * __code HIDtoSET1_Make[];
 extern __code uint8_t * __code HIDtoSET1_Break[];
 
+extern __code uint8_t KEY_SET2_WWWREFRESH_MAKE[];
+extern __code uint8_t KEY_SET2_WWWREFRESH_BREAK[];
+
 #endif //__SCANCODES_H__

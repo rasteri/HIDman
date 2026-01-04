@@ -58,7 +58,6 @@ $(OBJDIR)/andyalloc.rel \
 $(OBJDIR)/preset.rel \
 $(OBJDIR)/ps2mapping.rel \
 $(OBJDIR)/linkedlist.rel \
-$(OBJDIR)/scancode.rel \
 $(OBJDIR)/test/testcommon.rel \
 $(OBJDIR)/processreport.rel \
 $(OBJDIR)/ps2protocol.rel \
@@ -67,7 +66,18 @@ $(OBJDIR)/ps2.rel \
 $(OBJDIR)/delay.rel \
 $(OBJDIR)/uart.rel \
 $(OBJDIR)/uart1.rel \
-$(OBJDIR)/usbdata.rel
+$(OBJDIR)/usbdata.rel \
+$(OBJDIR)/usbll.rel
+
+# Special test objects that don't need scancode or usbhost
+TESTHUBOBJS = \
+$(OBJDIR)/andyalloc.rel \
+$(OBJDIR)/linkedlist.rel \
+$(OBJDIR)/usbdata.rel \
+$(OBJDIR)/usbll.rel \
+$(OBJDIR)/delay.rel \
+$(OBJDIR)/uart.rel \
+$(OBJDIR)/uart1.rel
 
 TESTS = \
 testcw917 \
@@ -77,7 +87,8 @@ teststandardkeyboard \
 testkeychron \
 testintsizes \
 testcheapogamepad \
-testsegextracts 
+testsegextracts \
+testnestedhubs 
 
 ifndef FREQ_SYS
 FREQ_SYS = 48000000
@@ -146,6 +157,10 @@ all: $(OBJDIR)/$(TARGET).bin $(OBJDIR)/$(TARGET).hex
 
 $(OBJDIR)/test/%.ihx: $(OBJDIR)/test/%.rel $(TESTOBJS) 
 	$(CC) $(TESTOBJS) $< $(TESTCFLAGS) -o $@ 
+
+# Special rule for testnestedhubs which doesn't need scancode
+$(OBJDIR)/test/testnestedhubs.ihx: $(OBJDIR)/test/testnestedhubs.rel $(TESTHUBOBJS) 
+	$(CC) $(TESTHUBOBJS) $< $(TESTCFLAGS) -o $@
 
 $(TESTS) : %: $(OBJDIR)/test/%.ihx $(TESTOBJS)
 	

@@ -12,6 +12,9 @@ UINT8 HostCtrlTransfer(USB_SETUP_REQ *pSetupReq, UINT8 MaxPacketSize0, PUINT8 Da
 UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen, UINT16 timeout);
 void InitHubPortData(USB_HUB_PORT *pUsbHubPort);
 void InitRootHubPortData(UINT8 rootHubIndex);
+__xdata USB_HUB_PORT* AllocateChildHubPorts(UINT8 numPorts);
+void FreeChildHubPorts(__xdata USB_HUB_PORT* childPorts, UINT8 numPorts);
+void SelectHubPortByDevice(USB_HUB_PORT *pUsbDevice);
 
 //root hub port
 extern USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];

@@ -32,6 +32,12 @@ void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 	pUsbHubPort->Interfaces = NULL;
 
 	pUsbHubPort->HubPortNum = 0;
+	
+	// Initialize hub nesting fields
+	pUsbHubPort->HubLevel = 0;
+	pUsbHubPort->ParentHub = NULL;
+	pUsbHubPort->ParentHubPortIndex = EXHUB_PORT_NONE;
+	pUsbHubPort->ChildHubPorts = NULL;
 }
 void InitInterface(INTERFACE* Interface)
 {

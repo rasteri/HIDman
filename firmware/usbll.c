@@ -112,12 +112,132 @@ void DisableRootHubPort(UINT8 RootHubIndex)
 void InitRootHubPortData(UINT8 rootHubIndex)
 {
 	UINT8 i;
+	
+	// Free child hub ports if they exist (for nested hubs)
+	if (RootHubPort[rootHubIndex].ChildHubPorts != NULL)
+	{
+		FreeChildHubPorts(RootHubPort[rootHubIndex].ChildHubPorts, RootHubPort[rootHubIndex].HubPortNum);
+		RootHubPort[rootHubIndex].ChildHubPorts = NULL;
+	}
 
 	InitHubPortData(&RootHubPort[rootHubIndex]);
 
 	for (i = 0; i < MAX_EXHUB_PORT_NUM; i++)
 	{
 		InitHubPortData(&SubHubPort[rootHubIndex][i]);
+	}
+}
+
+// Allocate child hub ports for a hub device
+__xdata USB_HUB_PORT* AllocateChildHubPorts(UINT8 numPorts)
+{
+	UINT8 i;
+	__xdata USB_HUB_PORT* childPorts;
+	
+	if (numPorts == 0 || numPorts > MAX_EXHUB_PORT_NUM)
+	{
+		return NULL;
+	}
+	
+	childPorts = (__xdata USB_HUB_PORT*)andyalloc(sizeof(USB_HUB_PORT) * numPorts);
+	if (childPorts == NULL)
+	{
+		return NULL;
+	}
+	
+	for (i = 0; i < numPorts; i++)
+	{
+		InitHubPortData(&childPorts[i]);
+	}
+	
+	return childPorts;
+}
+
+// Free child hub ports and their nested children recursively
+// Note: andyalloc doesn't support individual free, so this just clears the pointers
+void FreeChildHubPorts(__xdata USB_HUB_PORT* childPorts, UINT8 numPorts)
+{
+	UINT8 i;
+	
+	if (childPorts == NULL || numPorts == 0)
+	{
+		return;
+	}
+	
+	// Recursively clear nested children
+	for (i = 0; i < numPorts; i++)
+	{
+		if (childPorts[i].DeviceClass == USB_DEV_CLASS_HUB && childPorts[i].ChildHubPorts != NULL)
+		{
+			FreeChildHubPorts(childPorts[i].ChildHubPorts, childPorts[i].HubPortNum);
+			childPorts[i].ChildHubPorts = NULL;
+		}
+		
+		// Clear interfaces list pointer (memory will be reclaimed by andyclearmem)
+		childPorts[i].Interfaces = NULL;
+	}
+	
+	// Note: andyalloc doesn't support individual free operations
+	// Memory will be reclaimed when andyclearmem() is called during re-enumeration
+}
+
+// Select a hub port by tracing up the parent hierarchy
+void SelectHubPortByDevice(USB_HUB_PORT *pUsbDevice)
+{
+	if (pUsbDevice == NULL)
+	{
+		return;
+	}
+	
+	// If device is on root hub, use old path
+	if (pUsbDevice->ParentHub == NULL)
+	{
+		// This is a root hub device - find which root hub
+		UINT8 rootHubIndex;
+		for (rootHubIndex = 0; rootHubIndex < ROOT_HUB_PORT_NUM; rootHubIndex++)
+		{
+			if (&RootHubPort[rootHubIndex] == pUsbDevice)
+			{
+				SelectHubPort(rootHubIndex, EXHUB_PORT_NONE);
+				return;
+			}
+		}
+	}
+	else
+	{
+		// Device is on an external hub - need to find root and port path
+		USB_HUB_PORT *current = pUsbDevice;
+		USB_HUB_PORT *parent = current->ParentHub;
+		UINT8 portIndex = current->ParentHubPortIndex;
+		
+		// Trace up to find the root hub
+		while (parent->ParentHub != NULL)
+		{
+			current = parent;
+			parent = current->ParentHub;
+		}
+		
+		// Now parent is a root hub device, find which root hub index
+		UINT8 rootHubIndex;
+		for (rootHubIndex = 0; rootHubIndex < ROOT_HUB_PORT_NUM; rootHubIndex++)
+		{
+			if (&RootHubPort[rootHubIndex] == parent)
+			{
+				break;
+			}
+		}
+		
+		// For nested hubs, we need to select the device's parent hub
+		// and the device's port on that hub
+		SelectHubPort(rootHubIndex, EXHUB_PORT_NONE);
+		
+		// Set the device address and speed
+		SetHostUsbAddr(pUsbDevice->DeviceAddress);
+		if (pUsbDevice->DeviceSpeed == LOW_SPEED)
+		{
+			UH_SETUP |= bUH_PRE_PID_EN;
+		}
+		SetUsbSpeed(pUsbDevice->DeviceSpeed);
 	}
 }
 

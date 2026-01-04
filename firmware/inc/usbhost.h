@@ -48,7 +48,7 @@
 //maximum number of endpoints per interface
 #define MAX_ENDPOINT_NUM       4
 //maximum level of external hub
-#define MAX_EXHUB_LEVEL        1
+#define MAX_EXHUB_LEVEL        2
 
 //in 
 #define ENDPOINT_OUT           0
@@ -182,6 +182,12 @@ typedef struct _USB_HUB_PORT
 	UINT8       InterfaceNum;
 	__xdata LinkedList* Interfaces;
 	
+	// Hub nesting support
+	UINT8       HubLevel;  // 0 for root, 1 for first level hub, etc.
+	__xdata struct _USB_HUB_PORT* ParentHub;  // NULL for root hubs
+	UINT8       ParentHubPortIndex;  // Port index on parent hub
+	__xdata struct _USB_HUB_PORT* ChildHubPorts;  // Array of child ports if this is a hub
+	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 
 #define  LOW_SPEED      0
@@ -195,6 +201,7 @@ extern void InterruptProcessRootHubPort(UINT8 port_index);
 extern void UpdateUsbKeyboardLed(UINT8 led);
 extern INTERFACE* AllocInterface(UINT8 count);
 void ReenumerateAllPorts(void);
+void ResetAddressAllocation(void);
 
 void ProcessUsbHostPort(void);
 

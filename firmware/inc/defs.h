@@ -48,7 +48,7 @@
 #define EXHUB_PORT_NONE 0xff
 #define MAX_INTERFACE_COUNT 4
 #define MAX_ENDPOINT_COUNT 4
-#define MAX_EXHUB_LEVEL 1
+// MAX_EXHUB_LEVEL moved to usbhost.h to avoid duplicate definition
 #define ENDPOINT_OUT 0
 #define ENDPOINT_IN 1
 

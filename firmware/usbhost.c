@@ -453,19 +453,254 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	return (TRUE);
 }
 
+// Global address counter for nested hub support
+static UINT8 g_NextUsbAddress = 1;
+
+// Reset address counter (called during initialization)
+void ResetAddressAllocation(void)
+{
+	g_NextUsbAddress = 1;
+}
+
+// Assign unique address for any device (supports nested hubs)
 UINT8 AssignUniqueAddress(UINT8 RootHubIndex, UINT8 HubPortIndex)
 {
 	static UINT8 address;
-	if (HubPortIndex == EXHUB_PORT_NONE)
+	
+	// Use sequential addressing for better nested hub support
+	address = g_NextUsbAddress++;
+	
+	// Limit to valid USB address range (1-127)
+	if (address > 127)
 	{
-		address = (MAX_EXHUB_PORT_NUM + 1) * RootHubIndex + 1;
+		// Reset if we run out of addresses (shouldn't happen with typical setups)
+		g_NextUsbAddress = 1;
+		address = 1;
 	}
-	else
-	{
-		address = (MAX_EXHUB_PORT_NUM + 1) * RootHubIndex + 1 + HubPortIndex + 1;
-	}
-
+	
 	return address;
+}
+
+// Recursive function to initialize hub and its child ports
+// Returns TRUE if successful
+BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
+{
+	static __xdata UINT8 i, s;
+	static __xdata UINT16 len;
+	static __xdata USB_HUB_DESCR *pHubDescr;
+	static __xdata UINT8 hubPortNum;
+	static __xdata UINT16 hubPortStatus, hubPortChange;
+	static __xdata UINT8 addr;
+	static __xdata INTERFACE *pInterface;
+	static __xdata ENDPOINT *pEndPoint;
+	static __xdata uint8_t changebitmap;
+	static __xdata uint8_t newthing;
+	static __xdata USB_HUB_PORT *pChildPort;
+	
+	if (pHubDevice == NULL || pHubDevice->DeviceClass != USB_DEV_CLASS_HUB)
+	{
+		return TRUE; // Not a hub, nothing to do
+	}
+	
+	// Check hub level doesn't exceed maximum
+	if (pHubDevice->HubLevel >= MAX_EXHUB_LEVEL)
+	{
+		DEBUGOUT("Max hub level reached\n");
+		return FALSE;
+	}
+	
+	DEBUGOUT("\nInitializing hub at level %d\n", pHubDevice->HubLevel);
+	
+	// Select this hub for communication
+	SelectHubPortByDevice(pHubDevice);
+	
+	// Get hub descriptor
+	s = GetHubDescriptor(pHubDevice, ReceiveDataBuffer, sizeof(USB_HUB_DESCR), &len);
+	if (s != ERR_SUCCESS)
+	{
+		DEBUGOUT("hub desc err\n");
+		return FALSE;
+	}
+	
+	TRACE("GetHubDescriptor OK\r\n");
+	
+	pHubDescr = (USB_HUB_DESCR *)ReceiveDataBuffer;
+	hubPortNum = pHubDescr->bNbrPorts;
+	
+	DEBUGOUT("%d port hub\n", hubPortNum);
+	
+	if (hubPortNum > MAX_EXHUB_PORT_NUM)
+	{
+		hubPortNum = MAX_EXHUB_PORT_NUM;
+	}
+	
+	pHubDevice->HubPortNum = hubPortNum;
+	
+	// Allocate child ports
+	pHubDevice->ChildHubPorts = AllocateChildHubPorts(hubPortNum);
+	if (pHubDevice->ChildHubPorts == NULL)
+	{
+		DEBUGOUT("Failed to allocate child ports\n");
+		return FALSE;
+	}
+	
+	// Initialize parent references for all child ports
+	for (i = 0; i < hubPortNum; i++)
+	{
+		pChildPort = &pHubDevice->ChildHubPorts[i];
+		pChildPort->ParentHub = pHubDevice;
+		pChildPort->ParentHubPortIndex = i;
+		pChildPort->HubLevel = pHubDevice->HubLevel + 1;
+	}
+	
+	// Supply power to all ports
+	for (i = 0; i < hubPortNum; i++)
+	{
+		s = SetHubPortFeature(pHubDevice, i + 1, HUB_PORT_POWER);
+		if (s != ERR_SUCCESS)
+		{
+			TRACE1("SetHubPortFeature %d failed\r\n", (UINT16)i);
+			pHubDevice->ChildHubPorts[i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+			continue;
+		}
+		TRACE("SetHubPortFeature OK\r\n");
+	}
+	
+	// Get hub interface and endpoint for status changes
+	pInterface = (__xdata INTERFACE *)ListGetData(pHubDevice->Interfaces, 0);
+	if (pInterface == NULL)
+	{
+		DEBUGOUT("No hub interface\n");
+		return FALSE;
+	}
+	
+	pEndPoint = &pInterface->Endpoint[0];
+	
+	// Try to get change bitmap
+	newthing = 1;
+	s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 20000);
+	
+	if (s != ERR_SUCCESS)
+	{
+		DEBUGOUT("new enum. failed\n");
+		newthing = 0;
+	}
+	
+	changebitmap = ReceiveDataBuffer[0];
+	DEBUGOUT("change bitmap: %x\n", changebitmap);
+	
+	// Enumerate each port
+	for (i = 0; i < hubPortNum; i++)
+	{
+		if (!newthing || (changebitmap & (1 << (i+1))))
+		{
+			DEBUGOUT("Checking port %d\n", i);
+			mDelaymS(50);
+			
+			SelectHubPortByDevice(pHubDevice);
+			
+			s = GetHubPortStatus(pHubDevice, i + 1, &hubPortStatus, &hubPortChange);
+			if (s != ERR_SUCCESS)
+			{
+				pHubDevice->ChildHubPorts[i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+				TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
+				continue;
+			}
+			
+			DEBUGOUT("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
+			
+			if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
+			{
+				// Device attached
+				DEBUGOUT("port %d attached\n", i);
+				
+				s = ClearHubPortFeature(pHubDevice, i + 1, HUB_C_PORT_CONNECTION);
+				if (s != ERR_SUCCESS)
+				{
+					pHubDevice->ChildHubPorts[i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+					TRACE("ClearHubPortFeature failed\r\n");
+					continue;
+				}
+				
+				// Reset the port
+				s = SetHubPortFeature(pHubDevice, i + 1, HUB_PORT_RESET);
+				if (s != ERR_SUCCESS)
+				{
+					pHubDevice->ChildHubPorts[i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+					TRACE1("SetHubPortFeature port:%d failed\r\n", (UINT16)(i + 1));
+					continue;
+				}
+				
+				mDelaymS(100);
+				
+				// Wait for reset to complete
+				do
+				{
+					s = GetHubPortStatus(pHubDevice, i + 1, &hubPortStatus, &hubPortChange);
+					if (s != ERR_SUCCESS)
+					{
+						pHubDevice->ChildHubPorts[i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+						TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
+						break;
+					}
+					mDelaymS(20);
+				} while (hubPortStatus & 0x0010);
+				
+				if ((hubPortChange & 0x10) == 0x10) // Reset complete
+				{
+					TRACE("reset complete\r\n");
+					
+					// Determine speed
+					if (hubPortStatus & 0x0200)
+					{
+						pHubDevice->ChildHubPorts[i].DeviceSpeed = LOW_SPEED;
+						DEBUGOUT("lowspeed\n");
+					}
+					else
+					{
+						pHubDevice->ChildHubPorts[i].DeviceSpeed = FULL_SPEED;
+						DEBUGOUT("fullspeed\n");
+					}
+					
+					s = ClearHubPortFeature(pHubDevice, i + 1, HUB_C_PORT_RESET);
+					if (s != ERR_SUCCESS)
+					{
+						TRACE("ClearHubPortFeature failed\r\n");
+					}
+					
+					// Select this child port for enumeration
+					pChildPort = &pHubDevice->ChildHubPorts[i];
+					SelectHubPortByDevice(pChildPort);
+					
+					// Assign address and enumerate
+					addr = AssignUniqueAddress(rootHubIndex, i);
+					if (EnumerateHubPort(pChildPort, addr))
+					{
+						DEBUGOUT("enum.OK\n");
+						pChildPort->HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
+						
+						// If this device is also a hub, recursively initialize it
+						if (pChildPort->DeviceClass == USB_DEV_CLASS_HUB)
+						{
+							DEBUGOUT("Found nested hub\n");
+							if (!InitializeHubPorts(pChildPort, rootHubIndex))
+							{
+								DEBUGOUT("Nested hub init failed\n");
+								pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+							}
+						}
+					}
+					else
+					{
+						DEBUGOUT("enum.fail\n");
+						pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+					}
+				}
+			}
+		}
+	}
+	
+	return TRUE;
 }
 
 BOOL EnumerateRootHubPort(UINT8 port)
@@ -536,234 +771,17 @@ BOOL EnumerateRootHubPort(UINT8 port)
 
 		TRACE("EnumerateHubPort success\r\n");
 
-		
-
-		//SelectHubPort(port, EXHUB_PORT_NONE);
+		// If this is a hub, recursively initialize its ports
 		if (RootHubPort[port].DeviceClass == USB_DEV_CLASS_HUB)
 		{
-			DEBUGOUT("\nFound hub\n");
-
-			//hub
-			USB_HUB_DESCR *pHubDescr;
-
-			UINT8 hubPortNum;
-			UINT16 hubPortStatus, hubPortChange;
-			USB_HUB_PORT *pUsbDevice = &RootHubPort[port];
-
-			//hub
-			s = GetHubDescriptor(pUsbDevice, ReceiveDataBuffer, sizeof(USB_HUB_DESCR), &len);
-			if (s != ERR_SUCCESS)
+			DEBUGOUT("\nFound root hub\n");
+			
+			if (!InitializeHubPorts(&RootHubPort[port], port))
 			{
+				DEBUGOUT("Hub initialization failed\n");
 				DisableRootHubPort(port);
-
 				RootHubPort[port].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-				DEBUGOUT("hub desc err\n");
-				return (FALSE);
-			}
-
-			TRACE("GetHubDescriptor OK\r\n");
-			TRACE1("len=%d\r\n", len);
-
-			pHubDescr = (USB_HUB_DESCR *)ReceiveDataBuffer;
-			hubPortNum = pHubDescr->bNbrPorts;
-
-			TRACE1("hubPortNum=%bd\r\n", hubPortNum);
-			DEBUGOUT("%d port hub\n", hubPortNum);
-
-			if (hubPortNum > MAX_EXHUB_PORT_NUM)
-			{
-				hubPortNum = MAX_EXHUB_PORT_NUM;
-			}
-
-			pUsbDevice->HubPortNum = hubPortNum;
-
-			//supply power for each port
-			for (i = 0; i < hubPortNum; i++)
-			{
-				s = SetHubPortFeature(pUsbDevice, i + 1, HUB_PORT_POWER);
-				if (s != ERR_SUCCESS)
-				{
-					TRACE1("SetHubPortFeature %d failed\r\n", (UINT16)i);
-
-					SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-					continue;
-				}
-
-				TRACE("SetHubPortFeature OK\r\n");
-			}
-
-			
-
-			/*
-			for (i = 0; i < hubPortNum; i++)
-            {
-                s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_CONNECTION );
-                if ( s != ERR_SUCCESS )
-                {
-                    TRACE1("ClearHubPortFeature %d failed\r\n", (UINT16)i);
-
-                    continue;
-                }
-
-                TRACE("ClearHubPortFeature OK\r\n");
-            }
-*/
-			INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, 0);
-
-			ENDPOINT *pEndPoint = &pInterface->Endpoint[0];
-
-			// "new thing" means wait for a change bitmap before clearing ports
-			// this is how other USB stacks seem to do it
-			printf("Doing new thing - %x\n", pInterface->Endpoint[0].EndpointAddr);
-
-			uint8_t newthing = 1;
-
-			s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 20000);
-
-			
-
-			if (s != ERR_SUCCESS){
-				DEBUGOUT("new enum. failed\n");
-				// if "new thing" failed just clear all ports without waiting
-				// seems to be required for some hubs
-				newthing = 0;
-				//return FALSE;
-			}
-
-			uint8_t changebitmap = ReceiveDataBuffer[0];
-
-			DEBUGOUT("new enum. %x\n", changebitmap);
-
-			for (i = 0; i < hubPortNum; i++)
-			{
-				if (!newthing || (changebitmap & (1 << (i+1)))) {
-					DEBUGOUT("checkn port %d\n", i);
-					mDelaymS(50);
-
-					SelectHubPort(port, EXHUB_PORT_NONE); //�л���hub��ַ
-
-					s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);
-					if (s != ERR_SUCCESS)
-					{
-						SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-						TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
-
-						return FALSE;
-					}
-
-					DEBUGOUT("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
-
-					TRACE2("hubPortStatus:0x%02X,hubPortChange:0x%02X\r\n", hubPortStatus, hubPortChange);
-
-					if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
-					{
-						//device attached
-						TRACE1("hubPort=%d\r\n", (UINT16)i);
-
-						TRACE("device attached\r\n");
-
-						DEBUGOUT("port %d attached\n", i);
-
-						s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_CONNECTION);
-						if (s != ERR_SUCCESS)
-						{
-							SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-							TRACE("ClearHubPortFeature failed\r\n");
-
-							return FALSE;
-						}
-
-						TRACE("ClearHubPortFeature OK\r\n");
-
-
-						s = SetHubPortFeature(pUsbDevice, i + 1, HUB_PORT_RESET); //reset the port device
-						if (s != ERR_SUCCESS)
-						{
-							SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-							TRACE1("SetHubPortFeature port:%d failed\r\n", (UINT16)(i + 1));
-
-							return FALSE;
-						}
-
-						mDelaymS(100);
-						do
-						{
-							s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);
-							if (s != ERR_SUCCESS)
-							{
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-								TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
-
-								return FALSE;
-							}
-
-							mDelaymS(20);
-						} while (hubPortStatus & 0x0010);
-
-						if ((hubPortChange & 0x10) == 0x10) //reset over success
-						{
-							TRACE("reset complete\r\n");
-
-							if (hubPortStatus & 0x0200)
-							{
-								//speed low
-								SubHubPort[port][i].DeviceSpeed = LOW_SPEED;
-								DEBUGOUT("lowspeed\n");
-								TRACE("low speed device\r\n");
-							}
-							else
-							{
-								//full speed device
-								SubHubPort[port][i].DeviceSpeed = FULL_SPEED;
-								DEBUGOUT("fullspeed\n");
-								TRACE("full speed device\r\n");
-							}
-
-							s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_RESET);
-							if (s != ERR_SUCCESS)
-							{
-								TRACE("ClearHubPortFeature failed\r\n");
-							}
-							else
-							{
-								TRACE("ClearHubPortFeature OK\r\n");
-							}
-
-							/*s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_PORT_SUSPEND);
-							if (s != ERR_SUCCESS)
-							{
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-								TRACE("ClearHubPortFeature failed\r\n");
-
-								return FALSE;
-							}
-
-							TRACE("ClearHubPortFeature OK\r\n");
-
-							mDelaymS(500);*/
-
-							SelectHubPort(port, i);
-
-							addr = AssignUniqueAddress(port, i);
-							if (EnumerateHubPort(&SubHubPort[port][i], addr))
-							{
-								DEBUGOUT("enum.OK\n");
-								TRACE("EnumerateHubPort success\r\n");
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
-							}
-							else
-							{
-								DEBUGOUT("enum.fail\n");
-								TRACE("EnumerateHubPort failed\r\n");
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-							}
-						}
-					}
-				}
+				return FALSE;
 			}
 		}
 	}
@@ -953,35 +971,71 @@ void regrabinterfaces(__xdata USB_HUB_PORT *pUsbHubPort)
 	}
 }
 
+// Recursive function to regrab interfaces for all devices in hub tree
+void RegrabInterfacesRecursive(__xdata USB_HUB_PORT *pUsbHubPort)
+{
+	UINT8 i;
+	
+	if (pUsbHubPort == NULL || pUsbHubPort->HubPortStatus != PORT_DEVICE_ENUM_SUCCESS)
+	{
+		return;
+	}
+	
+	if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
+	{
+		// This is a leaf device, regrab its interfaces
+		SelectHubPortByDevice(pUsbHubPort);
+		regrabinterfaces(pUsbHubPort);
+	}
+	else
+	{
+		// This is a hub, recursively process its children
+		if (pUsbHubPort->ChildHubPorts != NULL)
+		{
+			for (i = 0; i < pUsbHubPort->HubPortNum; i++)
+			{
+				RegrabInterfacesRecursive(&pUsbHubPort->ChildHubPorts[i]);
+			}
+		}
+	}
+}
+
+// Recursive function to process HID data transfers for all devices in hub tree
+void ProcessHIDDataRecursive(__xdata USB_HUB_PORT *pUsbHubPort)
+{
+	UINT8 i;
+	
+	if (pUsbHubPort == NULL || pUsbHubPort->HubPortStatus != PORT_DEVICE_ENUM_SUCCESS)
+	{
+		return;
+	}
+	
+	if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
+	{
+		// This is a leaf device, process its HID data
+		SelectHubPortByDevice(pUsbHubPort);
+		HIDDataTransferReceive(pUsbHubPort);
+	}
+	else
+	{
+		// This is a hub, recursively process its children
+		if (pUsbHubPort->ChildHubPorts != NULL)
+		{
+			for (i = 0; i < pUsbHubPort->HubPortNum; i++)
+			{
+				ProcessHIDDataRecursive(&pUsbHubPort->ChildHubPorts[i]);
+			}
+		}
+	}
+}
+
 void RegrabDeviceReports(UINT8 port)
 {
 	static __xdata USB_HUB_PORT *pUsbHubPort;
 	pUsbHubPort = &RootHubPort[port];
 
-	if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
-	{
-		if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-		{
-			SelectHubPort(port, EXHUB_PORT_NONE);
-			regrabinterfaces(pUsbHubPort);
-		}
-		else
-		{
-			UINT8 exHubPortNum = pUsbHubPort->HubPortNum;
-			UINT8 i;
-
-			for (i = 0; i < exHubPortNum; i++)
-			{
-				pUsbHubPort = &SubHubPort[port][i];
-
-				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-				{
-					SelectHubPort(port, i);
-					regrabinterfaces(pUsbHubPort);
-				}
-			}
-		}
-	}
+	// Use recursive function to handle all devices including nested hubs
+	RegrabInterfacesRecursive(pUsbHubPort);
 }
 
 void ReenumerateAllPorts(void) {
@@ -996,6 +1050,7 @@ void ReenumerateAllPorts(void) {
 	InitUsbData();
 	andyclearmem();
 	InitPresets();
+	ResetAddressAllocation();  // Reset address counter for new enumeration
 	
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 	{
@@ -1025,32 +1080,8 @@ void InterruptProcessRootHubPort(UINT8 port)
 	static __xdata USB_HUB_PORT *pUsbHubPort;
 	pUsbHubPort = &RootHubPort[port];
 
-	if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
-	{
-		if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-		{
-			SelectHubPort(port, EXHUB_PORT_NONE);
-
-			HIDDataTransferReceive(pUsbHubPort);
-			
-		}
-		else
-		{
-			UINT8 exHubPortNum = pUsbHubPort->HubPortNum;
-			UINT8 i;
-
-			for (i = 0; i < exHubPortNum; i++)
-			{
-				pUsbHubPort = &SubHubPort[port][i];
-
-				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-				{
-					SelectHubPort(port, i);
-					HIDDataTransferReceive(pUsbHubPort);
-				}
-			}
-		}
-	}
+	// Use recursive function to handle all devices including nested hubs
+	ProcessHIDDataRecursive(pUsbHubPort);
 }
 
 void UpdateUsbKeyboardLedInternal(USB_HUB_PORT *pUsbDevice, UINT8 led)
@@ -1072,39 +1103,43 @@ void UpdateUsbKeyboardLedInternal(USB_HUB_PORT *pUsbDevice, UINT8 led)
 	}
 }
 
+// Recursive function to update keyboard LEDs for all devices in hub tree
+void UpdateKeyboardLedRecursive(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 led)
+{
+	UINT8 i;
+	
+	if (pUsbHubPort == NULL || pUsbHubPort->HubPortStatus != PORT_DEVICE_ENUM_SUCCESS)
+	{
+		return;
+	}
+	
+	if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
+	{
+		// This is a leaf device, update its keyboard LEDs
+		SelectHubPortByDevice(pUsbHubPort);
+		UpdateUsbKeyboardLedInternal(pUsbHubPort, led);
+	}
+	else
+	{
+		// This is a hub, recursively process its children
+		if (pUsbHubPort->ChildHubPorts != NULL)
+		{
+			for (i = 0; i < pUsbHubPort->HubPortNum; i++)
+			{
+				UpdateKeyboardLedRecursive(&pUsbHubPort->ChildHubPorts[i], led);
+			}
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 void UpdateUsbKeyboardLed(UINT8 led)
 {
-	UINT8 i, j;
+	UINT8 i;
 
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 	{
-		USB_HUB_PORT *pUsbHubPort = &RootHubPort[i];
-		if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
-		{
-			if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-			{
-				SelectHubPort(i, EXHUB_PORT_NONE);
-
-				UpdateUsbKeyboardLedInternal(pUsbHubPort, led);
-			}
-			else
-			{
-				int exHubPortNum = pUsbHubPort->HubPortNum;
-
-				for (j = 0; j < exHubPortNum; j++)
-				{
-					pUsbHubPort = &SubHubPort[i][j];
-
-					if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-					{
-						SelectHubPort(i, j);
-
-						UpdateUsbKeyboardLedInternal(pUsbHubPort, led);
-					}
-				}
-			}
-		}
+		UpdateKeyboardLedRecursive(&RootHubPort[i], led);
 	}
 }
 

@@ -182,7 +182,7 @@ void FreeChildHubPorts(__xdata USB_HUB_PORT* childPorts, UINT8 numPorts)
 }
 
 // Select a hub port by tracing up the parent hierarchy
-void SelectHubPortByDevice(USB_HUB_PORT *pUsbDevice)
+void SelectHubPortByDevice(__xdata USB_HUB_PORT *pUsbDevice)
 {
 	if (pUsbDevice == NULL)
 	{
@@ -206,8 +206,8 @@ void SelectHubPortByDevice(USB_HUB_PORT *pUsbDevice)
 	else
 	{
 		// Device is on an external hub - need to find root and port path
-		USB_HUB_PORT *current = pUsbDevice;
-		USB_HUB_PORT *parent = current->ParentHub;
+		__xdata USB_HUB_PORT *current = pUsbDevice;
+		__xdata USB_HUB_PORT *parent = current->ParentHub;
 		UINT8 portIndex = current->ParentHubPortIndex;
 		
 		// Trace up to find the root hub

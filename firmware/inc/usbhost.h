@@ -203,6 +203,8 @@ extern INTERFACE* AllocInterface(UINT8 count);
 void ReenumerateAllPorts(void);
 void ResetAddressAllocation(void);
 UINT8 AssignUniqueAddress(UINT8 RootHubIndex, UINT8 HubPortIndex);
+void RebuildHubList(void);
+void ClearHubList(void);
 
 void ProcessUsbHostPort(void);
 

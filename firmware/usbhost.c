@@ -1030,12 +1030,18 @@ void ReenumerateAllPorts(void) {
 	}
 	DEBUGOUT("done reenumerating\n");
 	OutputsEnabled = 1;
+	
+	// Rebuild the flat hub list for efficient polling
+	RebuildHubList();
 }
 
 //----------------------------------------------------------------------------------
 void DealUsbPort(void) //main function should use it at least 500ms
 {
 	static __xdata UINT8 s;
+	UINT8 i;
+	UINT16 hubPortStatus, hubPortChange;
+	__xdata USB_HUB_PORT *pHub;
 
 	s = QueryHubPortAttach();
 	if (s == ERR_USB_CONNECT)
@@ -1044,10 +1050,42 @@ void DealUsbPort(void) //main function should use it at least 500ms
 		return;
 	}
 	
-	// Note: We don't poll external hub ports for changes to minimize USB transactions.
-	// External hub hotplug detection would require polling all hub ports every cycle,
-	// which is too slow. Users need to unplug/replug at the root level to trigger
-	// re-enumeration, or we could implement interrupt endpoint monitoring in the future.
+	// Check one external hub per cycle for hotplug detection (rotating through all hubs)
+	if (HubListCount > 0)
+	{
+		// Get the current hub to check
+		pHub = HubList[HubPollIndex];
+		
+		// Move to next hub for the next cycle
+		HubPollIndex++;
+		if (HubPollIndex >= HubListCount)
+		{
+			HubPollIndex = 0;
+		}
+		
+		// Check this hub's ports for changes
+		if (pHub != NULL && pHub->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
+		{
+			// Select this hub for communication
+			SelectHubPortByDevice(pHub);
+			
+			// Check each port for connection changes
+			for (i = 0; i < pHub->HubPortNum; i++)
+			{
+				s = GetHubPortStatus(pHub, i + 1, &hubPortStatus, &hubPortChange);
+				if (s == ERR_SUCCESS)
+				{
+					// Check for connection change bit
+					if (hubPortChange & 0x0001)
+					{
+						DEBUGOUT("Hub port %d change detected, re-enumerating\n", i);
+						ReenumerateAllPorts();
+						return;
+					}
+				}
+			}
+		}
+	}
 }
 
 void InterruptProcessRootHubPort(UINT8 port)

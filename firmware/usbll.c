@@ -23,6 +23,12 @@ __at(0x0100) unsigned char __xdata TxBuffer[MAX_PACKET_SIZE];
 //root hub port
 USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
 
+// Flat list of all hubs for efficient polling
+#define MAX_HUB_COUNT 8  // Max hubs we can track (2 root + up to 6 external hubs)
+__xdata USB_HUB_PORT* HubList[MAX_HUB_COUNT];
+UINT8 HubListCount = 0;
+UINT8 HubPollIndex = 0;  // Rotating index for hub polling
+
 //sub hub port
 USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
 
@@ -219,6 +225,59 @@ void SelectHubPortByDevice(__xdata USB_HUB_PORT *pUsbDevice)
 			UH_SETUP |= bUH_PRE_PID_EN;
 		}
 		SetUsbSpeed(pUsbDevice->DeviceSpeed);
+	}
+}
+
+// Clear the flat hub list
+void ClearHubList(void)
+{
+	UINT8 i;
+	for (i = 0; i < MAX_HUB_COUNT; i++)
+	{
+		HubList[i] = NULL;
+	}
+	HubListCount = 0;
+	HubPollIndex = 0;
+}
+
+// Recursively add hubs to the flat list
+void AddHubsToListRecursive(__xdata USB_HUB_PORT *pHubDevice)
+{
+	UINT8 i;
+	
+	if (pHubDevice == NULL || pHubDevice->HubPortStatus != PORT_DEVICE_ENUM_SUCCESS)
+	{
+		return;
+	}
+	
+	// If this is a hub, add it to the list
+	if (pHubDevice->DeviceClass == USB_DEV_CLASS_HUB && HubListCount < MAX_HUB_COUNT)
+	{
+		HubList[HubListCount] = pHubDevice;
+		HubListCount++;
+		
+		// Recursively add child hubs
+		for (i = 0; i < pHubDevice->HubPortNum; i++)
+		{
+			if (pHubDevice->ChildHubPorts[i] != NULL)
+			{
+				AddHubsToListRecursive(pHubDevice->ChildHubPorts[i]);
+			}
+		}
+	}
+}
+
+// Rebuild the flat hub list from the tree structure
+void RebuildHubList(void)
+{
+	UINT8 i;
+	
+	ClearHubList();
+	
+	// Add all hubs starting from root hubs
+	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
+	{
+		AddHubsToListRecursive(&RootHubPort[i]);
 	}
 }
 

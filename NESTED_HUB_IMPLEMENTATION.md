@@ -305,16 +305,16 @@ The implementation compiles successfully with SDCC 4.2.0. Key considerations:
 ### Future Enhancements
 
 1. **Dynamic Hub Level**: Could detect and warn about maximum depth at runtime
-2. **Hub Interrupt Endpoint**: Implement hub status change endpoint monitoring for efficient hotplug detection on external hubs
+2. **Hub Interrupt Endpoint**: Implement hub status change endpoint monitoring for even more efficient hotplug detection
 3. **Error Recovery**: Enhanced error handling for hub failures
-4. **Performance**: Optimize recursive traversal if needed
+4. **Performance**: Further optimize if needed
 5. **Debugging**: Add more detailed logging for nested hub operations
 
 ### Hotplug Detection
 
-**Files**: `firmware/usbhost.c`
+**Files**: `firmware/usbhost.c`, `firmware/usbll.c`, `firmware/inc/usbhost.h`
 
-The firmware supports hotplug detection for root hub ports via hardware detection:
+The firmware supports efficient hotplug detection for both root hub ports and external hub ports:
 
 #### Implementation Details
 
@@ -323,27 +323,43 @@ The firmware supports hotplug detection for root hub ports via hardware detectio
 - Hardware-based detection is fast and efficient with no polling overhead
 - Triggers immediate re-enumeration when root devices change
 
-**External Hub Limitation**:
-- Hotplug detection for devices on external hubs is **not implemented** to avoid performance issues
-- Polling all external hub ports recursively every 500ms would require many USB transactions (GetHubPortStatus)
-- Each hub with N ports would need N USB transactions per polling cycle, too slow for responsive operation
+**External Hub Detection** (Rotating Poll Strategy):
+- Maintains a flat list of all hubs (`HubList[]`) for efficient access
+- Polls only **one hub per cycle** instead of all hubs, rotating through the list
+- Each cycle checks all ports on one hub using `GetHubPortStatus()`
+- `HubPollIndex` tracks which hub to check next
+- Amortizes USB transaction cost: N hubs → 1 USB transaction per cycle per hub port
 
-**Workaround**:
-- To detect changes on external hub ports, unplug and replug the hub at the root level
-- This triggers full re-enumeration and detects all topology changes
-- Alternative: could implement hub interrupt endpoint monitoring in the future for efficient detection
+**Performance**:
+- With 2 hubs of 4 ports each: only 4 USB transactions per cycle (instead of 8)
+- Detection latency: N cycles to detect change on any hub (where N = number of hubs)
+- Example: 3 hubs → change detected within 3 polling cycles (1.5 seconds at 500ms/cycle)
+- Much better than no external hub detection, minimal performance impact
+
+**Data Structures**:
+```c
+__xdata USB_HUB_PORT* HubList[MAX_HUB_COUNT];  // Flat list of hub pointers
+UINT8 HubListCount;  // Number of hubs in list
+UINT8 HubPollIndex;  // Current hub being polled (rotating)
+```
+
+**Functions**:
+- `RebuildHubList()` - Called after re-enumeration to populate flat hub list
+- `AddHubsToListRecursive()` - Recursively finds all hubs in the tree
+- `ClearHubList()` - Clears the flat list and resets poll index
 
 #### Re-enumeration Flow
 
-When a change is detected on a root hub port:
+When a change is detected on any hub port:
 1. Change detected → `ReenumerateAllPorts()` called
 2. `andyclearmem()` clears ALL dynamically allocated memory
 3. `InitPresets()` resets configuration
 4. `ResetAddressAllocation()` resets USB address counter
 5. Complete USB tree enumerated from scratch
 6. All devices assigned new addresses and initialized
+7. `RebuildHubList()` creates new flat hub list for efficient polling
 
-This approach is simple, robust, and ensures consistent state after any topology change.
+This approach provides a good balance between detection speed and performance overhead.
 
 ## Backward Compatibility
 

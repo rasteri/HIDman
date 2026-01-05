@@ -203,6 +203,7 @@ extern INTERFACE* AllocInterface(UINT8 count);
 void ReenumerateAllPorts(void);
 void ResetAddressAllocation(void);
 UINT8 AssignUniqueAddress(UINT8 RootHubIndex, UINT8 HubPortIndex);
+BOOL CheckHubPortChangesRecursive(__xdata USB_HUB_PORT *pHubDevice);
 
 void ProcessUsbHostPort(void);
 

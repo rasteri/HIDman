@@ -305,10 +305,53 @@ The implementation compiles successfully with SDCC 4.2.0. Key considerations:
 ### Future Enhancements
 
 1. **Dynamic Hub Level**: Could detect and warn about maximum depth at runtime
-2. **Port Status Monitoring**: Add hot-plug detection for nested hub ports
+2. ~~**Port Status Monitoring**: Add hot-plug detection for nested hub ports~~ ✅ **IMPLEMENTED**
 3. **Error Recovery**: Enhanced error handling for hub failures
 4. **Performance**: Optimize recursive traversal if needed
 5. **Debugging**: Add more detailed logging for nested hub operations
+
+### Hotplug Detection (Implemented)
+
+**Files**: `firmware/usbhost.c`, `firmware/inc/usbhost.h`
+
+The firmware now supports detection of device attach/detach events on all hub ports, including nested hubs:
+
+#### Implementation Details
+
+**Function**: `CheckHubPortChangesRecursive(__xdata USB_HUB_PORT *pHubDevice)`
+- Recursively checks all ports on all hubs (including nested hubs) for connection changes
+- Uses `GetHubPortStatus()` to query each port's status
+- Checks the `hubPortChange` field for connection change bit (0x0001)
+- Returns TRUE if any change is detected
+
+**Integration with Main Loop**:
+- `DealUsbPort()` function now calls `CheckHubPortChangesRecursive()` for each root hub port
+- Runs periodically (at least every 500ms as per main loop requirements)
+- When a change is detected:
+  1. Logs the detection event
+  2. Calls `ReenumerateAllPorts()` to clear memory and rescan entire USB tree
+  3. All devices are re-enumerated from scratch
+
+#### Memory Efficiency
+
+- Uses minimal storage per port (only standard USB_HUB_PORT fields)
+- No additional tracking structures needed
+- Query-based approach avoids storing historical state
+- Recursive checking scales efficiently with hub depth
+
+#### Behavior
+
+**Detection**: Device plug/unplug on any hub port (root, first-level, or nested) triggers full re-enumeration
+
+**Re-enumeration Flow**:
+1. Change detected → `ReenumerateAllPorts()` called
+2. `andyclearmem()` clears ALL dynamically allocated memory
+3. `InitPresets()` resets configuration
+4. `ResetAddressAllocation()` resets USB address counter
+5. Complete USB tree enumerated from scratch
+6. All devices assigned new addresses and initialized
+
+This approach is simple, robust, and ensures consistent state after any topology change.
 
 ## Backward Compatibility
 

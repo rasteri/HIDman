@@ -835,6 +835,62 @@ UINT8 QueryHubPortAttach(void)
 	return s;
 }
 
+// Recursively check all hub ports for attach/detach changes
+// Returns TRUE if any change detected
+BOOL CheckHubPortChangesRecursive(__xdata USB_HUB_PORT *pHubDevice)
+{
+	static __xdata UINT8 i, s;
+	static __xdata UINT16 hubPortStatus, hubPortChange;
+	static __xdata BOOL changeDetected;
+	
+	changeDetected = FALSE;
+	
+	if (pHubDevice == NULL || pHubDevice->HubPortStatus != PORT_DEVICE_ENUM_SUCCESS)
+	{
+		return FALSE;
+	}
+	
+	// Only check hubs
+	if (pHubDevice->DeviceClass != USB_DEV_CLASS_HUB)
+	{
+		return FALSE;
+	}
+	
+	// Select this hub for communication
+	SelectHubPortByDevice(pHubDevice);
+	
+	// Check each port for changes
+	for (i = 0; i < pHubDevice->HubPortNum; i++)
+	{
+		s = GetHubPortStatus(pHubDevice, i + 1, &hubPortStatus, &hubPortChange);
+		if (s != ERR_SUCCESS)
+		{
+			// Can't read status, skip this port
+			continue;
+		}
+		
+		// Check for connection change
+		if (hubPortChange & 0x0001)  // Connection status changed
+		{
+			DEBUGOUT("Hub port %d change detected\n", i);
+			changeDetected = TRUE;
+			break;  // No need to check more, we'll re-enumerate anyway
+		}
+		
+		// Recursively check child hubs
+		if (pHubDevice->ChildHubPorts[i] != NULL)
+		{
+			if (CheckHubPortChangesRecursive(pHubDevice->ChildHubPorts[i]))
+			{
+				changeDetected = TRUE;
+				break;  // No need to check more
+			}
+		}
+	}
+	
+	return changeDetected;
+}
+
 
 void regrabinterfaces(__xdata USB_HUB_PORT *pUsbHubPort)
 {
@@ -1036,10 +1092,35 @@ void ReenumerateAllPorts(void) {
 void DealUsbPort(void) //main function should use it at least 500ms
 {
 	static __xdata UINT8 s;
+	static __xdata UINT8 i;
+	static __xdata BOOL hubChangeDetected;
 
 	s = QueryHubPortAttach();
 	if (s == ERR_USB_CONNECT)
 	{
+		ReenumerateAllPorts();
+		return;
+	}
+	
+	// Check for changes in external hubs (including nested hubs)
+	hubChangeDetected = FALSE;
+	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
+	{
+		if (RootHubPort[i].HubPortStatus == PORT_DEVICE_ENUM_SUCCESS &&
+		    RootHubPort[i].DeviceClass == USB_DEV_CLASS_HUB)
+		{
+			if (CheckHubPortChangesRecursive(&RootHubPort[i]))
+			{
+				DEBUGOUT("Change detected in hub on root port %d\n", i);
+				hubChangeDetected = TRUE;
+				break;
+			}
+		}
+	}
+	
+	if (hubChangeDetected)
+	{
+		DEBUGOUT("Re-enumerating due to hub port change\n");
 		ReenumerateAllPorts();
 	}
 }

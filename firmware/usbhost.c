@@ -491,10 +491,6 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 	static __xdata UINT8 hubPortNum;
 	static __xdata UINT16 hubPortStatus, hubPortChange;
 	static __xdata UINT8 addr;
-	static __xdata INTERFACE *pInterface;
-	static __xdata ENDPOINT *pEndPoint;
-	static __xdata uint8_t changebitmap;
-	static __xdata uint8_t newthing;
 	static __xdata USB_HUB_PORT *pChildPort;
 	
 	if (pHubDevice == NULL || pHubDevice->DeviceClass != USB_DEV_CLASS_HUB)
@@ -566,52 +562,29 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 		TRACE("SetHubPortFeature OK\r\n");
 	}
 	
-	// Get hub interface and endpoint for status changes
-	pInterface = (__xdata INTERFACE *)ListGetData(pHubDevice->Interfaces, 0);
-	if (pInterface == NULL)
-	{
-		DEBUGOUT("No hub interface\n");
-		return FALSE;
-	}
-	
-	pEndPoint = &pInterface->Endpoint[0];
-	
-	// Try to get change bitmap
-	newthing = 1;
-	s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 20000);
-	
-	if (s != ERR_SUCCESS)
-	{
-		DEBUGOUT("new enum. failed\n");
-		newthing = 0;
-	}
-	
-	changebitmap = ReceiveDataBuffer[0];
-	DEBUGOUT("change bitmap: %x\n", changebitmap);
-	
-	// Enumerate each port
+	// Enumerate each port (without checking change bitmap - simpler approach)
+	// The original code had an optimization to check status change endpoint,
+	// but that requires hub interfaces which aren't parsed by ParseConfigDescriptor
 	for (i = 0; i < hubPortNum; i++)
 	{
-		if (!newthing || (changebitmap & (1 << (i+1))))
+		DEBUGOUT("Checking port %d\n", i);
+		mDelaymS(50);
+		
+		SelectHubPortByDevice(pHubDevice);
+		
+		s = GetHubPortStatus(pHubDevice, i + 1, &hubPortStatus, &hubPortChange);
+		if (s != ERR_SUCCESS)
 		{
-			DEBUGOUT("Checking port %d\n", i);
-			mDelaymS(50);
-			
-			SelectHubPortByDevice(pHubDevice);
-			
-			s = GetHubPortStatus(pHubDevice, i + 1, &hubPortStatus, &hubPortChange);
-			if (s != ERR_SUCCESS)
-			{
-				pHubDevice->ChildHubPorts[i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-				TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
-				continue;
-			}
-			
-			DEBUGOUT("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
-			
-			if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
-			{
-				// Device attached
+			pHubDevice->ChildHubPorts[i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+			TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
+			continue;
+		}
+		
+		DEBUGOUT("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
+		
+		if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
+		{
+			// Device attached
 				DEBUGOUT("port %d attached\n", i);
 				
 				s = ClearHubPortFeature(pHubDevice, i + 1, HUB_C_PORT_CONNECTION);
@@ -696,7 +669,6 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 						pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
 					}
 				}
-			}
 		}
 	}
 	

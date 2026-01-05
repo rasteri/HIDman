@@ -305,45 +305,37 @@ The implementation compiles successfully with SDCC 4.2.0. Key considerations:
 ### Future Enhancements
 
 1. **Dynamic Hub Level**: Could detect and warn about maximum depth at runtime
-2. ~~**Port Status Monitoring**: Add hot-plug detection for nested hub ports~~ ✅ **IMPLEMENTED**
+2. **Hub Interrupt Endpoint**: Implement hub status change endpoint monitoring for efficient hotplug detection on external hubs
 3. **Error Recovery**: Enhanced error handling for hub failures
 4. **Performance**: Optimize recursive traversal if needed
 5. **Debugging**: Add more detailed logging for nested hub operations
 
-### Hotplug Detection (Implemented)
+### Hotplug Detection
 
-**Files**: `firmware/usbhost.c`, `firmware/inc/usbhost.h`
+**Files**: `firmware/usbhost.c`
 
-The firmware now supports detection of device attach/detach events on all hub ports, including nested hubs:
+The firmware supports hotplug detection for root hub ports via hardware detection:
 
 #### Implementation Details
 
-**Function**: `CheckHubPortChangesRecursive(__xdata USB_HUB_PORT *pHubDevice)`
-- Recursively checks all ports on all hubs (including nested hubs) for connection changes
-- Uses `GetHubPortStatus()` to query each port's status
-- Checks the `hubPortChange` field for connection change bit (0x0001)
-- Returns TRUE if any change is detected
+**Root Hub Detection**:
+- `QueryHubPortAttach()` detects device attach/detach on root hub ports via CH559 hardware
+- Hardware-based detection is fast and efficient with no polling overhead
+- Triggers immediate re-enumeration when root devices change
 
-**Integration with Main Loop**:
-- `DealUsbPort()` function now calls `CheckHubPortChangesRecursive()` for each root hub port
-- Runs periodically (at least every 500ms as per main loop requirements)
-- When a change is detected:
-  1. Logs the detection event
-  2. Calls `ReenumerateAllPorts()` to clear memory and rescan entire USB tree
-  3. All devices are re-enumerated from scratch
+**External Hub Limitation**:
+- Hotplug detection for devices on external hubs is **not implemented** to avoid performance issues
+- Polling all external hub ports recursively every 500ms would require many USB transactions (GetHubPortStatus)
+- Each hub with N ports would need N USB transactions per polling cycle, too slow for responsive operation
 
-#### Memory Efficiency
+**Workaround**:
+- To detect changes on external hub ports, unplug and replug the hub at the root level
+- This triggers full re-enumeration and detects all topology changes
+- Alternative: could implement hub interrupt endpoint monitoring in the future for efficient detection
 
-- Uses minimal storage per port (only standard USB_HUB_PORT fields)
-- No additional tracking structures needed
-- Query-based approach avoids storing historical state
-- Recursive checking scales efficiently with hub depth
+#### Re-enumeration Flow
 
-#### Behavior
-
-**Detection**: Device plug/unplug on any hub port (root, first-level, or nested) triggers full re-enumeration
-
-**Re-enumeration Flow**:
+When a change is detected on a root hub port:
 1. Change detected → `ReenumerateAllPorts()` called
 2. `andyclearmem()` clears ALL dynamically allocated memory
 3. `InitPresets()` resets configuration

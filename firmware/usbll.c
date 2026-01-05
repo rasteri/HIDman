@@ -146,6 +146,22 @@ __xdata USB_HUB_PORT* AllocateChildHubPorts(UINT8 numPorts)
 	return childPorts;
 }
 
+// Allocate a single child hub port on demand (memory-efficient approach)
+__xdata USB_HUB_PORT* AllocateSingleChildPort()
+{
+	__xdata USB_HUB_PORT* childPort;
+	
+	childPort = (__xdata USB_HUB_PORT*)andyalloc(sizeof(USB_HUB_PORT));
+	if (childPort == NULL)
+	{
+		return NULL;
+	}
+	
+	InitHubPortData(childPort);
+	
+	return childPort;
+}
+
 // Select a hub port by tracing up the parent hierarchy
 void SelectHubPortByDevice(__xdata USB_HUB_PORT *pUsbDevice)
 {

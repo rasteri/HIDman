@@ -74,36 +74,36 @@ void TestHubHierarchy()
     
     assert(TestRootHub.HubLevel == 0);
     assert(TestRootHub.ParentHub == NULL);
-    assert(TestRootHub.ChildHubPorts == NULL);
+    assert(TestRootHub.ChildHubPorts[0] == NULL);
     
-    // Allocate child ports for root hub
+    // Allocate individual child port (lazy allocation)
     TestRootHub.HubPortNum = 4;
-    TestRootHub.ChildHubPorts = AllocateChildHubPorts(4);
-    assert(TestRootHub.ChildHubPorts != NULL);
+    TestRootHub.ChildHubPorts[0] = AllocateSingleChildPort();
+    assert(TestRootHub.ChildHubPorts[0] != NULL);
     
     // Set up child hub
-    TestRootHub.ChildHubPorts[0].ParentHub = &TestRootHub;
-    TestRootHub.ChildHubPorts[0].ParentHubPortIndex = 0;
-    TestRootHub.ChildHubPorts[0].HubLevel = 1;
+    TestRootHub.ChildHubPorts[0]->ParentHub = &TestRootHub;
+    TestRootHub.ChildHubPorts[0]->ParentHubPortIndex = 0;
+    TestRootHub.ChildHubPorts[0]->HubLevel = 1;
     
-    assert(TestRootHub.ChildHubPorts[0].HubLevel == 1);
-    assert(TestRootHub.ChildHubPorts[0].ParentHub == &TestRootHub);
-    assert(TestRootHub.ChildHubPorts[0].ParentHubPortIndex == 0);
+    assert(TestRootHub.ChildHubPorts[0]->HubLevel == 1);
+    assert(TestRootHub.ChildHubPorts[0]->ParentHub == &TestRootHub);
+    assert(TestRootHub.ChildHubPorts[0]->ParentHubPortIndex == 0);
     
-    // Allocate child ports for second-level hub
-    TestRootHub.ChildHubPorts[0].HubPortNum = 4;
-    TestRootHub.ChildHubPorts[0].ChildHubPorts = AllocateChildHubPorts(4);
-    assert(TestRootHub.ChildHubPorts[0].ChildHubPorts != NULL);
+    // Allocate child port for second-level hub
+    TestRootHub.ChildHubPorts[0]->HubPortNum = 4;
+    TestRootHub.ChildHubPorts[0]->ChildHubPorts[0] = AllocateSingleChildPort();
+    assert(TestRootHub.ChildHubPorts[0]->ChildHubPorts[0] != NULL);
     
     // Set up nested hub's child
-    TestRootHub.ChildHubPorts[0].ChildHubPorts[0].ParentHub = &TestRootHub.ChildHubPorts[0];
-    TestRootHub.ChildHubPorts[0].ChildHubPorts[0].ParentHubPortIndex = 0;
-    TestRootHub.ChildHubPorts[0].ChildHubPorts[0].HubLevel = 2;
+    TestRootHub.ChildHubPorts[0]->ChildHubPorts[0]->ParentHub = TestRootHub.ChildHubPorts[0];
+    TestRootHub.ChildHubPorts[0]->ChildHubPorts[0]->ParentHubPortIndex = 0;
+    TestRootHub.ChildHubPorts[0]->ChildHubPorts[0]->HubLevel = 2;
     
-    assert(TestRootHub.ChildHubPorts[0].ChildHubPorts[0].HubLevel == 2);
-    assert(TestRootHub.ChildHubPorts[0].ChildHubPorts[0].ParentHub == &TestRootHub.ChildHubPorts[0]);
+    assert(TestRootHub.ChildHubPorts[0]->ChildHubPorts[0]->HubLevel == 2);
+    assert(TestRootHub.ChildHubPorts[0]->ChildHubPorts[0]->ParentHub == TestRootHub.ChildHubPorts[0]);
     
-    printf("  PASS - Hub hierarchy correctly initialized\n");
+    printf("  PASS - Hub hierarchy correctly initialized with lazy allocation\n");
 }
 
 // Test 2: Verify mock address allocation
@@ -140,33 +140,27 @@ void TestMaxHubLevel()
     printf("  PASS - MAX_EXHUB_LEVEL is %d\n", MAX_EXHUB_LEVEL);
 }
 
-// Test 4: Verify child hub port allocation
+// Test 4: Verify child hub port allocation (lazy allocation)
 void TestChildHubAllocation()
 {
-    printf("Test: Child Hub Port Allocation...\n");
+    printf("Test: Child Hub Port Lazy Allocation...\n");
     
-    __xdata USB_HUB_PORT *childPorts;
-    UINT8 i;
+    __xdata USB_HUB_PORT *childPort1, *childPort2;
     
-    // Test allocation
-    childPorts = AllocateChildHubPorts(4);
-    assert(childPorts != NULL);
+    // Test individual port allocation
+    childPort1 = AllocateSingleChildPort();
+    assert(childPort1 != NULL);
+    assert(childPort1->HubPortStatus == PORT_DEVICE_NONE);
+    assert(childPort1->DeviceClass == USB_DEV_CLASS_RESERVED);
+    assert(childPort1->HubLevel == 0);
+    assert(childPort1->ParentHub == NULL);
+    assert(childPort1->ChildHubPorts[0] == NULL);
     
-    // Verify all ports are initialized
-    for (i = 0; i < 4; i++)
-    {
-        assert(childPorts[i].HubPortStatus == PORT_DEVICE_NONE);
-        assert(childPorts[i].DeviceClass == USB_DEV_CLASS_RESERVED);
-        assert(childPorts[i].HubLevel == 0);
-        assert(childPorts[i].ParentHub == NULL);
-        assert(childPorts[i].ChildHubPorts == NULL);
-    }
+    childPort2 = AllocateSingleChildPort();
+    assert(childPort2 != NULL);
+    assert(childPort2 != childPort1);  // Different allocations
     
-    // Test boundary conditions
-    assert(AllocateChildHubPorts(0) == NULL);  // 0 ports
-    assert(AllocateChildHubPorts(MAX_EXHUB_PORT_NUM + 1) == NULL);  // Too many ports
-    
-    printf("  PASS - Child hub ports allocated and initialized correctly\n");
+    printf("  PASS - Child hub ports allocated lazily and independently\n");
 }
 
 // Test 5: Verify memory management strategy
@@ -174,25 +168,26 @@ void TestMemoryManagement()
 {
     printf("Test: Memory Management Strategy...\n");
     
-    __xdata USB_HUB_PORT *childPorts;
-    __xdata USB_HUB_PORT *nestedPorts;
+    __xdata USB_HUB_PORT *childPort1, *childPort2;
     
-    // Allocate parent ports
-    childPorts = AllocateChildHubPorts(2);
-    assert(childPorts != NULL);
+    // Allocate some ports
+    childPort1 = AllocateSingleChildPort();
+    assert(childPort1 != NULL);
     
-    // Make one a hub with its own children
-    childPorts[0].DeviceClass = USB_DEV_CLASS_HUB;
-    childPorts[0].HubPortNum = 2;
-    nestedPorts = AllocateChildHubPorts(2);
-    childPorts[0].ChildHubPorts = nestedPorts;
+    // Make it a hub with a child
+    childPort1->DeviceClass = USB_DEV_CLASS_HUB;
+    childPort1->HubPortNum = 4;
+    childPort2 = AllocateSingleChildPort();
+    childPort1->ChildHubPorts[0] = childPort2;
     
     // Note: andyalloc doesn't support individual free operations
     // Memory is cleared via andyclearmem() during re-enumeration
     // Just verify pointers are set correctly
-    assert(childPorts[0].ChildHubPorts != NULL);
+    assert(childPort1->ChildHubPorts[0] != NULL);
+    assert(childPort1->ChildHubPorts[0] == childPort2);
     
     printf("  PASS - Memory management relies on andyclearmem() during re-enumeration\n");
+    printf("  INFO - Lazy allocation saves memory by only allocating ports with devices\n");
 }
 
 void main()

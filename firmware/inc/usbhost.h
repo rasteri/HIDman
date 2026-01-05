@@ -186,7 +186,7 @@ typedef struct _USB_HUB_PORT
 	UINT8       HubLevel;  // 0 for root, 1 for first level hub, etc.
 	__xdata struct _USB_HUB_PORT* ParentHub;  // NULL for root hubs
 	UINT8       ParentHubPortIndex;  // Port index on parent hub
-	__xdata struct _USB_HUB_PORT* ChildHubPorts;  // Array of child ports if this is a hub
+	__xdata struct _USB_HUB_PORT* ChildHubPorts[MAX_EXHUB_PORT_NUM];  // Array of pointers to child ports (allocated on demand)
 	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 

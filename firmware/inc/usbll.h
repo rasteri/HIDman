@@ -13,6 +13,7 @@ UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen, UINT16
 void InitHubPortData(USB_HUB_PORT *pUsbHubPort);
 void InitRootHubPortData(UINT8 rootHubIndex);
 __xdata USB_HUB_PORT* AllocateChildHubPorts(UINT8 numPorts);
+__xdata USB_HUB_PORT* AllocateSingleChildPort();
 void SelectHubPortByDevice(__xdata USB_HUB_PORT *pUsbDevice);
 
 //root hub port

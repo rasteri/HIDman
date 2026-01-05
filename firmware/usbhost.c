@@ -485,13 +485,13 @@ UINT8 AssignUniqueAddress(UINT8 RootHubIndex, UINT8 HubPortIndex)
 // Returns TRUE if successful
 BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 {
-	static __xdata UINT8 i, s;
-	static __xdata UINT16 len;
-	static __xdata USB_HUB_DESCR *pHubDescr;
-	static __xdata UINT8 hubPortNum;
-	static __xdata UINT16 hubPortStatus, hubPortChange;
-	static __xdata UINT8 addr;
-	static __xdata USB_HUB_PORT *pChildPort;
+	UINT8 i, s;
+	UINT16 len;
+	__xdata USB_HUB_DESCR *pHubDescr;
+	UINT8 hubPortNum;
+	UINT16 hubPortStatus, hubPortChange;
+	UINT8 addr;
+	__xdata USB_HUB_PORT *pChildPort;
 	
 	if (pHubDevice == NULL || pHubDevice->DeviceClass != USB_DEV_CLASS_HUB)
 	{
@@ -839,9 +839,9 @@ UINT8 QueryHubPortAttach(void)
 // Returns TRUE if any change detected
 BOOL CheckHubPortChangesRecursive(__xdata USB_HUB_PORT *pHubDevice)
 {
-	static __xdata UINT8 i, s;
-	static __xdata UINT16 hubPortStatus, hubPortChange;
-	static __xdata BOOL changeDetected;
+	UINT8 i, s;
+	UINT16 hubPortStatus, hubPortChange;
+	BOOL changeDetected;
 	
 	changeDetected = FALSE;
 	

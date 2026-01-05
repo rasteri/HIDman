@@ -112,13 +112,6 @@ void DisableRootHubPort(UINT8 RootHubIndex)
 void InitRootHubPortData(UINT8 rootHubIndex)
 {
 	UINT8 i;
-	
-	// Free child hub ports if they exist (for nested hubs)
-	if (RootHubPort[rootHubIndex].ChildHubPorts != NULL)
-	{
-		FreeChildHubPorts(RootHubPort[rootHubIndex].ChildHubPorts, RootHubPort[rootHubIndex].HubPortNum);
-		RootHubPort[rootHubIndex].ChildHubPorts = NULL;
-	}
 
 	InitHubPortData(&RootHubPort[rootHubIndex]);
 
@@ -151,34 +144,6 @@ __xdata USB_HUB_PORT* AllocateChildHubPorts(UINT8 numPorts)
 	}
 	
 	return childPorts;
-}
-
-// Free child hub ports and their nested children recursively
-// Note: andyalloc doesn't support individual free, so this just clears the pointers
-void FreeChildHubPorts(__xdata USB_HUB_PORT* childPorts, UINT8 numPorts)
-{
-	UINT8 i;
-	
-	if (childPorts == NULL || numPorts == 0)
-	{
-		return;
-	}
-	
-	// Recursively clear nested children
-	for (i = 0; i < numPorts; i++)
-	{
-		if (childPorts[i].DeviceClass == USB_DEV_CLASS_HUB && childPorts[i].ChildHubPorts != NULL)
-		{
-			FreeChildHubPorts(childPorts[i].ChildHubPorts, childPorts[i].HubPortNum);
-			childPorts[i].ChildHubPorts = NULL;
-		}
-		
-		// Clear interfaces list pointer (memory will be reclaimed by andyclearmem)
-		childPorts[i].Interfaces = NULL;
-	}
-	
-	// Note: andyalloc doesn't support individual free operations
-	// Memory will be reclaimed when andyclearmem() is called during re-enumeration
 }
 
 // Select a hub port by tracing up the parent hierarchy

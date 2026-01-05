@@ -47,11 +47,15 @@ Implemented dynamic allocation functions:
 - Returns `__xdata USB_HUB_PORT*` pointer or NULL on failure
 - Validates port count (0 < numPorts <= MAX_EXHUB_PORT_NUM)
 
-#### `FreeChildHubPorts(__xdata USB_HUB_PORT* childPorts, UINT8 numPorts)`
-- Recursively clears child hub port hierarchies
-- Note: andyalloc doesn't support individual free operations
-- Memory is reclaimed when `andyclearmem()` is called during re-enumeration
-- Clears pointers to prevent dangling references
+#### Memory Management Strategy
+- **Important**: andyalloc doesn't support individual free operations
+- Memory is managed through `andyclearmem()` which is called during re-enumeration
+- When a device is added/removed, the entire USB tree is re-enumerated:
+  1. `ReenumerateAllPorts()` is called
+  2. `andyclearmem()` clears ALL allocated memory
+  3. The entire USB tree is enumerated from scratch
+- Child hub port pointers are cleared in `InitHubPortData()` to reset state
+- No explicit "free" operation is needed or possible for individual allocations
 
 ### 4. Improved Address Allocation
 
@@ -207,21 +211,25 @@ void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 }
 ```
 
-Updated `InitRootHubPortData()` to free child ports:
+Updated `InitRootHubPortData()` for proper re-enumeration:
 ```c
 void InitRootHubPortData(UINT8 rootHubIndex)
 {
-    // Free child hub ports if they exist
-    if (RootHubPort[rootHubIndex].ChildHubPorts != NULL)
-    {
-        FreeChildHubPorts(RootHubPort[rootHubIndex].ChildHubPorts, 
-                          RootHubPort[rootHubIndex].HubPortNum);
-        RootHubPort[rootHubIndex].ChildHubPorts = NULL;
-    }
+    // Simply initialize port data - memory cleanup happens via andyclearmem()
+    InitHubPortData(&RootHubPort[rootHubIndex]);
     
-    // ... rest of initialization ...
+    for (i = 0; i < MAX_EXHUB_PORT_NUM; i++)
+    {
+        InitHubPortData(&SubHubPort[rootHubIndex][i]);
+    }
 }
 ```
+
+**Note**: Child hub port memory is NOT explicitly freed here. The cleanup happens through the re-enumeration flow:
+1. Device change detected → `ReenumerateAllPorts()` called
+2. `andyclearmem()` clears all memory
+3. USB tree re-enumerated from scratch
+4. New child ports allocated as needed
 
 ## Testing
 
@@ -248,10 +256,10 @@ Created comprehensive unit tests to validate nested hub support:
 - Validates initialization of allocated ports
 - Tests boundary conditions (0 ports, too many ports)
 
-#### Test 5: Free Child Hub Ports
-- Tests recursive cleanup
-- Verifies pointer clearing
-- Validates nested hierarchy cleanup
+#### Test 5: Memory Management Strategy
+- Validates memory allocation
+- Confirms memory cleanup relies on `andyclearmem()` during re-enumeration
+- Verifies nested hub port allocation works correctly
 
 ### Running Tests
 

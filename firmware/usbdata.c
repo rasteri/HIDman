@@ -45,6 +45,11 @@ void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 	{
 		pUsbHubPort->ChildHubPorts[i] = NULL;
 	}
+	
+	// Initialize hub interrupt endpoint fields
+	pUsbHubPort->HubIntEndpointAddr = 0;
+	pUsbHubPort->HubIntMaxPacketSize = 0;
+	pUsbHubPort->HubIntTOG = 0;
 }
 void InitInterface(INTERFACE* Interface)
 {

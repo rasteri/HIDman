@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of nested USB hub support in the HIDman project. The changes enable the firmware to support up to 2 levels of USB hub nesting (root hub → external hub → nested hub → devices).
+This document describes the implementation of nested USB hub support in the HIDman project. The changes enable the firmware to support up to 2 levels of USB hub nesting (root hub → external hub → nested hub → devices) with efficient interrupt endpoint-based hotplug detection.
 
 ## Changes Summary
 
@@ -18,34 +18,46 @@ This document describes the implementation of nested USB hub support in the HIDm
 
 **File**: `firmware/inc/usbhost.h`
 
-Added new fields to track hub hierarchy:
+Added new fields to track hub hierarchy and interrupt endpoint:
 
 ```c
 typedef struct _USB_HUB_PORT
 {
     // ... existing fields ...
     
-    // Hub nesting support (NEW)
+    // Hub nesting support
     UINT8       HubLevel;                      // 0 for root, 1 for first level hub, etc.
     __xdata struct _USB_HUB_PORT* ParentHub;   // NULL for root hubs
     UINT8       ParentHubPortIndex;            // Port index on parent hub
-    __xdata struct _USB_HUB_PORT* ChildHubPorts;  // Array of child ports if this is a hub
+    __xdata struct _USB_HUB_PORT* ChildHubPorts[MAX_EXHUB_PORT_NUM];  // Array of pointers (lazy allocation)
+    
+    // Hub interrupt endpoint for efficient change detection
+    UINT8       HubIntEndpointAddr;            // Interrupt IN endpoint address (0 if not available)
+    UINT8       HubIntMaxPacketSize;           // Max packet size for interrupt endpoint
+    UINT8       HubIntTOG;                     // Toggle bit for interrupt endpoint
 } USB_HUB_PORT;
 ```
 
-**Purpose**: These fields enable traversal of the hub tree in both directions (parent and child).
+**Purpose**: 
+- Hub hierarchy fields enable traversal of the hub tree in both directions
+- Interrupt endpoint fields enable event-driven hotplug detection instead of polling all ports
 
-### 3. Dynamic Child Hub Port Allocation
+### 3. Dynamic Child Hub Port Allocation (Lazy Allocation)
 
 **Files**: `firmware/usbll.c`, `firmware/inc/usbll.h`
 
-Implemented dynamic allocation functions:
+Implemented lazy allocation for memory efficiency:
 
-#### `AllocateChildHubPorts(UINT8 numPorts)`
-- Dynamically allocates an array of USB_HUB_PORT structures
-- Initializes each port with `InitHubPortData()`
+#### `AllocateSingleChildPort()`
+- Allocates a single USB_HUB_PORT structure on demand
+- Only called when a device is actually detected on a port
+- Initializes the port with `InitHubPortData()`
 - Returns `__xdata USB_HUB_PORT*` pointer or NULL on failure
-- Validates port count (0 < numPorts <= MAX_EXHUB_PORT_NUM)
+
+#### Memory Savings
+- **Before**: Allocated N × sizeof(USB_HUB_PORT) upfront for all hub ports
+- **After**: Only allocate sizeof(USB_HUB_PORT) when device is detected on a port
+- **Example**: 4-port hub with 1 device saves 3 × sizeof(USB_HUB_PORT) bytes
 
 #### Memory Management Strategy
 - **Important**: andyalloc doesn't support individual free operations
@@ -305,47 +317,89 @@ The implementation compiles successfully with SDCC 4.2.0. Key considerations:
 ### Future Enhancements
 
 1. **Dynamic Hub Level**: Could detect and warn about maximum depth at runtime
-2. **Hub Interrupt Endpoint**: Implement hub status change endpoint monitoring for even more efficient hotplug detection
-3. **Error Recovery**: Enhanced error handling for hub failures
-4. **Performance**: Further optimize if needed
-5. **Debugging**: Add more detailed logging for nested hub operations
+2. **Error Recovery**: Enhanced error handling for hub failures
+3. **Performance**: Further optimize if needed
+4. **Debugging**: Add more detailed logging for nested hub operations
 
-### Hotplug Detection
+## Hotplug Detection
 
 **Files**: `firmware/usbhost.c`, `firmware/usbll.c`, `firmware/inc/usbhost.h`
 
-The firmware supports efficient hotplug detection for both root hub ports and external hub ports:
+The firmware supports efficient hotplug detection using interrupt endpoint monitoring.
 
-#### Implementation Details
+### Implementation Details
 
 **Root Hub Detection**:
 - `QueryHubPortAttach()` detects device attach/detach on root hub ports via CH559 hardware
 - Hardware-based detection is fast and efficient with no polling overhead
 - Triggers immediate re-enumeration when root devices change
 
-**External Hub Detection** (Rotating Poll Strategy):
-- Maintains a flat list of all hubs (`HubList[]`) for efficient access
-- Polls only **one hub per cycle** instead of all hubs, rotating through the list
-- Each cycle checks all ports on one hub using `GetHubPortStatus()`
-- `HubPollIndex` tracks which hub to check next
-- Amortizes USB transaction cost: N hubs → 1 USB transaction per cycle per hub port
+**External Hub Detection** (Interrupt Endpoint Monitoring):
 
-**Performance**:
-- With 2 hubs of 4 ports each: only 4 USB transactions per cycle (instead of 8)
-- Detection latency: N cycles to detect change on any hub (where N = number of hubs)
-- Example: 3 hubs → change detected within 3 polling cycles (1.5 seconds at 500ms/cycle)
-- Much better than no external hub detection, minimal performance impact
+The implementation uses USB hub interrupt endpoints for event-driven change detection:
 
-**Data Structures**:
+#### How It Works
+
+1. **During Hub Enumeration** (`InitializeHubPorts()`):
+   - Parse configuration descriptor to find interrupt IN endpoint
+   - Store endpoint address, max packet size in hub structure
+   - Typically endpoint address is 0x81 with 1-byte max packet size
+
+2. **During Periodic Polling** (`DealUsbPort()`):
+   - Check interrupt endpoint of **all** hubs in one cycle (not rotating)
+   - Perform interrupt IN transfer for each hub
+   - Hub NAKs if no changes (very fast, no data transfer)
+   - Hub returns bitmap when port status changes
+
+3. **Processing Interrupt Data**:
+   - Bitmap format: bit 0 = hub status, bits 1-N = ports 1-N
+   - Only query specific ports indicated by bitmap
+   - Trigger re-enumeration if connection change detected
+
+#### Performance Comparison
+
+**Old Approach (Rotating Poll)**:
+- Poll all ports on one hub per cycle
+- N hubs with M ports: M USB transactions per cycle
+- Detection latency: N cycles to check all hubs
+- Example: 3 hubs × 4 ports = 4 transactions/cycle, 1.5s latency
+
+**New Approach (Interrupt Endpoint)**:
+- Check interrupt endpoint of all hubs per cycle
+- Idle: N interrupt transfers (NAK responses, minimal data)
+- Change: N interrupt transfers + small number of GetHubPortStatus for changed ports
+- Immediate detection across all hubs (no latency)
+- Much more efficient when no changes occurring
+
+#### Advantages
+
+- **Event-Driven**: Only USB traffic when actual changes occur
+- **Lower Latency**: Immediate detection on any hub (no N-cycle delay)
+- **More Efficient**: Just NAK responses when idle, no GetHubPortStatus transactions
+- **Scalable**: Performance doesn't degrade with more hubs
+
+#### Data Structures
+
 ```c
-__xdata USB_HUB_PORT* HubList[MAX_HUB_COUNT];  // Flat list of hub pointers
-UINT8 HubListCount;  // Number of hubs in list
-UINT8 HubPollIndex;  // Current hub being polled (rotating)
+typedef struct _USB_HUB_PORT {
+    // ... existing fields ...
+    
+    // Hub interrupt endpoint for change detection
+    UINT8       HubIntEndpointAddr;   // Interrupt IN endpoint address (0 if not available)
+    UINT8       HubIntMaxPacketSize;  // Max packet size for interrupt endpoint
+    UINT8       HubIntTOG;            // Toggle bit for interrupt endpoint
+} USB_HUB_PORT;
 ```
 
-**Functions**:
-- `RebuildHubList()` - Called after re-enumeration to populate flat hub list
-- `AddHubsToListRecursive()` - Recursively finds all hubs in the tree
+#### Functions
+
+- `InitializeHubPorts()` - Parses config descriptor to find interrupt endpoint
+- `DealUsbPort()` - Checks all hub interrupt endpoints per cycle
+- Uses `USBHostTransact()` for interrupt IN transfers
+
+#### Fallback Behavior
+
+If a hub doesn't have an interrupt endpoint (HubIntEndpointAddr == 0), it is simply skipped during polling. Root hub detection via hardware still works normally.
 - `ClearHubList()` - Clears the flat list and resets poll index
 
 #### Re-enumeration Flow

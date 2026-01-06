@@ -532,6 +532,46 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 	
 	pHubDevice->HubPortNum = hubPortNum;
 	
+	// Parse configuration descriptor to find hub interrupt endpoint
+	// Get full configuration descriptor
+	s = GetConfigDescr(pHubDevice, ReceiveDataBuffer, RECEIVE_BUFFER_LEN, &len);
+	if (s == ERR_SUCCESS && len > 0)
+	{
+		UINT8 *pDesc = ReceiveDataBuffer;
+		UINT16 pos = 0;
+		
+		// Parse through descriptor looking for interrupt IN endpoint
+		while (pos + 2 <= len)
+		{
+			UINT8 descLen = pDesc[pos];
+			UINT8 descType = pDesc[pos + 1];
+			
+			if (descLen < 2 || pos + descLen > len)
+				break;
+			
+			// Endpoint descriptor
+			if (descType == 0x05 && descLen >= 7)
+			{
+				UINT8 epAddr = pDesc[pos + 2];
+				UINT8 epAttr = pDesc[pos + 3];
+				UINT16 maxPkt = pDesc[pos + 4] | (pDesc[pos + 5] << 8);
+				
+				// Check if it's an interrupt IN endpoint
+				if ((epAttr & 0x03) == 0x03 && (epAddr & 0x80))
+				{
+					// Found hub interrupt endpoint
+					pHubDevice->HubIntEndpointAddr = epAddr;
+					pHubDevice->HubIntMaxPacketSize = (UINT8)maxPkt;
+					pHubDevice->HubIntTOG = 0;
+					DEBUGOUT("Hub INT EP: 0x%02X, MaxPkt: %d\n", epAddr, maxPkt);
+					break;
+				}
+			}
+			
+			pos += descLen;
+		}
+	}
+	
 	// Note: We don't pre-allocate child ports here to save memory
 	// Child ports are allocated on-demand when devices are detected
 	
@@ -1039,9 +1079,11 @@ void ReenumerateAllPorts(void) {
 void DealUsbPort(void) //main function should use it at least 500ms
 {
 	static __xdata UINT8 s;
-	UINT8 i;
+	UINT8 i, j;
 	UINT16 hubPortStatus, hubPortChange;
 	__xdata USB_HUB_PORT *pHub;
+	UINT8 intData;
+	UINT8 len;
 
 	s = QueryHubPortAttach();
 	if (s == ERR_USB_CONNECT)
@@ -1050,41 +1092,68 @@ void DealUsbPort(void) //main function should use it at least 500ms
 		return;
 	}
 	
-	// Check one external hub per cycle for hotplug detection (rotating through all hubs)
-	if (HubListCount > 0)
+	// Check all external hubs using interrupt endpoint monitoring
+	// This is more efficient than rotating poll since we check all hubs in one cycle
+	// and only when they report changes
+	for (i = 0; i < HubListCount; i++)
 	{
-		// Get the current hub to check
-		pHub = HubList[HubPollIndex];
+		pHub = HubList[i];
 		
-		// Move to next hub for the next cycle
-		HubPollIndex++;
-		if (HubPollIndex >= HubListCount)
-		{
-			HubPollIndex = 0;
-		}
+		if (pHub == NULL || pHub->HubPortStatus != PORT_DEVICE_ENUM_SUCCESS)
+			continue;
 		
-		// Check this hub's ports for changes
-		if (pHub != NULL && pHub->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
+		// Skip if hub doesn't have interrupt endpoint
+		if (pHub->HubIntEndpointAddr == 0)
+			continue;
+		
+		// Select this hub for communication
+		SelectHubPortByDevice(pHub);
+		
+		// Perform interrupt IN transfer to check for port changes
+		// This will NAK if no changes, or return bitmap if changes occurred
+		s = USBHostTransact(USB_PID_IN << 4 | (pHub->HubIntEndpointAddr & 0x7F), 
+		                   pHub->HubIntTOG ? bUH_R_TOG | bUH_T_TOG : 0, 
+		                   200); // Short timeout for interrupt transfer
+		
+		if (s == ERR_SUCCESS)
 		{
-			// Select this hub for communication
-			SelectHubPortByDevice(pHub);
+			// Data received - toggle bit and read data
+			pHub->HubIntTOG = pHub->HubIntTOG ? 0 : 1;
+			len = USB_RX_LEN;
 			
-			// Check each port for connection changes
-			for (i = 0; i < pHub->HubPortNum; i++)
+			if (len > 0)
 			{
-				s = GetHubPortStatus(pHub, i + 1, &hubPortStatus, &hubPortChange);
-				if (s == ERR_SUCCESS)
+				intData = RxBuffer[0];
+				
+				// Bitmap indicates which ports changed
+				// Bit 0 = hub status change, Bit 1-N = port 1-N change
+				if (intData != 0)
 				{
-					// Check for connection change bit
-					if (hubPortChange & 0x0001)
+					DEBUGOUT("Hub %d interrupt: 0x%02X\n", i, intData);
+					
+					// Check specific ports that have changes
+					for (j = 0; j < pHub->HubPortNum && j < 7; j++)
 					{
-						DEBUGOUT("Hub port %d change detected, re-enumerating\n", i);
-						ReenumerateAllPorts();
-						return;
+						if (intData & (1 << (j + 1)))
+						{
+							// Port j+1 has a change
+							s = GetHubPortStatus(pHub, j + 1, &hubPortStatus, &hubPortChange);
+							if (s == ERR_SUCCESS)
+							{
+								// Check for connection change bit
+								if (hubPortChange & 0x0001)
+								{
+									DEBUGOUT("Hub port %d change detected, re-enumerating\n", j);
+									ReenumerateAllPorts();
+									return;
+								}
+							}
+						}
 					}
 				}
 			}
 		}
+		// If NAK or timeout, just continue to next hub (no change on this hub)
 	}
 }
 

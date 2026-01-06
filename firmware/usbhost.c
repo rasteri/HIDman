@@ -614,7 +614,9 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 		
 		DEBUGOUT("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
 		
-		if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
+		// Check if device is connected (either already connected or just connected)
+		// During initial enumeration, change bit may not be set for pre-connected devices
+		if (hubPortStatus & 0x0001)
 		{
 			// Device attached - allocate port structure now
 			DEBUGOUT("port %d attached\n", i);
@@ -631,7 +633,10 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 			pChildPort->ParentHub = pHubDevice;
 			pChildPort->ParentHubPortIndex = i;
 			pChildPort->HubLevel = pHubDevice->HubLevel + 1;
-				
+			
+			// Clear connection change flag if it's set
+			if (hubPortChange & 0x0001)
+			{
 				s = ClearHubPortFeature(pHubDevice, i + 1, HUB_C_PORT_CONNECTION);
 				if (s != ERR_SUCCESS)
 				{
@@ -639,80 +644,81 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 					TRACE("ClearHubPortFeature failed\r\n");
 					continue;
 				}
-				
-				// Reset the port
-				s = SetHubPortFeature(pHubDevice, i + 1, HUB_PORT_RESET);
+			}
+			
+			// Reset the port
+			s = SetHubPortFeature(pHubDevice, i + 1, HUB_PORT_RESET);
+			if (s != ERR_SUCCESS)
+			{
+				pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+				TRACE1("SetHubPortFeature port:%d failed\r\n", (UINT16)(i + 1));
+				continue;
+			}
+			
+			mDelaymS(100);
+			
+			// Wait for reset to complete
+			do
+			{
+				s = GetHubPortStatus(pHubDevice, i + 1, &hubPortStatus, &hubPortChange);
 				if (s != ERR_SUCCESS)
 				{
 					pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-					TRACE1("SetHubPortFeature port:%d failed\r\n", (UINT16)(i + 1));
-					continue;
+					TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
+					break;
+				}
+				mDelaymS(20);
+			} while (hubPortStatus & 0x0010);
+			
+			if ((hubPortChange & 0x10) == 0x10) // Reset complete
+			{
+				TRACE("reset complete\r\n");
+				
+				// Determine speed
+				if (hubPortStatus & 0x0200)
+				{
+					pChildPort->DeviceSpeed = LOW_SPEED;
+					DEBUGOUT("lowspeed\n");
+				}
+				else
+				{
+					pChildPort->DeviceSpeed = FULL_SPEED;
+					DEBUGOUT("fullspeed\n");
 				}
 				
-				mDelaymS(100);
-				
-				// Wait for reset to complete
-				do
+				s = ClearHubPortFeature(pHubDevice, i + 1, HUB_C_PORT_RESET);
+				if (s != ERR_SUCCESS)
 				{
-					s = GetHubPortStatus(pHubDevice, i + 1, &hubPortStatus, &hubPortChange);
-					if (s != ERR_SUCCESS)
-					{
-						pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-						TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
-						break;
-					}
-					mDelaymS(20);
-				} while (hubPortStatus & 0x0010);
+					TRACE("ClearHubPortFeature failed\r\n");
+				}
 				
-				if ((hubPortChange & 0x10) == 0x10) // Reset complete
+				// Select this child port for enumeration
+				SelectHubPortByDevice(pChildPort);
+				
+				// Assign address and enumerate
+				addr = AssignUniqueAddress(rootHubIndex, i);
+				if (EnumerateHubPort(pChildPort, addr))
 				{
-					TRACE("reset complete\r\n");
+					DEBUGOUT("enum.OK\n");
+					pChildPort->HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
 					
-					// Determine speed
-					if (hubPortStatus & 0x0200)
+					// If this device is also a hub, recursively initialize it
+					if (pChildPort->DeviceClass == USB_DEV_CLASS_HUB)
 					{
-						pChildPort->DeviceSpeed = LOW_SPEED;
-						DEBUGOUT("lowspeed\n");
-					}
-					else
-					{
-						pChildPort->DeviceSpeed = FULL_SPEED;
-						DEBUGOUT("fullspeed\n");
-					}
-					
-					s = ClearHubPortFeature(pHubDevice, i + 1, HUB_C_PORT_RESET);
-					if (s != ERR_SUCCESS)
-					{
-						TRACE("ClearHubPortFeature failed\r\n");
-					}
-					
-					// Select this child port for enumeration
-					SelectHubPortByDevice(pChildPort);
-					
-					// Assign address and enumerate
-					addr = AssignUniqueAddress(rootHubIndex, i);
-					if (EnumerateHubPort(pChildPort, addr))
-					{
-						DEBUGOUT("enum.OK\n");
-						pChildPort->HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
-						
-						// If this device is also a hub, recursively initialize it
-						if (pChildPort->DeviceClass == USB_DEV_CLASS_HUB)
+						DEBUGOUT("Found nested hub\n");
+						if (!InitializeHubPorts(pChildPort, rootHubIndex))
 						{
-							DEBUGOUT("Found nested hub\n");
-							if (!InitializeHubPorts(pChildPort, rootHubIndex))
-							{
-								DEBUGOUT("Nested hub init failed\n");
-								pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-							}
+							DEBUGOUT("Nested hub init failed\n");
+							pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
 						}
 					}
-					else
-					{
-						DEBUGOUT("enum.fail\n");
-						pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-					}
 				}
+				else
+				{
+					DEBUGOUT("enum.fail\n");
+					pChildPort->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+				}
+			}
 		}
 	}
 	

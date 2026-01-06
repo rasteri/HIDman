@@ -23,6 +23,12 @@ __at(0x0100) unsigned char __xdata TxBuffer[MAX_PACKET_SIZE];
 //root hub port
 USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
 
+// Flat list of all hubs for efficient polling
+#define MAX_HUB_COUNT 8  // Max hubs we can track (2 root + up to 6 external hubs)
+__xdata USB_HUB_PORT* HubList[MAX_HUB_COUNT];
+UINT8 HubListCount = 0;
+UINT8 HubPollIndex = 0;  // Rotating index for hub polling
+
 //sub hub port
 USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
 
@@ -118,6 +124,160 @@ void InitRootHubPortData(UINT8 rootHubIndex)
 	for (i = 0; i < MAX_EXHUB_PORT_NUM; i++)
 	{
 		InitHubPortData(&SubHubPort[rootHubIndex][i]);
+	}
+}
+
+// Allocate child hub ports for a hub device
+__xdata USB_HUB_PORT* AllocateChildHubPorts(UINT8 numPorts)
+{
+	UINT8 i;
+	__xdata USB_HUB_PORT* childPorts;
+	
+	if (numPorts == 0 || numPorts > MAX_EXHUB_PORT_NUM)
+	{
+		return NULL;
+	}
+	
+	childPorts = (__xdata USB_HUB_PORT*)andyalloc(sizeof(USB_HUB_PORT) * numPorts);
+	if (childPorts == NULL)
+	{
+		return NULL;
+	}
+	
+	for (i = 0; i < numPorts; i++)
+	{
+		InitHubPortData(&childPorts[i]);
+	}
+	
+	return childPorts;
+}
+
+// Allocate a single child hub port on demand (memory-efficient approach)
+__xdata USB_HUB_PORT* AllocateSingleChildPort()
+{
+	__xdata USB_HUB_PORT* childPort;
+	
+	childPort = (__xdata USB_HUB_PORT*)andyalloc(sizeof(USB_HUB_PORT));
+	if (childPort == NULL)
+	{
+		return NULL;
+	}
+	
+	InitHubPortData(childPort);
+	
+	return childPort;
+}
+
+// Select a hub port by tracing up the parent hierarchy
+void SelectHubPortByDevice(__xdata USB_HUB_PORT *pUsbDevice)
+{
+	if (pUsbDevice == NULL)
+	{
+		return;
+	}
+	
+	// If device is on root hub, use old path
+	if (pUsbDevice->ParentHub == NULL)
+	{
+		// This is a root hub device - find which root hub
+		UINT8 rootHubIndex;
+		for (rootHubIndex = 0; rootHubIndex < ROOT_HUB_PORT_NUM; rootHubIndex++)
+		{
+			if (&RootHubPort[rootHubIndex] == pUsbDevice)
+			{
+				SelectHubPort(rootHubIndex, EXHUB_PORT_NONE);
+				return;
+			}
+		}
+	}
+	else
+	{
+		// Device is on an external hub - need to find root and port path
+		__xdata USB_HUB_PORT *current = pUsbDevice;
+		__xdata USB_HUB_PORT *parent = current->ParentHub;
+		UINT8 portIndex = current->ParentHubPortIndex;
+		
+		// Trace up to find the root hub
+		while (parent->ParentHub != NULL)
+		{
+			current = parent;
+			parent = current->ParentHub;
+		}
+		
+		// Now parent is a root hub device, find which root hub index
+		UINT8 rootHubIndex;
+		for (rootHubIndex = 0; rootHubIndex < ROOT_HUB_PORT_NUM; rootHubIndex++)
+		{
+			if (&RootHubPort[rootHubIndex] == parent)
+			{
+				break;
+			}
+		}
+		
+		// For nested hubs, we need to select the device's parent hub
+		// and the device's port on that hub
+		SelectHubPort(rootHubIndex, EXHUB_PORT_NONE);
+		
+		// Set the device address and speed
+		SetHostUsbAddr(pUsbDevice->DeviceAddress);
+		if (pUsbDevice->DeviceSpeed == LOW_SPEED)
+		{
+			UH_SETUP |= bUH_PRE_PID_EN;
+		}
+		SetUsbSpeed(pUsbDevice->DeviceSpeed);
+	}
+}
+
+// Clear the flat hub list
+void ClearHubList(void)
+{
+	UINT8 i;
+	for (i = 0; i < MAX_HUB_COUNT; i++)
+	{
+		HubList[i] = NULL;
+	}
+	HubListCount = 0;
+	HubPollIndex = 0;
+}
+
+// Recursively add hubs to the flat list
+void AddHubsToListRecursive(__xdata USB_HUB_PORT *pHubDevice)
+{
+	UINT8 i;
+	
+	if (pHubDevice == NULL || pHubDevice->HubPortStatus != PORT_DEVICE_ENUM_SUCCESS)
+	{
+		return;
+	}
+	
+	// If this is a hub, add it to the list
+	if (pHubDevice->DeviceClass == USB_DEV_CLASS_HUB && HubListCount < MAX_HUB_COUNT)
+	{
+		HubList[HubListCount] = pHubDevice;
+		HubListCount++;
+		
+		// Recursively add child hubs
+		for (i = 0; i < pHubDevice->HubPortNum; i++)
+		{
+			if (pHubDevice->ChildHubPorts[i] != NULL)
+			{
+				AddHubsToListRecursive(pHubDevice->ChildHubPorts[i]);
+			}
+		}
+	}
+}
+
+// Rebuild the flat hub list from the tree structure
+void RebuildHubList(void)
+{
+	UINT8 i;
+	
+	ClearHubList();
+	
+	// Add all hubs starting from root hubs
+	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
+	{
+		AddHubsToListRecursive(&RootHubPort[i]);
 	}
 }
 

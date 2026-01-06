@@ -12,12 +12,25 @@ UINT8 HostCtrlTransfer(USB_SETUP_REQ *pSetupReq, UINT8 MaxPacketSize0, PUINT8 Da
 UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen, UINT16 timeout);
 void InitHubPortData(USB_HUB_PORT *pUsbHubPort);
 void InitRootHubPortData(UINT8 rootHubIndex);
+__xdata USB_HUB_PORT* AllocateChildHubPorts(UINT8 numPorts);
+__xdata USB_HUB_PORT* AllocateSingleChildPort();
+void SelectHubPortByDevice(__xdata USB_HUB_PORT *pUsbDevice);
 
 //root hub port
 extern USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
 
 //sub hub port
 extern USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
+
+// USB receive/transmit buffers
+extern unsigned char __xdata RxBuffer[MAX_PACKET_SIZE];
+extern unsigned char __xdata TxBuffer[MAX_PACKET_SIZE];
+
+// Flat hub list for efficient polling
+#define MAX_HUB_COUNT 8
+extern __xdata USB_HUB_PORT* HubList[MAX_HUB_COUNT];
+extern UINT8 HubListCount;
+extern UINT8 HubPollIndex;
 
 #define WAIT_USB_TOUT_200US 800
 #endif

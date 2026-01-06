@@ -18,6 +18,8 @@
 
 void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 {
+	UINT8 i;
+	
 	pUsbHubPort->HubPortStatus = PORT_DEVICE_NONE;
 	pUsbHubPort->DeviceClass = USB_DEV_CLASS_RESERVED;
 	pUsbHubPort->MaxPacketSize0 = DEFAULT_ENDP0_SIZE;
@@ -32,6 +34,17 @@ void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 	pUsbHubPort->Interfaces = NULL;
 
 	pUsbHubPort->HubPortNum = 0;
+	
+	// Initialize hub nesting fields
+	pUsbHubPort->HubLevel = 0;
+	pUsbHubPort->ParentHub = NULL;
+	pUsbHubPort->ParentHubPortIndex = EXHUB_PORT_NONE;
+	
+	// Initialize all child port pointers to NULL
+	for (i = 0; i < MAX_EXHUB_PORT_NUM; i++)
+	{
+		pUsbHubPort->ChildHubPorts[i] = NULL;
+	}
 }
 void InitInterface(INTERFACE* Interface)
 {

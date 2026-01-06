@@ -22,6 +22,10 @@ extern USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
 //sub hub port
 extern USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
 
+// USB receive/transmit buffers
+extern unsigned char __xdata RxBuffer[MAX_PACKET_SIZE];
+extern unsigned char __xdata TxBuffer[MAX_PACKET_SIZE];
+
 // Flat hub list for efficient polling
 #define MAX_HUB_COUNT 8
 extern __xdata USB_HUB_PORT* HubList[MAX_HUB_COUNT];

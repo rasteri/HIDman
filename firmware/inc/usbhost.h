@@ -188,11 +188,6 @@ typedef struct _USB_HUB_PORT
 	UINT8       ParentHubPortIndex;  // Port index on parent hub
 	__xdata struct _USB_HUB_PORT* ChildHubPorts[MAX_EXHUB_PORT_NUM];  // Array of pointers to child ports (allocated on demand)
 	
-	// Hub interrupt endpoint for change detection
-	UINT8       HubIntEndpointAddr;  // Interrupt IN endpoint address (0 if not available)
-	UINT8       HubIntMaxPacketSize; // Max packet size for interrupt endpoint
-	UINT8       HubIntTOG;           // Toggle bit for interrupt endpoint
-	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 
 #define  LOW_SPEED      0

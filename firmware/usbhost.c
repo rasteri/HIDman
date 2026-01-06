@@ -20,6 +20,12 @@
 #define RECEIVE_BUFFER_LEN 512
 UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
 
+// Timeout for hub interrupt endpoint polling (in units used by USBHostTransact)
+#define HUB_INTERRUPT_TIMEOUT 200
+
+// Maximum port bits in hub interrupt bitmap (8 bits total, bit 0 is hub status, bits 1-7 are ports)
+#define MAX_HUB_INT_PORTS 7
+
 __xdata bool DumpReport = 0;
 
 void DumpHex(uint8_t *buffa, uint16_t len)
@@ -546,7 +552,8 @@ BOOL InitializeHubPorts(__xdata USB_HUB_PORT *pHubDevice, UINT8 rootHubIndex)
 			UINT8 descLen = pDesc[pos];
 			UINT8 descType = pDesc[pos + 1];
 			
-			if (descLen < 2 || pos + descLen > len)
+			// Check for invalid descriptor length
+			if (descLen == 0 || descLen < 2 || pos + descLen > len)
 				break;
 			
 			// Endpoint descriptor
@@ -1113,7 +1120,7 @@ void DealUsbPort(void) //main function should use it at least 500ms
 		// This will NAK if no changes, or return bitmap if changes occurred
 		s = USBHostTransact(USB_PID_IN << 4 | (pHub->HubIntEndpointAddr & 0x7F), 
 		                   pHub->HubIntTOG ? bUH_R_TOG | bUH_T_TOG : 0, 
-		                   200); // Short timeout for interrupt transfer
+		                   HUB_INTERRUPT_TIMEOUT); // Short timeout for interrupt transfer
 		
 		if (s == ERR_SUCCESS)
 		{
@@ -1132,7 +1139,7 @@ void DealUsbPort(void) //main function should use it at least 500ms
 					DEBUGOUT("Hub %d interrupt: 0x%02X\n", i, intData);
 					
 					// Check specific ports that have changes
-					for (j = 0; j < pHub->HubPortNum && j < 7; j++)
+					for (j = 0; j < pHub->HubPortNum && j < MAX_HUB_INT_PORTS; j++)
 					{
 						if (intData & (1 << (j + 1)))
 						{

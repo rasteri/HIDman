@@ -921,12 +921,50 @@ void ReenumerateAllPorts(void) {
 //----------------------------------------------------------------------------------
 void DealUsbPort(void) //main function should use it at least 500ms
 {
+	static __xdata UINT8 s;
+	static __xdata uint8_t j = 0;
+	static __xdata UINT16 hubPortStatus, hubPortChange;
+
 	// detect change
 	// may have to be more complex than this
 	if (UIF_DETECT)
 	{
 		ReenumerateAllPorts();
 	}
+
+	static __xdata LinkedList * __xdata pnt;
+	static __xdata USB_HUB_PORT * __xdata pUsbHubPort;
+	pnt = PolledDevices;
+
+	while (pnt != NULL) {
+		pUsbHubPort = (USB_HUB_PORT *)pnt->data;
+
+		if (pUsbHubPort->DeviceClass == USB_DEV_CLASS_HUB)
+		{
+			SelectHubPort(pUsbHubPort);
+
+			// Check each port for connection changes
+			for (j = 0; j < pUsbHubPort->HubPortNum; j++)
+			{
+				s = GetHubPortStatus(pUsbHubPort, j + 1, &hubPortStatus, &hubPortChange);
+				if (s == ERR_SUCCESS)
+				{
+					// Check for connection change bit
+					if (hubPortChange & 0x0001)
+					{
+						DEBUGOUT("Hub port change detected, re-enumerating\n");
+						ReenumerateAllPorts();
+						return;
+					}
+				}
+			}
+
+		}
+
+		pnt = pnt->next;
+	}
+
+
 }
 
 void InterruptProcessRootHubPorts()
@@ -1009,14 +1047,19 @@ void UpdateUsbKeyboardLed(UINT8 led)
 __xdata BOOL volatile s_CheckUsbPort0 = FALSE;
 __xdata BOOL volatile s_CheckUsbPort1 = FALSE;
 
+uint8_t cuntage = 0;
+
 void ProcessUsbHostPort(void)
 {	
-
-	DealUsbPort();
 	if (s_CheckUsbPort0)
 	{
 		s_CheckUsbPort0 = FALSE;
 		
 		InterruptProcessRootHubPorts();
+
+		if (cuntage++ > 40){
+			cuntage = 0;
+			DealUsbPort();
+		}
 	}
 }

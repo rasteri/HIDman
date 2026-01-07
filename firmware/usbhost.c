@@ -57,6 +57,7 @@ Then hubs and devices can be polled in one big loop at whatever rate we want
 UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
 
 __xdata bool DumpReport = 0;
+uint8_t AddressCounter = 1;
 
 void DumpHex(uint8_t *buffa, uint16_t len)
 {
@@ -327,6 +328,7 @@ UINT8 SetReport(USB_HUB_PORT *pUsbDevice, UINT8 interface, UINT8 *pReport, UINT1
 void InitUsbData(void)
 {
 	PolledDevices = NULL;
+	AddressCounter = 1;
 }
 
 //-------------------------------------------------------------------------------------------
@@ -381,7 +383,7 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 	return (s);
 }
 
-uint8_t AddressCounter = 1;
+
 
 // enum device
 // should have already been selected using hub stuff
@@ -392,9 +394,17 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed, UINT8 level)
 	static __xdata UINT16 len;
 	static __xdata UINT16 cfgDescLen;
 
-	__xdata USB_HUB_PORT *pUsbDevice;
-	static __xdata USB_CFG_DESCR *pCfgDescr;
+	__xdata USB_HUB_PORT * pUsbDevice;
+	static __xdata USB_CFG_DESCR * __xdata pCfgDescr;
+	static __xdata uint8_t addr;
+
+	//hub
+	static __xdata USB_HUB_DESCR * __xdata pHubDescr;
+	static __xdata UINT16 hubPortStatus, hubPortChange;
+	static __xdata uint8_t changebitmap = ReceiveDataBuffer[0];
+
 	UINT8 i;
+	UINT8 hubPortNum;
 
 	//get first 8 bytes of device descriptor to get maxpacketsize0
 	s = GetDeviceDescr(NULL, ReceiveDataBuffer, 8, &len);
@@ -408,7 +418,7 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed, UINT8 level)
 	DEBUGOUT("gdd len:%d\n", len);
 
 	// device seems to be talking to us, so allocate it a USB_HUB_PORT
-	uint8_t addr = AddressCounter++;
+	addr = AddressCounter++;
 
 	PolledDevices = ListAdd(PolledDevices, sizeof(USB_HUB_PORT), addr);
 
@@ -515,11 +525,7 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed, UINT8 level)
 		SelectHubPort(pUsbDevice);
 		DEBUGOUT("\nFound hub\n");
 
-		//hub
-		USB_HUB_DESCR *pHubDescr;
 
-		UINT8 hubPortNum;
-		UINT16 hubPortStatus, hubPortChange;
 
 		//hub
 		s = GetHubDescriptor(pUsbDevice, ReceiveDataBuffer, sizeof(USB_HUB_DESCR), &len);
@@ -582,8 +588,6 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed, UINT8 level)
 			newthing = 0;
 			//return FALSE;
 		}
-
-		uint8_t changebitmap = ReceiveDataBuffer[0];
 
 		DEBUGOUT("new enum. %x\n", changebitmap);
 

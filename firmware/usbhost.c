@@ -386,14 +386,15 @@ uint8_t AddressCounter = 1;
 // enum device
 // should have already been selected using hub stuff
 // returns pointer to USB_HUB_PORT if all is ok
-USB_HUB_PORT * EnumerateHubPort(UINT8 speed)
+USB_HUB_PORT * EnumerateHubPort(UINT8 speed, UINT8 level)
 {
-	static __xdata UINT8 s;
-	static __xdata UINT16 len;
-	static __xdata UINT16 cfgDescLen;
+	UINT8 s;
+	UINT16 len;
+	UINT16 cfgDescLen;
 
-	static __xdata USB_HUB_PORT *pUsbDevice;
-	static __xdata USB_CFG_DESCR *pCfgDescr;
+	USB_HUB_PORT *pUsbDevice;
+	USB_CFG_DESCR *pCfgDescr;
+	UINT8 i;
 
 	//get first 8 bytes of device descriptor to get maxpacketsize0
 	s = GetDeviceDescr(NULL, ReceiveDataBuffer, 8, &len);
@@ -405,10 +406,10 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed)
 	}
 
 	DEBUGOUT("gdd len:%d\n", len);
-	
-	uint8_t addr = AddressCounter++;
 
 	// device seems to be talking to us, so allocate it a USB_HUB_PORT
+	uint8_t addr = AddressCounter++;
+
 	PolledDevices = ListAdd(PolledDevices, sizeof(USB_HUB_PORT), addr);
 
 	pUsbDevice = (USB_HUB_PORT *)PolledDevices->data;
@@ -435,6 +436,12 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed)
 
 	DEBUGOUT("mps %d\n", pUsbDevice->MaxPacketSize0);
 
+	if (level > 0)
+		pUsbDevice->IsRootHub = 0;
+	else
+		pUsbDevice->IsRootHub = 1;
+
+	SelectHubPort(pUsbDevice);
 
 	//get full bytes of device descriptor
 	s = GetDeviceDescr(pUsbDevice, ReceiveDataBuffer, sizeof(USB_DEV_DESCR), &len);
@@ -498,6 +505,200 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed)
 
 	TRACE1("pUsbDevice->InterfaceNum=%d\r\n", (UINT16)pUsbDevice->InterfaceNum);
 
+	pUsbDevice->HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
+
+
+	// OK let's try doing hubs
+	
+	if (pUsbDevice->DeviceClass == USB_DEV_CLASS_HUB)
+	{
+		SelectHubPort(pUsbDevice);
+		DEBUGOUT("\nFound hub\n");
+
+		//hub
+		USB_HUB_DESCR *pHubDescr;
+
+		UINT8 hubPortNum;
+		UINT16 hubPortStatus, hubPortChange;
+
+		//hub
+		s = GetHubDescriptor(pUsbDevice, ReceiveDataBuffer, sizeof(USB_HUB_DESCR), &len);
+		if (s != ERR_SUCCESS)
+		{
+			//DisableRootHubPort(port);
+
+			pUsbDevice->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+			DEBUGOUT("hub desc err\n");
+			return FALSE;
+		}
+
+		TRACE("GetHubDescriptor OK\r\n");
+		TRACE1("len=%d\r\n", len);
+
+		pHubDescr = (USB_HUB_DESCR *)ReceiveDataBuffer;
+		hubPortNum = pHubDescr->bNbrPorts;
+
+		TRACE1("hubPortNum=%bd\r\n", hubPortNum);
+		DEBUGOUT("%d port hub\n", hubPortNum);
+
+		if (hubPortNum > MAX_EXHUB_PORT_NUM)
+		{
+			hubPortNum = MAX_EXHUB_PORT_NUM;
+		}
+
+		pUsbDevice->HubPortNum = hubPortNum;
+		
+		//supply power for each port
+		for (UINT8 i = 0; i < hubPortNum; i++)
+		{
+			s = SetHubPortFeature(pUsbDevice, i + 1, HUB_PORT_POWER);
+			if (s != ERR_SUCCESS)
+			{
+				TRACE1("SetHubPortFeature %d failed\r\n", (UINT16)i);
+
+				continue;
+			}
+
+			TRACE("SetHubPortFeature OK\r\n");
+		}
+
+		
+		INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, 0);
+
+		ENDPOINT *pEndPoint = &pInterface->Endpoint[0];
+
+		// "new thing" means wait for a change bitmap before clearing ports
+		// this is how other USB stacks seem to do it
+		DEBUGOUT("Doing new thing - %x\n", pInterface->Endpoint[0].EndpointAddr);
+
+		uint8_t newthing = 1;
+
+		s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 20000);
+
+		if (s != ERR_SUCCESS){
+			DEBUGOUT("new enum. failed\n");
+			// if "new thing" failed just clear all ports without waiting
+			// seems to be required for some hubs
+			newthing = 0;
+			//return FALSE;
+		}
+
+		uint8_t changebitmap = ReceiveDataBuffer[0];
+
+		DEBUGOUT("new enum. %x\n", changebitmap);
+
+		for (i = 0; i < hubPortNum; i++)
+		{
+			if (!newthing || (changebitmap & (1 << (i+1)))) {
+				DEBUGOUT("checkn port %d\n", i);
+				mDelaymS(50);
+
+				SelectHubPort(pUsbDevice);
+
+				s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);
+				if (s != ERR_SUCCESS)
+				{
+					TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
+
+					return NULL;
+				}
+
+				DEBUGOUT("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
+
+				TRACE2("hubPortStatus:0x%02X,hubPortChange:0x%02X\r\n", hubPortStatus, hubPortChange);
+
+				if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
+				{
+					//device attached
+					TRACE1("hubPort=%d\r\n", (UINT16)i);
+
+					TRACE("device attached\r\n");
+
+					DEBUGOUT("port %d attached\n", i);
+
+					s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_CONNECTION);
+					if (s != ERR_SUCCESS)
+					{
+						TRACE("ClearHubPortFeature failed\r\n");
+						return NULL;
+					}
+
+					TRACE("ClearHubPortFeature OK\r\n");
+
+
+					s = SetHubPortFeature(pUsbDevice, i + 1, HUB_PORT_RESET); //reset the port device
+					if (s != ERR_SUCCESS)
+					{
+						TRACE1("SetHubPortFeature port:%d failed\r\n", (UINT16)(i + 1));
+
+						return NULL;
+					}
+
+					mDelaymS(100);
+					do
+					{
+						s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);
+						if (s != ERR_SUCCESS)
+						{
+							TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
+							return NULL;
+						}
+
+						mDelaymS(20);
+					} while (hubPortStatus & 0x0010);
+
+					if ((hubPortChange & 0x10) == 0x10) //reset over success
+					{
+						TRACE("reset complete\r\n");
+
+						if (hubPortStatus & 0x0200)
+						{
+							//speed low
+							speed = LOW_SPEED;
+							DEBUGOUT("lowspeed\n");
+							TRACE("low speed device\r\n");
+						}
+						else
+						{
+							//full speed device
+							speed = FULL_SPEED;
+							DEBUGOUT("fullspeed\n");
+							TRACE("full speed device\r\n");
+						}
+
+						s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_RESET);
+						if (s != ERR_SUCCESS)
+						{
+							TRACE("ClearHubPortFeature failed\r\n");
+						}
+						else
+						{
+							TRACE("ClearHubPortFeature OK\r\n");
+						}
+
+
+						// new devices always start at addr zero
+						SetHostUsbAddr(0);
+						if (speed == LOW_SPEED)
+						{
+							UH_SETUP |= bUH_PRE_PID_EN;
+						}
+						SetUsbSpeed(speed);
+
+						if (EnumerateHubPort(speed, level + 1))
+						{
+							DEBUGOUT("enum.OK\n");
+						}
+						else
+						{
+							DEBUGOUT("enum.fail\n");
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return pUsbDevice;
 }
 
@@ -518,7 +719,7 @@ BOOL EnumerateRootHubPort(UINT8 port)
 	ResetRootHubPort(port);
 	static __xdata uint8_t speed = 0;
 
-	for (i = 0, s = 0; i <100; i ++) // wait for the USB device to reset and reconnect, 100mS timeout
+	for (i = 0, s = 0; i < 100; i ++) // wait for the USB device to reset and reconnect, 100mS timeout
 	{
 		mDelaymS( 1 );
 		if (EnableRootHubPort( port, &speed ) == ERR_SUCCESS) // Enable ROOT-HUB port
@@ -543,218 +744,13 @@ BOOL EnumerateRootHubPort(UINT8 port)
 	SetHostUsbAddr(0);
 	SetUsbSpeed(speed);
 
-	pHubPort = EnumerateHubPort(speed);
+	pHubPort = EnumerateHubPort(speed, 0);
 
 	if (pHubPort != NULL)
 	{
-		pHubPort->HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
-		pHubPort->RootHubNum = port;
-		pHubPort->IsRootHub = 1;
+
 
 		TRACE("EnumerateHubPort success\r\n");
-
-		/*
-		if (RootHubPort[port].DeviceClass == USB_DEV_CLASS_HUB)
-		{
-			SelectHubPort(port, EXHUB_PORT_NONE);
-			DEBUGOUT("\nFound hub\n");
-
-			//hub
-			USB_HUB_DESCR *pHubDescr;
-
-			UINT8 hubPortNum;
-			UINT16 hubPortStatus, hubPortChange;
-			USB_HUB_PORT *pUsbDevice = pHubPort;
-
-			//hub
-			s = GetHubDescriptor(pUsbDevice, ReceiveDataBuffer, sizeof(USB_HUB_DESCR), &len);
-			if (s != ERR_SUCCESS)
-			{
-				DisableRootHubPort(port);
-
-				pUsbDevice->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-				DEBUGOUT("hub desc err\n");
-				return (FALSE);
-			}
-
-			TRACE("GetHubDescriptor OK\r\n");
-			TRACE1("len=%d\r\n", len);
-
-			pHubDescr = (USB_HUB_DESCR *)ReceiveDataBuffer;
-			hubPortNum = pHubDescr->bNbrPorts;
-
-			TRACE1("hubPortNum=%bd\r\n", hubPortNum);
-			DEBUGOUT("%d port hub\n", hubPortNum);
-
-			if (hubPortNum > MAX_EXHUB_PORT_NUM)
-			{
-				hubPortNum = MAX_EXHUB_PORT_NUM;
-			}
-
-			pUsbDevice->HubPortNum = hubPortNum;
-
-			//supply power for each port
-			for (i = 0; i < hubPortNum; i++)
-			{
-				s = SetHubPortFeature(pUsbDevice, i + 1, HUB_PORT_POWER);
-				if (s != ERR_SUCCESS)
-				{
-					TRACE1("SetHubPortFeature %d failed\r\n", (UINT16)i);
-
-					SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-					continue;
-				}
-
-				TRACE("SetHubPortFeature OK\r\n");
-			}
-
-			
-			INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, 0);
-
-			ENDPOINT *pEndPoint = &pInterface->Endpoint[0];
-
-			// "new thing" means wait for a change bitmap before clearing ports
-			// this is how other USB stacks seem to do it
-			DEBUGOUT("Doing new thing - %x\n", pInterface->Endpoint[0].EndpointAddr);
-
-			uint8_t newthing = 1;
-
-			s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 20000);
-
-			
-
-			if (s != ERR_SUCCESS){
-				DEBUGOUT("new enum. failed\n");
-				// if "new thing" failed just clear all ports without waiting
-				// seems to be required for some hubs
-				newthing = 0;
-				//return FALSE;
-			}
-
-			uint8_t changebitmap = ReceiveDataBuffer[0];
-
-			DEBUGOUT("new enum. %x\n", changebitmap);
-
-			for (i = 0; i < hubPortNum; i++)
-			{
-				if (!newthing || (changebitmap & (1 << (i+1)))) {
-					DEBUGOUT("checkn port %d\n", i);
-					mDelaymS(50);
-
-					SelectHubPort(port, EXHUB_PORT_NONE); //�л���hub��ַ
-
-					s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);
-					if (s != ERR_SUCCESS)
-					{
-						SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-						TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
-
-						return FALSE;
-					}
-
-					DEBUGOUT("ps- 0x%02X pc- 0x%02X\n", hubPortStatus, hubPortChange);
-
-					TRACE2("hubPortStatus:0x%02X,hubPortChange:0x%02X\r\n", hubPortStatus, hubPortChange);
-
-					if ((hubPortStatus & 0x0001) && (hubPortChange & 0x0001))
-					{
-						//device attached
-						TRACE1("hubPort=%d\r\n", (UINT16)i);
-
-						TRACE("device attached\r\n");
-
-						DEBUGOUT("port %d attached\n", i);
-
-						s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_CONNECTION);
-						if (s != ERR_SUCCESS)
-						{
-							SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-							TRACE("ClearHubPortFeature failed\r\n");
-
-							return FALSE;
-						}
-
-						TRACE("ClearHubPortFeature OK\r\n");
-
-
-						s = SetHubPortFeature(pUsbDevice, i + 1, HUB_PORT_RESET); //reset the port device
-						if (s != ERR_SUCCESS)
-						{
-							SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-							TRACE1("SetHubPortFeature port:%d failed\r\n", (UINT16)(i + 1));
-
-							return FALSE;
-						}
-
-						mDelaymS(100);
-						do
-						{
-							s = GetHubPortStatus(pUsbDevice, i + 1, &hubPortStatus, &hubPortChange);
-							if (s != ERR_SUCCESS)
-							{
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-
-								TRACE1("GetHubPortStatus port:%d failed\r\n", (UINT16)(i + 1));
-
-								return FALSE;
-							}
-
-							mDelaymS(20);
-						} while (hubPortStatus & 0x0010);
-
-						if ((hubPortChange & 0x10) == 0x10) //reset over success
-						{
-							TRACE("reset complete\r\n");
-
-							if (hubPortStatus & 0x0200)
-							{
-								//speed low
-								SubHubPort[port][i].DeviceSpeed = LOW_SPEED;
-								DEBUGOUT("lowspeed\n");
-								TRACE("low speed device\r\n");
-							}
-							else
-							{
-								//full speed device
-								SubHubPort[port][i].DeviceSpeed = FULL_SPEED;
-								DEBUGOUT("fullspeed\n");
-								TRACE("full speed device\r\n");
-							}
-
-							s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_RESET);
-							if (s != ERR_SUCCESS)
-							{
-								TRACE("ClearHubPortFeature failed\r\n");
-							}
-							else
-							{
-								TRACE("ClearHubPortFeature OK\r\n");
-							}
-
-
-							SelectHubPort(port, i);
-
-							addr = AddressCounter++;
-							if (EnumerateHubPort(&SubHubPort[port][i], addr))
-							{
-								DEBUGOUT("enum.OK\n");
-								TRACE("EnumerateHubPort success\r\n");
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
-							}
-							else
-							{
-								DEBUGOUT("enum.fail\n");
-								TRACE("EnumerateHubPort failed\r\n");
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-							}
-						}
-					}
-				}
-			}
-		}*/
 	}
 	else
 	{
@@ -929,37 +925,26 @@ void DealUsbPort(void) //main function should use it at least 500ms
 	}
 }
 
-void InterruptProcessRootHubPort(UINT8 port)
+void InterruptProcessRootHubPorts()
 {
-	/*static __xdata USB_HUB_PORT *pUsbHubPort;
-	pUsbHubPort = &RootHubPort[port];
 
-	if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
-	{
-		if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
+	static __xdata LinkedList * __xdata pnt;
+	static __xdata USB_HUB_PORT * __xdata pUsbHubPort;
+	pnt = PolledDevices;
+
+	while (pnt != NULL) {
+		pUsbHubPort = (USB_HUB_PORT *)pnt->data;
+
+		if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
 		{
-			SelectHubPort(port, EXHUB_PORT_NONE);
-
+			SelectHubPort(pUsbHubPort);
 			HIDDataTransferReceive(pUsbHubPort);
-			
 		}
-		else
-		{
-			UINT8 exHubPortNum = pUsbHubPort->HubPortNum;
-			UINT8 i;
+		pnt = pnt->next;
+	}
 
-			for (i = 0; i < exHubPortNum; i++)
-			{
-				pUsbHubPort = &SubHubPort[port][i];
+	return;
 
-				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-				{
-					SelectHubPort(port, i);
-					HIDDataTransferReceive(pUsbHubPort);
-				}
-			}
-		}
-	}*/
 }
 
 void UpdateUsbKeyboardLedInternal(USB_HUB_PORT *pUsbDevice, UINT8 led)
@@ -1028,12 +1013,6 @@ void ProcessUsbHostPort(void)
 	{
 		s_CheckUsbPort0 = FALSE;
 		
-		InterruptProcessRootHubPort(0);
-	}
-	if (s_CheckUsbPort1)
-	{
-		s_CheckUsbPort1 = FALSE;
-
-		InterruptProcessRootHubPort(1);
+		InterruptProcessRootHubPorts();
 	}
 }

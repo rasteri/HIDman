@@ -16,6 +16,42 @@
 #include "ps2protocol.h"
 #include "usbll.h"
 #include "preset.h"
+#include "linkedlist.h"
+// enumeration done in stages
+
+/*
+
+1. EnumerateRootHubPort does both root hubs
+	EnumerateHubPort for each port
+		This Fills "RootHubPort" Array, setting SUCCESS to each port if it has device attached
+		And assigns addresses
+		And parses/fills interface descriptors
+	Then another EnumerateHubPort for each non-root hub
+		This fills the "SubHubPort" array, setting SUCCESS to each port if it has device attached
+		also assigning addresses
+		And parses/fills interface descriptors
+	
+2. RegrabDeviceReports traverses these arrays and parses the report descriptors
+
+3. InterruptProcessRootHubPort(uint8 rootport) then actually polls the devices (per root port)
+	For each entry in the RootHubPort and SubHubPort :
+		SelectHubPort selects the root port and address
+		HIDDataTransferReceive actually queries the device
+	 
+
+hubs are essentially transparent once you get all the addresses assigned
+So enumeratehubport needs to be made recursive, but apart from that no real need to store hub tree structure
+
+However, to correctly detect changes in hub port status, we need to keep a list of all the hubs themselves, who get addresses like everything else
+
+So maybe : 
+
+ditch the whole idea of RootHubPort/SubHubPort 
+just have a flat list of all devices that need polled, 
+maybe the last time they *were* polled (add a global clock)
+Then hubs and devices can be polled in one big loop at whatever rate we want
+*/
+
 
 #define RECEIVE_BUFFER_LEN 512
 UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
@@ -62,7 +98,8 @@ UINT8 GetDeviceDescr(USB_HUB_PORT *pUsbDevice, UINT8 *pDevDescr, UINT16 reqLen, 
 	FillSetupReq(&SetupReq, USB_REQ_TYP_IN | USB_REQ_TYP_STANDARD | USB_REQ_RECIP_DEVICE,
 				 USB_GET_DESCRIPTOR, USB_DESCR_TYP_DEVICE << 8, 0, reqLen);
 
-	s = HostCtrlTransfer(&SetupReq, pUsbDevice->MaxPacketSize0, pDevDescr, &len);
+
+	s = HostCtrlTransfer(&SetupReq, pUsbDevice == NULL ? DEFAULT_ENDP0_SIZE : pUsbDevice->MaxPacketSize0, pDevDescr, &len);
 
 	if (s == ERR_SUCCESS)
 	{
@@ -289,12 +326,7 @@ UINT8 SetReport(USB_HUB_PORT *pUsbDevice, UINT8 interface, UINT8 *pReport, UINT1
 //-----------------------------------------------------------------------------------------------
 void InitUsbData(void)
 {
-	static int i;
-
-	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
-	{
-		InitRootHubPortData(i);
-	}
+	PolledDevices = NULL;
 }
 
 //-------------------------------------------------------------------------------------------
@@ -349,8 +381,12 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 	return (s);
 }
 
-//enum device
-BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
+uint8_t AddressCounter = 1;
+
+// enum device
+// should have already been selected using hub stuff
+// returns pointer to USB_HUB_PORT if all is ok
+USB_HUB_PORT * EnumerateHubPort(UINT8 speed)
 {
 	static __xdata UINT8 s;
 	static __xdata UINT16 len;
@@ -359,40 +395,54 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	static __xdata USB_HUB_PORT *pUsbDevice;
 	static __xdata USB_CFG_DESCR *pCfgDescr;
 
-	pUsbDevice = pUsbHubPort;
-
 	//get first 8 bytes of device descriptor to get maxpacketsize0
-	s = GetDeviceDescr(pUsbDevice, ReceiveDataBuffer, 8, &len);
+	s = GetDeviceDescr(NULL, ReceiveDataBuffer, 8, &len);
 
 	if (s != ERR_SUCCESS)
 	{
 		DEBUGOUT("gdd.fail\n");
-		return (FALSE);
+		return NULL;
 	}
 
 	DEBUGOUT("gdd len:%d\n", len);
+	
+	uint8_t addr = AddressCounter++;
 
+	// device seems to be talking to us, so allocate it a USB_HUB_PORT
+	PolledDevices = ListAdd(PolledDevices, sizeof(USB_HUB_PORT), addr);
+
+	pUsbDevice = (USB_HUB_PORT *)PolledDevices->data;
+
+	InitHubPortData(pUsbDevice);
+	pUsbDevice->DeviceSpeed = speed;
+
+	//set device address
+	pUsbDevice->DeviceAddress = addr;
+
+	s = SetUsbAddress(pUsbDevice, pUsbDevice->DeviceAddress);
+
+	if (s != ERR_SUCCESS)
+	{
+		AddressCounter--;
+		DEBUGOUT("addr fail\n");
+		return NULL;
+	}
+
+	DEBUGOUT("addr ok %d\n", pUsbDevice->DeviceAddress);
+
+	// parse first 8 bytes of device descriptor
 	ParseDeviceDescriptor((USB_DEV_DESCR *)ReceiveDataBuffer, len, pUsbDevice);
 
 	DEBUGOUT("mps %d\n", pUsbDevice->MaxPacketSize0);
 
-	//set device address
-	s = SetUsbAddress(pUsbDevice, addr);
-	if (s != ERR_SUCCESS)
-	{
-		DEBUGOUT("addr fail\n");
-		return (FALSE);
-	}
 
-	DEBUGOUT("addr ok %d\n", pUsbDevice->DeviceAddress);
-	pUsbDevice->DeviceAddress = addr;
 	//get full bytes of device descriptor
 	s = GetDeviceDescr(pUsbDevice, ReceiveDataBuffer, sizeof(USB_DEV_DESCR), &len);
 
 	if (s != ERR_SUCCESS)
 	{
 		DEBUGOUT("gddfull fail\n");
-		return (FALSE);
+		return NULL;
 	}
 
 	DEBUGOUT("gddfull ok %d\n", len);
@@ -402,8 +452,6 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 
 	ParseDeviceDescriptor((USB_DEV_DESCR *)ReceiveDataBuffer, len, pUsbDevice);
 
-	DEBUGOUT("0x%04X 0x%04X 0x%04X\n", pUsbDevice->VendorID, pUsbDevice->ProductID, pUsbDevice->bcdDevice);
-
 	//get configure descriptor for the first time
 	cfgDescLen = sizeof(USB_CFG_DESCR);
 
@@ -411,7 +459,7 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	if (s != ERR_SUCCESS)
 	{
 		DEBUGOUT("gcd1 fail\n");
-		return (FALSE);
+		return NULL;
 	}
 
 	//get configure descriptor for the second time
@@ -426,7 +474,7 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	if (s != ERR_SUCCESS)
 	{
 		DEBUGOUT("gcd 2 fail\n");
-		return (FALSE);
+		return NULL;
 	}
 
 	DEBUGOUT("Config Descriptor :\n")
@@ -442,7 +490,7 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 	if (s != ERR_SUCCESS)
 	{
 		DEBUGOUT("suc fail\n");
-		return (FALSE);
+		return NULL;
 	}
 
 	TRACE("SetUsbConfig OK\r\n");
@@ -450,23 +498,10 @@ BOOL EnumerateHubPort(__xdata USB_HUB_PORT *pUsbHubPort, UINT8 addr)
 
 	TRACE1("pUsbDevice->InterfaceNum=%d\r\n", (UINT16)pUsbDevice->InterfaceNum);
 
-	return (TRUE);
+	return pUsbDevice;
 }
 
-UINT8 AssignUniqueAddress(UINT8 RootHubIndex, UINT8 HubPortIndex)
-{
-	static UINT8 address;
-	if (HubPortIndex == EXHUB_PORT_NONE)
-	{
-		address = (MAX_EXHUB_PORT_NUM + 1) * RootHubIndex + 1;
-	}
-	else
-	{
-		address = (MAX_EXHUB_PORT_NUM + 1) * RootHubIndex + 1 + HubPortIndex + 1;
-	}
 
-	return address;
-}
 
 BOOL EnumerateRootHubPort(UINT8 port)
 {
@@ -476,71 +511,52 @@ BOOL EnumerateRootHubPort(UINT8 port)
 	static __xdata UINT8 retry;
 
 	static __xdata UINT8 addr;
+	static USB_HUB_PORT * __xdata pHubPort;
+
 	retry = 0;
-	/*if (RootHubPort[port].HubPortStatus != PORT_DEVICE_INSERT)
-	{
-		return FALSE;
-	}*/
-
-	TRACE1("enumerate port:%bd\r\n", port);
-
-//	DisableRootHubPort(port);
-
-//	mDelaymS(500);
 
 	ResetRootHubPort(port);
-//	mDelaymS(500);
+	static __xdata uint8_t speed = 0;
 
-#if 1
-	for (i = 0, s = 0; i < 10; i++) // �ȴ�USB�豸��λ����������,100mS��ʱ
+	for (i = 0, s = 0; i <100; i ++) // wait for the USB device to reset and reconnect, 100mS timeout
 	{
-		EnableRootHubPort(port);
-
-		mDelaymS(1);
-	}
-
-#else
-	for (i = 0, s = 0; i < 100; i++) // �ȴ�USB�豸��λ����������,100mS��ʱ
-	{
-		mDelaymS(1);
-		if (EnableRootHubPort(port) == ERR_SUCCESS) // ʹ��ROOT-HUB�˿�
+		mDelaymS( 1 );
+		if (EnableRootHubPort( port, &speed ) == ERR_SUCCESS) // Enable ROOT-HUB port
 		{
 			i = 0;
-			s++; // ��ʱ�ȴ�USB�豸���Ӻ��ȶ�
-			if (s > 10 * retry)
-			{
-				break; // �Ѿ��ȶ�����15mS
-			}
+			break;
 		}
 	}
 
-	TRACE1("i:%d\r\n", (UINT16)i);
-
-	if (i) // ��λ���豸û������
+	if (i)
 	{
 		DisableRootHubPort(port);
 		TRACE1("Disable root hub %1d# port because of disconnect\n", (UINT16)port);
-
-		return (ERR_USB_DISCON);
+		return;
 	}
-#endif
 
 	mDelaymS(100);
 
-	SelectHubPort(port, EXHUB_PORT_NONE);
+	printf("ss%x\n", speed);
 
-	addr = AssignUniqueAddress(port, EXHUB_PORT_NONE);
-	if (EnumerateHubPort(&RootHubPort[port], addr))
+	// devices always start at addr zero
+	SetHostUsbAddr(0);
+	SetUsbSpeed(speed);
+
+	pHubPort = EnumerateHubPort(speed);
+
+	if (pHubPort != NULL)
 	{
-		RootHubPort[port].HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
+		pHubPort->HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
+		pHubPort->RootHubNum = port;
+		pHubPort->IsRootHub = 1;
 
 		TRACE("EnumerateHubPort success\r\n");
 
-		
-
-		//SelectHubPort(port, EXHUB_PORT_NONE);
+		/*
 		if (RootHubPort[port].DeviceClass == USB_DEV_CLASS_HUB)
 		{
+			SelectHubPort(port, EXHUB_PORT_NONE);
 			DEBUGOUT("\nFound hub\n");
 
 			//hub
@@ -548,7 +564,7 @@ BOOL EnumerateRootHubPort(UINT8 port)
 
 			UINT8 hubPortNum;
 			UINT16 hubPortStatus, hubPortChange;
-			USB_HUB_PORT *pUsbDevice = &RootHubPort[port];
+			USB_HUB_PORT *pUsbDevice = pHubPort;
 
 			//hub
 			s = GetHubDescriptor(pUsbDevice, ReceiveDataBuffer, sizeof(USB_HUB_DESCR), &len);
@@ -556,7 +572,7 @@ BOOL EnumerateRootHubPort(UINT8 port)
 			{
 				DisableRootHubPort(port);
 
-				RootHubPort[port].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
+				pUsbDevice->HubPortStatus = PORT_DEVICE_ENUM_FAILED;
 				DEBUGOUT("hub desc err\n");
 				return (FALSE);
 			}
@@ -594,28 +610,13 @@ BOOL EnumerateRootHubPort(UINT8 port)
 			}
 
 			
-
-			/*
-			for (i = 0; i < hubPortNum; i++)
-            {
-                s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_C_PORT_CONNECTION );
-                if ( s != ERR_SUCCESS )
-                {
-                    TRACE1("ClearHubPortFeature %d failed\r\n", (UINT16)i);
-
-                    continue;
-                }
-
-                TRACE("ClearHubPortFeature OK\r\n");
-            }
-*/
 			INTERFACE *pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, 0);
 
 			ENDPOINT *pEndPoint = &pInterface->Endpoint[0];
 
 			// "new thing" means wait for a change bitmap before clearing ports
 			// this is how other USB stacks seem to do it
-			printf("Doing new thing - %x\n", pInterface->Endpoint[0].EndpointAddr);
+			DEBUGOUT("Doing new thing - %x\n", pInterface->Endpoint[0].EndpointAddr);
 
 			uint8_t newthing = 1;
 
@@ -733,22 +734,10 @@ BOOL EnumerateRootHubPort(UINT8 port)
 								TRACE("ClearHubPortFeature OK\r\n");
 							}
 
-							/*s = ClearHubPortFeature(pUsbDevice, i + 1, HUB_PORT_SUSPEND);
-							if (s != ERR_SUCCESS)
-							{
-								SubHubPort[port][i].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
-								TRACE("ClearHubPortFeature failed\r\n");
-
-								return FALSE;
-							}
-
-							TRACE("ClearHubPortFeature OK\r\n");
-
-							mDelaymS(500);*/
 
 							SelectHubPort(port, i);
 
-							addr = AssignUniqueAddress(port, i);
+							addr = AddressCounter++;
 							if (EnumerateHubPort(&SubHubPort[port][i], addr))
 							{
 								DEBUGOUT("enum.OK\n");
@@ -765,97 +754,27 @@ BOOL EnumerateRootHubPort(UINT8 port)
 					}
 				}
 			}
-		}
+		}*/
 	}
 	else
 	{
 		DisableRootHubPort(port);
-
-		RootHubPort[port].HubPortStatus = PORT_DEVICE_ENUM_FAILED;
 	}
 
 	return TRUE;
 }
 
-UINT8 QueryHubPortAttach(void)
-{
-	static __xdata BOOL res;
-
-	static __xdata UINT8 s;
-
-	res = FALSE; s = ERR_SUCCESS;
-
-	if (UIF_DETECT)
-	{
-		//plug in or plug out
-		UIF_DETECT = 0;
-
-		if (USB_HUB_ST & bUHS_H0_ATTACH)
-		{
-			//port 0 plug in
-			if (RootHubPort[0].HubPortStatus == PORT_DEVICE_NONE
-				/*|| (UHUB0_CTRL & bUH_PORT_EN) == 0x00*/)
-			{
-				DisableRootHubPort(0);
-
-				RootHubPort[0].HubPortStatus = PORT_DEVICE_INSERT;
-
-				s = ERR_USB_CONNECT;
-
-				TRACE("hub 0 dev in\r\n");
-			}
-		}
-		else if (RootHubPort[0].HubPortStatus >= PORT_DEVICE_INSERT)
-		{
-			DisableRootHubPort(0);
-
-			if (s == ERR_SUCCESS)
-			{
-				s = ERR_USB_DISCON;
-			}
-
-			TRACE("hub 0 dev out\r\n");
-		}
-
-		if (USB_HUB_ST & bUHS_H1_ATTACH)
-		{
-			//port 1 plug in
-			if (RootHubPort[1].HubPortStatus == PORT_DEVICE_NONE
-				/*|| ( UHUB1_CTRL & bUH_PORT_EN ) == 0x00*/)
-			{
-				DisableRootHubPort(1);
-
-				RootHubPort[1].HubPortStatus = PORT_DEVICE_INSERT;
-
-				s = ERR_USB_CONNECT;
-
-				TRACE("hub 1 dev in\r\n");
-			}
-		}
-		else if (RootHubPort[1].HubPortStatus >= PORT_DEVICE_INSERT)
-		{
-			DisableRootHubPort(1);
-
-			if (s == ERR_SUCCESS)
-			{
-				s = ERR_USB_DISCON;
-			}
-
-			TRACE("hub 1 dev out\r\n");
-		}
-	}
-
-	return s;
-}
 
 
 void regrabinterfaces(__xdata USB_HUB_PORT *pUsbHubPort)
 {
+	// device will have already been selected at this point
 	static __xdata UINT8 i, s, c;
 	static __xdata UINT16 len, cnt;
 	static __xdata USB_HUB_PORT *pUsbDevice;
 
 	pUsbDevice = pUsbHubPort;
+	
 	if (pUsbDevice->DeviceClass != USB_DEV_CLASS_HUB)
 	{
 		for (i = 0; i < pUsbDevice->InterfaceNum; i++)
@@ -953,34 +872,23 @@ void regrabinterfaces(__xdata USB_HUB_PORT *pUsbHubPort)
 	}
 }
 
-void RegrabDeviceReports(UINT8 port)
+void RegrabDeviceReports()
 {
-	static __xdata USB_HUB_PORT *pUsbHubPort;
-	pUsbHubPort = &RootHubPort[port];
+	static __xdata LinkedList * __xdata pnt;
+	static __xdata USB_HUB_PORT * __xdata pUsbHubPort;
+	pnt = PolledDevices;
 
-	if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
-	{
-		if (pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
+	while (pnt != NULL) {
+		pUsbHubPort = (USB_HUB_PORT *)pnt->data;
+		printf("%d\n",pnt->index);
+
+		if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
 		{
-			SelectHubPort(port, EXHUB_PORT_NONE);
+			SelectHubPort(pUsbHubPort);
 			regrabinterfaces(pUsbHubPort);
+		
 		}
-		else
-		{
-			UINT8 exHubPortNum = pUsbHubPort->HubPortNum;
-			UINT8 i;
-
-			for (i = 0; i < exHubPortNum; i++)
-			{
-				pUsbHubPort = &SubHubPort[port][i];
-
-				if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS && pUsbHubPort->DeviceClass != USB_DEV_CLASS_HUB)
-				{
-					SelectHubPort(port, i);
-					regrabinterfaces(pUsbHubPort);
-				}
-			}
-		}
+		pnt = pnt->next;
 	}
 }
 
@@ -993,8 +901,8 @@ void ReenumerateAllPorts(void) {
 	DEBUGOUT("reenumerating all ports\n");
 	mDelaymS(150);
 
-	InitUsbData();
 	andyclearmem();
+	InitUsbData();
 	InitPresets();
 	
 	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
@@ -1002,8 +910,10 @@ void ReenumerateAllPorts(void) {
 		DEBUGOUT("port %d\n", i);
 
 		EnumerateRootHubPort(i);
-		RegrabDeviceReports(i);
 	}
+
+	RegrabDeviceReports();
+
 	DEBUGOUT("done reenumerating\n");
 	OutputsEnabled = 1;
 }
@@ -1011,10 +921,9 @@ void ReenumerateAllPorts(void) {
 //----------------------------------------------------------------------------------
 void DealUsbPort(void) //main function should use it at least 500ms
 {
-	static __xdata UINT8 s;
-
-	s = QueryHubPortAttach();
-	if (s == ERR_USB_CONNECT)
+	// detect change
+	// may have to be more complex than this
+	if (UIF_DETECT)
 	{
 		ReenumerateAllPorts();
 	}
@@ -1022,7 +931,7 @@ void DealUsbPort(void) //main function should use it at least 500ms
 
 void InterruptProcessRootHubPort(UINT8 port)
 {
-	static __xdata USB_HUB_PORT *pUsbHubPort;
+	/*static __xdata USB_HUB_PORT *pUsbHubPort;
 	pUsbHubPort = &RootHubPort[port];
 
 	if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
@@ -1050,7 +959,7 @@ void InterruptProcessRootHubPort(UINT8 port)
 				}
 			}
 		}
-	}
+	}*/
 }
 
 void UpdateUsbKeyboardLedInternal(USB_HUB_PORT *pUsbDevice, UINT8 led)
@@ -1077,7 +986,7 @@ void UpdateUsbKeyboardLed(UINT8 led)
 {
 	UINT8 i, j;
 
-	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
+/*	for (i = 0; i < ROOT_HUB_PORT_NUM; i++)
 	{
 		USB_HUB_PORT *pUsbHubPort = &RootHubPort[i];
 		if (pUsbHubPort->HubPortStatus == PORT_DEVICE_ENUM_SUCCESS)
@@ -1105,7 +1014,7 @@ void UpdateUsbKeyboardLed(UINT8 led)
 				}
 			}
 		}
-	}
+	}*/
 }
 
 __xdata BOOL volatile s_CheckUsbPort0 = FALSE;

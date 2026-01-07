@@ -21,12 +21,14 @@ __at(0x0000) unsigned char __xdata RxBuffer[MAX_PACKET_SIZE];
 __at(0x0100) unsigned char __xdata TxBuffer[MAX_PACKET_SIZE];
 
 //root hub port
-USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
+//USB_HUB_PORT __xdata RootHubPort[ROOT_HUB_PORT_NUM];
 
-//sub hub port
-USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
+//sub hub port - should be dynamically allocated
+//USB_HUB_PORT __xdata SubHubPort[ROOT_HUB_PORT_NUM][MAX_EXHUB_PORT_NUM];
 
-UINT8 EnableRootHubPort(UINT8 rootHubIndex)
+__xdata LinkedList* PolledDevices = NULL;
+
+UINT8 EnableRootHubPort(UINT8 rootHubIndex, UINT8 * DeviceSpeed)
 {
 	if (rootHubIndex == 0)
 	{
@@ -36,18 +38,18 @@ UINT8 EnableRootHubPort(UINT8 rootHubIndex)
 			{
 				if (USB_HUB_ST & bUHS_DM_LEVEL)
 				{
-					RootHubPort[0].DeviceSpeed = LOW_SPEED;
+					*DeviceSpeed = LOW_SPEED;
 
 					TRACE("low speed device on hub 0\r\n");
 				}
 				else
 				{
-					RootHubPort[0].DeviceSpeed = FULL_SPEED;
+					*DeviceSpeed = FULL_SPEED;
 
 					TRACE("full speed device on hub 0\r\n");
 				}
 
-				if (RootHubPort[0].DeviceSpeed == LOW_SPEED)
+				if (*DeviceSpeed == LOW_SPEED)
 				{
 					UHUB0_CTRL |= bUH_LOW_SPEED;
 				}
@@ -66,18 +68,18 @@ UINT8 EnableRootHubPort(UINT8 rootHubIndex)
 			{
 				if (USB_HUB_ST & bUHS_HM_LEVEL)
 				{
-					RootHubPort[1].DeviceSpeed = LOW_SPEED;
+					*DeviceSpeed = LOW_SPEED;
 
 					TRACE("low speed device on hub 1\r\n");
 				}
 				else
 				{
-					RootHubPort[1].DeviceSpeed = FULL_SPEED;
+					*DeviceSpeed = FULL_SPEED;
 
 					TRACE("full speed device on hub 1\r\n");
 				}
 
-				if (RootHubPort[1].DeviceSpeed == LOW_SPEED)
+				if (*DeviceSpeed == LOW_SPEED)
 				{
 					UHUB1_CTRL |= bUH_LOW_SPEED;
 				}
@@ -94,8 +96,6 @@ UINT8 EnableRootHubPort(UINT8 rootHubIndex)
 
 void DisableRootHubPort(UINT8 RootHubIndex)
 {
-	//reset data
-	InitRootHubPortData(RootHubIndex);
 
 	if (RootHubIndex == 0)
 	{
@@ -108,18 +108,6 @@ void DisableRootHubPort(UINT8 RootHubIndex)
 }
 
 
-
-void InitRootHubPortData(UINT8 rootHubIndex)
-{
-	UINT8 i;
-
-	InitHubPortData(&RootHubPort[rootHubIndex]);
-
-	for (i = 0; i < MAX_EXHUB_PORT_NUM; i++)
-	{
-		InitHubPortData(&SubHubPort[rootHubIndex][i]);
-	}
-}
 
 void SetHostUsbAddr(UINT8 addr)
 {
@@ -142,26 +130,45 @@ void SetUsbSpeed(UINT8 FullSpeed) // set current speed
 void ResetRootHubPort(UINT8 RootHubIndex)
 {
 	SetHostUsbAddr(0x00);
-	SetUsbSpeed(1); // Ĭ��Ϊȫ��
+	SetUsbSpeed(1);
 
 	if (RootHubIndex == 0)
 	{
-		UHUB0_CTRL = UHUB0_CTRL & ~bUH_LOW_SPEED | bUH_BUS_RESET; // Ĭ��Ϊȫ��,��ʼ��λ
-		mDelaymS(15);											  // ��λʱ��10mS��20mS
-		UHUB0_CTRL = UHUB0_CTRL & ~bUH_BUS_RESET;				  // ������λ
+		UHUB0_CTRL = UHUB0_CTRL & ~bUH_LOW_SPEED | bUH_BUS_RESET; 
+		mDelaymS(25);											  
+		UHUB0_CTRL = UHUB0_CTRL & ~bUH_BUS_RESET;				  
 	}
 	else if (RootHubIndex == 1)
 	{
-		UHUB1_CTRL = UHUB1_CTRL & ~bUH_LOW_SPEED | bUH_BUS_RESET; // Ĭ��Ϊȫ��,��ʼ��λ
-		mDelaymS(15);											  // ��λʱ��10mS��20mS
-		UHUB1_CTRL = UHUB1_CTRL & ~bUH_BUS_RESET;				  // ������λ
+		UHUB1_CTRL = UHUB1_CTRL & ~bUH_LOW_SPEED | bUH_BUS_RESET; 
+		mDelaymS(25);											  
+		UHUB1_CTRL = UHUB1_CTRL & ~bUH_BUS_RESET;				  
 	}
 
 	mDelayuS(250);
 	UIF_DETECT = 0; // ���жϱ�־
 }
 
-void SelectHubPort(UINT8 RootHubIndex, UINT8 HubPortIndex)
+void SelectHubPort(USB_HUB_PORT *pUsbDevice)
+{
+	if (pUsbDevice->IsRootHub)
+	{
+		// normal device
+		SetHostUsbAddr(pUsbDevice->DeviceAddress);
+		SetUsbSpeed(pUsbDevice->DeviceSpeed);
+	}
+	else
+	{
+		SetHostUsbAddr(pUsbDevice->DeviceAddress);
+		if (pUsbDevice->DeviceSpeed == LOW_SPEED)
+		{
+			UH_SETUP |= bUH_PRE_PID_EN;
+		}
+		SetUsbSpeed(pUsbDevice->DeviceSpeed);
+	}
+}
+
+/*void SelectHubPort(UINT8 RootHubIndex, UINT8 HubPortIndex)
 {
 	if (HubPortIndex == EXHUB_PORT_NONE)
 	{
@@ -180,7 +187,7 @@ void SelectHubPort(UINT8 RootHubIndex, UINT8 HubPortIndex)
 
 		SetUsbSpeed(pUsbDevice->DeviceSpeed);
 	}
-}
+}*/
 
 void InitUsbHost(void)
 {

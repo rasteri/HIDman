@@ -163,24 +163,35 @@ void InitInterface(INTERFACE* Interface);
 #define  PORT_DEVICE_ENUM_FAILED  2
 #define  PORT_DEVICE_ENUM_SUCCESS 3
 
+// This is actually more like a "device on hub port" than a port itself
 typedef struct _USB_HUB_PORT
 {
 	// Port status
-	UINT8  HubPortStatus;
+	UINT8		HubPortStatus;
 	UINT8       HubPortNum;
 
 	// Device Status
 	UINT8       DeviceClass;
 	UINT8       MaxPacketSize0;
 	
+/* these aren't needed
 	UINT16      VendorID;
 	UINT16      ProductID;
 	UINT16      bcdDevice;
+*/
 
 	UINT8       DeviceAddress;
 	UINT8       DeviceSpeed;
 	UINT8       InterfaceNum;
+
 	__xdata LinkedList* Interfaces;
+	
+	//not sure we need this or the next one
+	// which root hub this device is attached to
+	UINT8		RootHubNum;
+
+	// whether or not this device is directly connected to root
+	UINT8		IsRootHub;
 	
 } USB_HUB_PORT, *USB_PHUB_PORT;
 

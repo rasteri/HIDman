@@ -388,12 +388,12 @@ uint8_t AddressCounter = 1;
 // returns pointer to USB_HUB_PORT if all is ok
 USB_HUB_PORT * EnumerateHubPort(UINT8 speed, UINT8 level)
 {
-	UINT8 s;
-	UINT16 len;
-	UINT16 cfgDescLen;
+	static __xdata UINT8 s;
+	static __xdata UINT16 len;
+	static __xdata UINT16 cfgDescLen;
 
-	USB_HUB_PORT *pUsbDevice;
-	USB_CFG_DESCR *pCfgDescr;
+	__xdata USB_HUB_PORT *pUsbDevice;
+	static __xdata USB_CFG_DESCR *pCfgDescr;
 	UINT8 i;
 
 	//get first 8 bytes of device descriptor to get maxpacketsize0

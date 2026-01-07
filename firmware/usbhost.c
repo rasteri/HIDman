@@ -918,52 +918,59 @@ void ReenumerateAllPorts(void) {
 	OutputsEnabled = 1;
 }
 
-//----------------------------------------------------------------------------------
+// has global state because we only want to check one hub port each cycle
+__xdata LinkedList * __xdata CurrentHub;
+__xdata uint8_t CurrentPort;
 void DealUsbPort(void) //main function should use it at least 500ms
 {
 	static __xdata UINT8 s;
 	static __xdata uint8_t j = 0;
 	static __xdata UINT16 hubPortStatus, hubPortChange;
 
-	// detect change
+	// detect change on root ports
 	// may have to be more complex than this
 	if (UIF_DETECT)
 	{
 		ReenumerateAllPorts();
 	}
 
-	static __xdata LinkedList * __xdata pnt;
-	static __xdata USB_HUB_PORT * __xdata pUsbHubPort;
-	pnt = PolledDevices;
+	// fun stateful bit
 
-	while (pnt != NULL) {
-		pUsbHubPort = (USB_HUB_PORT *)pnt->data;
-
-		if (pUsbHubPort->DeviceClass == USB_DEV_CLASS_HUB)
-		{
-			SelectHubPort(pUsbHubPort);
-
-			// Check each port for connection changes
-			for (j = 0; j < pUsbHubPort->HubPortNum; j++)
-			{
-				s = GetHubPortStatus(pUsbHubPort, j + 1, &hubPortStatus, &hubPortChange);
-				if (s == ERR_SUCCESS)
-				{
-					// Check for connection change bit
-					if (hubPortChange & 0x0001)
-					{
-						DEBUGOUT("Hub port change detected, re-enumerating\n");
-						ReenumerateAllPorts();
-						return;
-					}
-				}
-			}
-
-		}
-
-		pnt = pnt->next;
+	// first time
+	if (CurrentHub == NULL){
+		CurrentHub = PolledDevices;
+		CurrentPort = 0;
 	}
 
+	static __xdata USB_HUB_PORT * pUsbHubPort;
+	pUsbHubPort = (USB_HUB_PORT *)CurrentHub->data;
+
+
+	if (pUsbHubPort->DeviceClass == USB_DEV_CLASS_HUB)
+	{
+		SelectHubPort(pUsbHubPort);
+
+		s = GetHubPortStatus(pUsbHubPort, CurrentPort + 1, &hubPortStatus, &hubPortChange);
+		if (s == ERR_SUCCESS)
+		{
+			// Check for connection change bit
+			if (hubPortChange & 0x0001)
+			{
+				DEBUGOUT("Hub port change detected, re-enumerating\n");
+				ReenumerateAllPorts();
+				return;
+			}
+		}
+
+		CurrentPort++;
+		if (CurrentPort >= pUsbHubPort->HubPortNum) {
+			CurrentPort = 0;
+			CurrentHub = CurrentHub->next;
+		}
+
+	}
+	else 
+		CurrentHub = CurrentHub->next;
 
 }
 

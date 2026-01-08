@@ -94,7 +94,11 @@ void EveryMillisecond(void) {
 
 
 	// Turn current LED on if we haven't seen any activity in a while
-	if (LEDDelayMs) {
+	if (LEDDelayMs == 255)
+	{
+		// on "until further notice", do nothing
+	}
+	else if (LEDDelayMs) {
 		LEDDelayMs--;
 	} else {
 #if defined(BOARD_MICRO)

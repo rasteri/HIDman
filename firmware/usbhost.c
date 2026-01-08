@@ -17,47 +17,18 @@
 #include "usbll.h"
 #include "preset.h"
 #include "linkedlist.h"
-// enumeration done in stages
-
-/*
-
-1. EnumerateRootHubPort does both root hubs
-	EnumerateHubPort for each port
-		This Fills "RootHubPort" Array, setting SUCCESS to each port if it has device attached
-		And assigns addresses
-		And parses/fills interface descriptors
-	Then another EnumerateHubPort for each non-root hub
-		This fills the "SubHubPort" array, setting SUCCESS to each port if it has device attached
-		also assigning addresses
-		And parses/fills interface descriptors
-	
-2. RegrabDeviceReports traverses these arrays and parses the report descriptors
-
-3. InterruptProcessRootHubPort(uint8 rootport) then actually polls the devices (per root port)
-	For each entry in the RootHubPort and SubHubPort :
-		SelectHubPort selects the root port and address
-		HIDDataTransferReceive actually queries the device
-	 
-
-hubs are essentially transparent once you get all the addresses assigned
-So enumeratehubport needs to be made recursive, but apart from that no real need to store hub tree structure
-
-However, to correctly detect changes in hub port status, we need to keep a list of all the hubs themselves, who get addresses like everything else
-
-So maybe : 
-
-ditch the whole idea of RootHubPort/SubHubPort 
-just have a flat list of all devices that need polled, 
-maybe the last time they *were* polled (add a global clock)
-Then hubs and devices can be polled in one big loop at whatever rate we want
-*/
-
+#include "pwm.h"
+#include "processreport.h"
 
 #define RECEIVE_BUFFER_LEN 512
 UINT8X ReceiveDataBuffer[RECEIVE_BUFFER_LEN];
 
 __xdata bool DumpReport = 0;
 uint8_t AddressCounter = 1;
+
+// global state for dealusbport because we only want to check one hub port each cycle
+__xdata LinkedList * __xdata CurrentHub;
+__xdata uint8_t CurrentPort;
 
 void DumpHex(uint8_t *buffa, uint16_t len)
 {
@@ -327,6 +298,8 @@ UINT8 SetReport(USB_HUB_PORT *pUsbDevice, UINT8 interface, UINT8 *pReport, UINT1
 //-----------------------------------------------------------------------------------------------
 void InitUsbData(void)
 {
+	CurrentHub = NULL;
+	CurrentPort = 0;
 	PolledDevices = NULL;
 	AddressCounter = 1;
 }
@@ -895,8 +868,16 @@ void RegrabDeviceReports()
 void ReenumerateAllPorts(void) {
 	UINT8 i;
 	
+	// red until further notice
+	SetPWM1Dat(0x40);
+	SetPWM2Dat(0x00);
+	T3_FIFO_L = 0;
+	T3_FIFO_H = 0;
+	LEDDelayMs = 255;
+
 	if (!KeyboardDebugOutput)
 		OutputsEnabled = 0;
+	// todo also reset bitbang state machine, maybe	
 
 	DEBUGOUT("reenumerating all ports\n");
 	mDelaymS(150);
@@ -913,14 +894,13 @@ void ReenumerateAllPorts(void) {
 	}
 
 	RegrabDeviceReports();
-
-	DEBUGOUT("done reenumerating\n");
+ 
+	DEBUGOUT("done reenumerating, memused %d\n", MemoryUsed());
+	LEDDelayMs = 0;
 	OutputsEnabled = 1;
 }
 
-// has global state because we only want to check one hub port each cycle
-__xdata LinkedList * __xdata CurrentHub;
-__xdata uint8_t CurrentPort;
+
 void DealUsbPort(void) //main function should use it at least 500ms
 {
 	static __xdata UINT8 s;

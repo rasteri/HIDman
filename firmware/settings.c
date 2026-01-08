@@ -38,7 +38,7 @@ void InitSettings(bool SafeMode) {
         SetPWM2Dat(0x00);
         T3_FIFO_L = 0;
         T3_FIFO_H = 0;
-        LEDDelayMs = 255;
+        LEDDelayMs = 254;
 
         DEBUGOUT("Magic Missing\n");
 

@@ -21,14 +21,17 @@
 
 __xdata ps2port ports[2];
 
+void InitPS2Port(uint8_t port)
+{
+	memset(&ports[port], 0x00, sizeof(ps2port));
+	ports[port].data = 0xFF;
+	ports[port].parity = 1;
+}
+
 void InitPS2Ports(void)
 {
-	memset(ports, 0x00, sizeof(ports));
-	ports[0].data = 0xFF;
-	ports[0].parity = 1;
-
-	ports[1].data = 0xFF;
-	ports[1].parity = 1;
+	InitPS2Port(PORT_KEY);
+	InitPS2Port(PORT_MOUSE);
 }
 
 bool ReadPS2Clock(uint8_t port)
@@ -160,8 +163,7 @@ void PS2ProcessPort(uint8_t port)
 			{
 				if (ports[port].rateLimit > 0) ports[port].rateLimit--;
 
-				//if rateLimit is ok and buffer not empty
-				//if buffer not empty
+				// if rateLimit is ok and buffer not empty
 				if (ports[port].rateLimit == 0 && ports[port].sendBuffEnd != ports[port].sendBuffStart)
 				{
 					ports[port].rateLimit = PS2_RATE_LIMIT;

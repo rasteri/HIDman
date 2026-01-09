@@ -117,11 +117,17 @@ void HandleReceived(uint8_t port)
 
 			// reset
 			case 0xFF:
-				SimonSaysSendKeyboard(KEY_ACK);
+				// clear all buffers etc
+				InitPS2Port(PORT_KEY);
+				
+				// default settings
 				TypematicDefaults();
+
+				// send ack
+				SimonSaysSendKeyboard(KEY_ACK);
+
 				// Start a 500ms countdown then send BAT OK (happens in main.c)
 				KeyBatCounter = 500;
-				ports[PORT_KEY].recvstate = R_IDLE;
 				break;
 
 			// not a command byte - this is fine if we're in another sstate, otherwise we send an error
@@ -185,97 +191,98 @@ void HandleReceived(uint8_t port)
 
 	else if (port == PORT_MOUSE)
 	{
-		switch (ports[PORT_KEY].recvstate)
+		// push command to buffer
+		memmove(MouseBuffer+1, MouseBuffer, MOUSE_BUFFER_SIZE-1);
+		MouseBuffer[0] = ports[port].recvout;
+
+		switch (ports[port].recvout)
 		{
-		case R_IDLE:
+			
+		// Set Scaling 1:1
+		case 0xE6:
+			SimonSaysSendMouse1(0xFA); // ACK
+			Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);
+			break;
+			
+		// Set Scaling 2:1
+		case 0xE7: 
+			SimonSaysSendMouse1(0xFA); // ACK
+			Ps2MouseSetScaling(MOUSE_PS2_SCALING_2X);
+			break;
+			
+		// Set Resolution (need 1 additional data byte)
+		case 0xE8: 
+			SimonSaysSendMouse1(0xFA); // ACK
+			break;
 		
-			// push command to buffer
-			memmove(MouseBuffer+1, MouseBuffer, MOUSE_BUFFER_SIZE-1);
-			MouseBuffer[0] = ports[port].recvout;
+		// Status Request
+		case 0xE9:							
+			// TODO: construct bytes from real state
+			SimonSaysSendMouse1(0xFA);		// ACK
+			SimonSaysSendMouse3(0b00100000, // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
+								0x02,		// Resolution 4 counts/mm
+								100);		// Sample rate 100/sec
+			break;
 
-			switch (ports[port].recvout)
+		// ID
+		case 0xF2:
+			SimonSaysSendMouse1(0xFA); // ACK
+			SimonSaysSendMouse1((&OutputMice[MOUSE_PORT_PS2])->Ps2Type); // Mouse type
+			break;
+
+		// Enable Reporting
+		case 0xF4: 
+			SimonSaysSendMouse1(0xFA); // ACK
+			Ps2MouseSetReporting(MOUSE_PS2_REPORTING_ON);
+			break; 
+			
+		// Disable Reporting
+		case 0xF5: 
+			SimonSaysSendMouse1(0xFA); // ACK
+			Ps2MouseSetReporting(MOUSE_PS2_REPORTING_OFF);
+			break;
+		
+		// Set Defaults
+		case 0xF6: 
+			SimonSaysSendMouse1(0xFA); // ACK
+			Ps2MouseSetDefaults();
+			break;
+		
+		// Reset
+		case 0xFF:
+
+			// clear all mouse state
+			InitPS2Port(PORT_MOUSE);
+			Ps2MouseSetDefaults();
+			Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
+
+			// send ack
+			SimonSaysSendMouse1(0xFA);
+
+			// Start a 500ms countdown then send BAT OK (happens in main.c)
+			MouseBatCounter = 500;
+			break;
+
+		// unimplemented command
+		case 0xEA: // Set Stream Mode
+		case 0xEB: // Read Data
+		case 0xEC: // Reset Wrap Mode
+		case 0xEE: // Set Wrap Mode
+		case 0xF0: // Remote Mode
+		case 0xF3: // Set Sample Rate
+		case 0xFE: // Resend
+		default:   // argument from command?
+			if (MouseBuffer[1] == 0xE8) 
 			{
-				
-			// Set Scaling 1:1
-			case 0xE6:
+				// previous command was set Resolution, this should be actual resolution
 				SimonSaysSendMouse1(0xFA); // ACK
-				Ps2MouseSetScaling(MOUSE_PS2_SCALING_1X);
-				break;
-				
-			// Set Scaling 2:1
-			case 0xE7: 
-				SimonSaysSendMouse1(0xFA); // ACK
-				Ps2MouseSetScaling(MOUSE_PS2_SCALING_2X);
-				break;
-				
-			// Set Resolution (need 1 additional data byte)
-			case 0xE8: 
-				SimonSaysSendMouse1(0xFA); // ACK
-				break;
-			
-			// Status Request
-			case 0xE9:							
-				// TODO: construct bytes from real state
-				SimonSaysSendMouse1(0xFA);		// ACK
-				SimonSaysSendMouse3(0b00100000, // Stream Mode, Scaling 1:1, Enabled, No buttons pressed
-									0x02,		// Resolution 4 counts/mm
-									100);		// Sample rate 100/sec
-				break;
-
-			// ID
-			case 0xF2:
-				SimonSaysSendMouse1(0xFA); // ACK
-				SimonSaysSendMouse1((&OutputMice[MOUSE_PORT_PS2])->Ps2Type); // Mouse type
-				break;
-
-			// Enable Reporting
-			case 0xF4: 
-				SimonSaysSendMouse1(0xFA); // ACK
-				Ps2MouseSetReporting(MOUSE_PS2_REPORTING_ON);
-				break; 
-				
-			// Disable Reporting
-			case 0xF5: 
-				SimonSaysSendMouse1(0xFA); // ACK
-				Ps2MouseSetReporting(MOUSE_PS2_REPORTING_OFF);
-				break;
-			
-			// Set Defaults
-			case 0xF6: 
-				SimonSaysSendMouse1(0xFA); // ACK
-				Ps2MouseSetDefaults();
-				break;
-			
-			// Reset
-			case 0xFF:
-				SimonSaysSendMouse1(0xFA); // ACK
-				SimonSaysSendMouse1(0xAA); // POST OK
-				SimonSaysSendMouse1(0x00); // Squeek Squeek I'm a mouse
-				Ps2MouseSetType(MOUSE_PS2_TYPE_STANDARD);
-				Ps2MouseSetDefaults();
-				break;
-
-			// unimplemented command
-			case 0xEA: // Set Stream Mode
-			case 0xEB: // Read Data
-			case 0xEC: // Reset Wrap Mode
-			case 0xEE: // Set Wrap Mode
-			case 0xF0: // Remote Mode
-			case 0xF3: // Set Sample Rate
-			case 0xFE: // Resend
-			default:   // argument from command?
-				if (MouseBuffer[1] == 0xE8) 
-				{
-					// previous command was set Resolution, this should be actual resolution
-					SimonSaysSendMouse1(0xFA); // ACK
-					Ps2MouseSetResolution(MouseBuffer[0]);
-				} 
-				else
-				{
-					SimonSaysSendMouse1(0xFA); // Just smile and nod
-				}
-				break;
+				Ps2MouseSetResolution(MouseBuffer[0]);
+			} 
+			else
+			{
+				SimonSaysSendMouse1(0xFA); // Just smile and nod
 			}
+			break;
 		}
 		
 		if (FlashSettings->Intellimouse){
@@ -290,11 +297,7 @@ void HandleReceived(uint8_t port)
 			}
 		}
 		
-		// If we're not expecting more stuff,
 		// unlock the send buffer so main loop can send stuff again
-		if (ports[PORT_MOUSE].recvstate == R_IDLE)
-		{
-			ports[PORT_MOUSE].sendDisabled = 0;
-		}
+		ports[PORT_MOUSE].sendDisabled = 0;
 	}
 }

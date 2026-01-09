@@ -245,4 +245,6 @@ void PS2ProcessPort(uint8_t port);
 #define PS2_KEY_LED_CAPSLOCK    0b00000100
 #define PS2_KEY_LED_KANA        0b00010000 // this might not actually be correct
 
+
+void InitPS2Port(uint8_t port);
 #endif

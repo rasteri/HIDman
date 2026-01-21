@@ -413,6 +413,8 @@ BOOL ParseDeviceDescriptor(USB_DEV_DESCR *pDevDescr, UINT8 len, USB_HUB_PORT *pU
 
 	if (len == sizeof(USB_DEV_DESCR))
 	{
+		pUsbDevice->VendorID = (pDevDescr->idVendorH << 8) | pDevDescr->idVendorL;
+		pUsbDevice->ProductID = (pDevDescr->idProductH << 8) | pDevDescr->idProductL;
 		DEBUGOUT("vend 0x%02X %02X\n",pDevDescr->idVendorH, pDevDescr->idVendorL );
 		DEBUGOUT("prod 0x%02X %02X\n",pDevDescr->idProductH, pDevDescr->idProductL );
 		DEBUGOUT("bcd 0x%02X %02X\n",pDevDescr->bcdDeviceH, pDevDescr->bcdDeviceL );

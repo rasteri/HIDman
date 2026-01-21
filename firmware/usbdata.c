@@ -31,6 +31,11 @@ void InitHubPortData(USB_HUB_PORT *pUsbHubPort)
 
 	pUsbHubPort->RootHubNum = 0;
 	pUsbHubPort->IsRootHub = 0;
+
+	pUsbHubPort->LogitechConfigured = 0;
+	pUsbHubPort->LogitechWoke = 0;
+	pUsbHubPort->LogitechDevNum = 0;
+	pUsbHubPort->LogitechFnFeatureIndex = 0;
 }
 void InitInterface(INTERFACE* Interface)
 {

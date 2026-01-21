@@ -467,3 +467,24 @@ UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen, UINT16
 
 	return (s);
 }
+
+UINT8 TransferSend(ENDPOINT *pEndPoint, UINT8 *pData, UINT8 len, UINT16 timeout)
+{
+	UINT8 s;
+	UINT8 i;
+
+	// Copy data to transmit buffer
+	for (i = 0; i < len; i++)
+	{
+		TxBuffer[i] = pData[i];
+	}
+	UH_TX_LEN = len;
+
+	s = USBHostTransact(USB_PID_OUT << 4 | (pEndPoint->EndpointAddr & 0x7F), pEndPoint->TOG ? bUH_R_TOG | bUH_T_TOG : 0, timeout);
+	if (s == ERR_SUCCESS)
+	{
+		pEndPoint->TOG = pEndPoint->TOG ? FALSE : TRUE;
+	}
+
+	return (s);
+}

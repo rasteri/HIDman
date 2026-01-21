@@ -10,6 +10,7 @@ void InitUsbHost(void);
 UINT8 USBHostTransact(UINT8 endp_pid, UINT8 tog, UINT16 timeout);
 UINT8 HostCtrlTransfer(USB_SETUP_REQ *pSetupReq, UINT8 MaxPacketSize0, PUINT8 DataBuf, PUINT16 RetLen);
 UINT8 TransferReceive(ENDPOINT *pEndPoint, UINT8 *pData, UINT16 *pRetLen, UINT16 timeout);
+UINT8 TransferSend(ENDPOINT *pEndPoint, UINT8 *pData, UINT8 len, UINT16 timeout);
 void InitHubPortData(USB_HUB_PORT *pUsbHubPort);
 
 #define WAIT_USB_TOUT_200US 800

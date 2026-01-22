@@ -8,6 +8,7 @@
 
 
 extern __code uint8_t ASCIItoHID[];
+extern __code uint8_t QWERTYtoOther[][131];
 
 extern __code JoyPreset DefaultJoyMaps[];
 extern __code JoyPreset ConfigGameNoMouse[];

@@ -32,7 +32,7 @@ uint8_t SyncSettings(void) {
 void InitSettings(bool SafeMode) {
 
     // magic value not present (or we're in safe mode), initialize flash data
-    if (SafeMode || FlashSettings->Magic != 0x54178008) {
+    if (SafeMode || FlashSettings->Magic != 0x54178007) {
 
         SetPWM1Dat(0x40);
         SetPWM2Dat(0x00);
@@ -43,20 +43,21 @@ void InitSettings(bool SafeMode) {
         DEBUGOUT("Magic Missing\n");
 
         memset(&HMSettings, 0x00, sizeof(Settings));
-        HMSettings.Magic = 0x54178008;
+        HMSettings.Magic = 0x54178007;
 
         //if (!SafeMode) HMSettings.Intellimouse = 1;
         HMSettings.Intellimouse = 1;
         //HMSettings.EnableAUXPS2 = 1;
         //HMSettings.SerialDebugOutput = 1;
         //HMSettings.MouseReportMode = 1;
+        HMSettings.KeyboardLayout = LAYOUT_QWERTY;
         if (SyncSettings()) {
             DEBUGOUT("Writin failed\n");
         }
     }
     memcpy(&HMSettings, FlashSettings, sizeof(Settings));
 
-    if (HMSettings.Magic != 0x54178008){
+    if (HMSettings.Magic != 0x54178007){
         // failed, do something bad
         DEBUGOUT("Initing settings failed\n");
     }

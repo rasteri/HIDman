@@ -7,9 +7,19 @@
 #define MODE_XT 1
 #define MODE_AMSTRAD 2
 
+// Keyboard Layouts (QWERTY, AZERTY, QWERTZ, DVORAK, DVORAK Left Hand, DVORAK Right Hand, COLEMAK, WORKMAN)
+#define LAYOUT_QWERTY 0
+#define LAYOUT_AZERTY 1
+#define LAYOUT_QWERTZ 2
+#define LAYOUT_DVORAK 3
+#define LAYOUT_DVORAKLH 4
+#define LAYOUT_DVORAKRH 5
+#define LAYOUT_COLEMAK 6
+#define LAYOUT_WORKMAN 7
+
 typedef struct Settings {
 
-    // will be set to 0x54178008 to make sure flash is intact
+    // will be set to 0x54178007 to make sure flash is intact
     uint32_t Magic;
 
     // Set all USB keyboards to run in Report Mode rather than Boot Mode
@@ -41,6 +51,9 @@ typedef struct Settings {
 
     // Whether or not the menu should be rate limited
     uint8_t MenuRateLimit;
+
+    // Keyboard layout to be used when interacting with internal menu
+    uint8_t KeyboardLayout;
 
 } Settings;
 

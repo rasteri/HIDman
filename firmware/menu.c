@@ -23,6 +23,7 @@
 #include "scancode.h"
 
 __xdata char SendBuffer[255];
+__xdata char StrCopyBuffer[65];
 __xdata char KeyboardPrintfBuffer[80];
 
 
@@ -62,7 +63,12 @@ void Sendbuffer_Task()
     case SEND_STATE_SHIFTON:
         if (*currchar)
         {
-            if (*currchar >= 0x41 && *currchar <= 0x5A)
+            if ((*currchar >= 0x3E && *currchar <= 0x5A)
+                || (*currchar >= 0x21 && *currchar <= 0x26)
+                || (*currchar >= 0x28 && *currchar <= 0x2B)
+                || *currchar == 0x3A
+                || *currchar == 0x3C
+                || *currchar == 0x5E)
             {
                 if (SendKeyboard((FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
                 {
@@ -95,7 +101,12 @@ void Sendbuffer_Task()
         break;
 
     case SEND_STATE_SHIFTOFF:
-        if (*currchar >= 0x41 && *currchar <= 0x5A)
+        if ((*currchar >= 0x3E && *currchar <= 0x5A)
+                || (*currchar >= 0x21 && *currchar <= 0x26)
+                || (*currchar >= 0x28 && *currchar <= 0x2B)
+                || *currchar == 0x3A
+                || *currchar == 0x3C
+                || *currchar == 0x5E)
         {
             if (SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
             {
@@ -136,11 +147,18 @@ void SendKeyboardBuffer(void)
             return;
         }
 
-        // capitals, hold shift first
-        if (currchar >= 0x41 && currchar <= 0x5A)
+        // capitals and layout special chars, hold shift first
+        if ((currchar >= 0x3E && currchar <= 0x5A)
+                || (currchar >= 0x21 && currchar <= 0x26)
+                || (currchar >= 0x28 && currchar <= 0x2B)
+                || currchar == 0x3A
+                || currchar == 0x3C
+                || currchar == 0x5E)
+        {
             while (!SendKeyboard(
                 (FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
                 ;
+        }
 
         // press the key
         PressKey(currchar);
@@ -149,7 +167,12 @@ void SendKeyboardBuffer(void)
         ReleaseKey(currchar);
 
         // release shift
-        if (currchar >= 0x41 && currchar <= 0x5A)
+        if ((currchar >= 0x3E && currchar <= 0x5A)
+                || (currchar >= 0x21 && currchar <= 0x26)
+                || (currchar >= 0x28 && currchar <= 0x2B)
+                || currchar == 0x3A
+                || currchar == 0x3C
+                || currchar == 0x5E)
         {
             while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
                 ;
@@ -210,10 +233,11 @@ void Menu_Task(void)
             {
                 SendBuffer[0] = 0;
                 SendKeyboardString("\n--\nHIDman v1.1.7betax\n\n");
-                SendKeyboardString("1. Key\n");
-                SendKeyboardString("2. Mouse\n");
-                SendKeyboardString("3. Game\n");
-                SendKeyboardString("\n4. Adv.\n\n");
+                SendKeyboardString("1. Menu Keyboar Layout\n");
+                SendKeyboardString("2. Key\n");
+                SendKeyboardString("3. Mouse\n");
+                SendKeyboardString("4. Game\n");
+                SendKeyboardString("\n5. Adv.\n\n");
                 SendKeyboardString("ESC. Exit\n\n");
                 currchar = SendBuffer;
                 lastMenuState = menuState;
@@ -227,22 +251,59 @@ void Menu_Task(void)
                 MenuExiting = 0;
             }
 
-            switch (menuKey)
-            {
-                case KEY_1:     menuState = MENU_STATE_KEYBOARD; break;
-                case KEY_2:     menuState = MENU_STATE_MOUSE; break;
-                case KEY_3:     menuState = MENU_STATE_GAME; break;
-                case KEY_4:     menuState = MENU_STATE_ADVANCED; break;
+            if (menuKey == PressedKey('1')){     menuState = MENU_STATE_LAYOUT; }
+            else if (menuKey == PressedKey('2')){     menuState = MENU_STATE_KEYBOARD; }
+            else if (menuKey == PressedKey('3')){     menuState = MENU_STATE_MOUSE; }
+            else if (menuKey == PressedKey('4')){     menuState = MENU_STATE_GAME; }
+            else if (menuKey == PressedKey('5')){     menuState = MENU_STATE_ADVANCED; }
 
-                case KEY_ESC:
+            else if (menuKey == KEY_ESC){
                     SendBuffer[0] = 0;
                     SendKeyboardString("Goodbye\n");
                     currchar = SendBuffer;
                     MenuExiting = 1;
-                    break;
             }
-            
-            
+                        
+            break;
+
+        case MENU_STATE_LAYOUT:
+            if (lastMenuState != MENU_STATE_LAYOUT){
+                SendBuffer[0] = 0;
+                SendKeyboardString("\n--\nMenu Keyboard Layout\n\n");
+                SendKeyboardString("1. QWERTY\n");
+                SendKeyboardString("2. AZERTY\n");
+                SendKeyboardString("3. QWERTZ\n");
+                SendKeyboardString("4. DVORAK\n");
+                SendKeyboardString("5. DVORAK Left Hand\n");
+                SendKeyboardString("6. DVORAK Right Hand\n");
+                SendKeyboardString("7. COLEMAK\n");
+                SendKeyboardString("8. WORKMAN\n");
+                SendKeyboardString("9. Layout Test Print\n");
+
+                SendKeyboardString("\nESC Main Menu\n");
+                currchar = SendBuffer;
+                lastMenuState = menuState;
+            }
+            if (menuKey == PressedKey('1')){     HMSettings.KeyboardLayout = LAYOUT_QWERTY;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('2')){     HMSettings.KeyboardLayout = LAYOUT_AZERTY;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('3')){     HMSettings.KeyboardLayout = LAYOUT_QWERTZ;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('4')){     HMSettings.KeyboardLayout = LAYOUT_DVORAK;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('5')){     HMSettings.KeyboardLayout = LAYOUT_DVORAKLH;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('6')){     HMSettings.KeyboardLayout = LAYOUT_DVORAKRH;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('7')){     HMSettings.KeyboardLayout = LAYOUT_COLEMAK;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('8')){     HMSettings.KeyboardLayout = LAYOUT_WORKMAN;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('9')){
+                    SendBuffer[0] = 0;
+                    SendKeyboardString("+,-.1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+                    SendKeyboardString("abcdefghijklmnopqrstuvwxyz\n");
+                    SendKeyboardString("If all 66 characters finishing with z are not displayed, ");
+                    SendKeyboardString("the first character not properly displayed is not properly ");
+                    SendKeyboardString("mapped in firmware for the current layout\n");
+                    currchar = SendBuffer;
+                    lastMenuState = menuState;
+            }
+            else if (menuKey == KEY_ESC){   menuState = MENU_STATE_MAIN; }
+
             break;
 
         case MENU_STATE_KEYBOARD:
@@ -259,12 +320,11 @@ void Menu_Task(void)
                 currchar = SendBuffer;
                 lastMenuState = menuState;
             }
-            switch (menuKey) {
-                case KEY_1:     HMSettings.KeyboardReportMode ^= 1;     SyncSettings(); lastMenuState = 0; break;
-                case KEY_2:     HMSettings.XT83Keys ^= 1;               SyncSettings(); lastMenuState = 0; break;
-                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
-            }
-        break;
+            if (menuKey == PressedKey('1')){     HMSettings.KeyboardReportMode ^= 1;     SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('2')){     HMSettings.XT83Keys ^= 1;               SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == KEY_ESC){   menuState = MENU_STATE_MAIN; }
+
+            break;
 
         case MENU_STATE_MOUSE:
             if (lastMenuState != MENU_STATE_MOUSE)
@@ -282,12 +342,10 @@ void Menu_Task(void)
                 lastMenuState = menuState;
             }
 
-            switch (menuKey)
-            {
-                case KEY_1:     HMSettings.MouseReportMode ^= 1;        SyncSettings(); lastMenuState = 0; break;
-                case KEY_2:     HMSettings.Intellimouse ^= 1;           SyncSettings(); lastMenuState = 0; break;
-                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
-            }
+            if (menuKey == PressedKey('1')){     HMSettings.MouseReportMode ^= 1;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('2')){     HMSettings.Intellimouse ^= 1;           SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == KEY_ESC){   menuState = MENU_STATE_MAIN; }
+
             break;
 
         case MENU_STATE_GAME:
@@ -304,11 +362,9 @@ void Menu_Task(void)
                 lastMenuState = menuState;
             }
 
-            switch (menuKey)
-            {
-                case KEY_1:     HMSettings.GameControllerAsMouse ^= 1;        SyncSettings(); lastMenuState = 0; break;
-                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
-            }
+            if (menuKey == PressedKey('1')){     HMSettings.GameControllerAsMouse ^= 1;        SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == KEY_ESC){   menuState = MENU_STATE_MAIN; }
+                        
             break;
 
         case MENU_STATE_ADVANCED:
@@ -331,23 +387,21 @@ void Menu_Task(void)
                 currchar = SendBuffer;
                 lastMenuState = menuState;
             }
-            switch (menuKey)
-            {
-                case KEY_1:
+            if (menuKey == PressedKey('1')){
                     // stop timer0 resetting watchdog
                     ET0 = 0;
                     while(1);
-                    break;
+            }
 
-                case KEY_2:
+            else if (menuKey == PressedKey('2')){
                     SendBuffer[0] = 0;
                     SendKeyboardString("ESC to stop, R to redetect\n");
                     currchar = SendBuffer;
                     KeyboardDebugOutput = 1;
                     menuState = MENU_STATE_DUMPING;
-                    break;
+            }
 
-                case KEY_3:
+            else if (menuKey == PressedKey('3')){
                     SendBuffer[0] = 0;
                     KeyboardPrintf("Type           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Type);
                     KeyboardPrintf("Rate           %u\n", (&OutputMice[MOUSE_PORT_PS2])->Ps2Rate);
@@ -362,15 +416,15 @@ void Menu_Task(void)
                         KeyboardPrintf("%02X ", MouseBuffer[i]);
                     }
                     currchar = SendBuffer;
-                    break;
+            }
 
-                case KEY_4:     HMSettings.SerialDebugOutput ^= 1;  SyncSettings(); lastMenuState = 0; break;
-                case KEY_5:     HMSettings.EnableAUXPS2 ^= 1;       SyncSettings(); lastMenuState = 0; break;
-                case KEY_6:     HMSettings.MenuRateLimit ^= 1;       SyncSettings(); lastMenuState = 0; break;
+            else if (menuKey == PressedKey('4')){     HMSettings.SerialDebugOutput ^= 1;  SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('5')){     HMSettings.EnableAUXPS2 ^= 1;       SyncSettings(); lastMenuState = 0; }
+            else if (menuKey == PressedKey('6')){     HMSettings.MenuRateLimit ^= 1;       SyncSettings(); lastMenuState = 0; }
 
-                case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
+            else if (menuKey == KEY_ESC){   menuState = MENU_STATE_MAIN; }
 
-                /*case KEY_5:
+                /*else if (menuKey == PressedKey('5']){
                     SendKeyboardString("Used %lx, free %lx\n", MemoryUsed(), MemoryFree());
                     SendKeyboardString("Testing allocator, will reset when complete\n");
                     for (int i = 0; i < 128; i++) {
@@ -379,7 +433,7 @@ void Menu_Task(void)
                     DumpReport = 1;
                     menuState = MENU_STATE_DUMPING;
                     break;*/
-            }
+                        
             break;
 
         case MENU_STATE_DUMPING:
@@ -521,4 +575,27 @@ void inputProcess(void)
     {
         gpiodebounce++;
     }
+}
+
+void SendKeyboardString_func(const char* bum, size_t bum_len){
+    int idx;
+
+    if (bum_len > sizeof(StrCopyBuffer)){
+        SendBuffer[193] = 0;
+        SendKeyboardString("\nERROR - Print func called with string greater than 64 char\n");
+        return;
+    }
+
+    if (strlen(SendBuffer) + bum_len > sizeof(SendBuffer) + 1){
+        SendBuffer[207] = 0;
+        SendKeyboardString("\nERROR - SendBuffer already full. Flush first\n");
+        return;
+    }
+
+    for (idx = 0; bum[idx] != '\0' && idx < sizeof(StrCopyBuffer) - 1; idx++) {
+        StrCopyBuffer[idx] = QWERTYtoOther[FlashSettings->KeyboardLayout][bum[idx]];
+    }
+    StrCopyBuffer[bum_len-1] = 0;
+
+    strcat(SendBuffer, StrCopyBuffer);
 }

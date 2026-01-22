@@ -2,6 +2,7 @@
 #include "ch559.h"
 #include "system.h"
 #include "ps2.h"
+#include "data.h"
 #include "menu.h"
 #include "settings.h"
 #include "scancode.h"
@@ -41,8 +42,15 @@ int putchar(int c)
 	
 	if (KeyboardDebugOutput)
 	{
-		// capitals, hold shift first
-		if (c >= 0x41 && c <= 0x5A){
+		c = QWERTYtoOther[FlashSettings->KeyboardLayout][c];
+		// capitals and layout special chars, hold shift first
+		if ((c >= 0x3E && c <= 0x5A)
+			|| (c >= 0x21 && c <= 0x26)
+			|| (c >= 0x28 && c <= 0x2B)
+			|| c == 0x3A
+			|| c == 0x3C
+			|| c == 0x5E)
+		{
 			while (!SendKeyboard(
 				(FlashSettings->KeyboardMode == MODE_PS2) ? KEY_SET2_LSHIFT_MAKE : KEY_SET1_LSHIFT_MAKE))
 				;
@@ -61,7 +69,12 @@ int putchar(int c)
 		KeyDelay();
 
 		// release shift
-		if (c >= 0x41 && c <= 0x5A)
+		if ((c >= 0x3E && c <= 0x5A)
+			|| (c >= 0x21 && c <= 0x26)
+			|| (c >= 0x28 && c <= 0x2B)
+			|| c == 0x3A
+			|| c == 0x3C
+			|| c == 0x5E)
 		{
 			while (!SendKeyboard(FlashSettings->KeyboardMode == MODE_PS2 ? KEY_SET2_LSHIFT_BREAK : KEY_SET1_LSHIFT_BREAK))
 				;

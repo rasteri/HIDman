@@ -36,6 +36,9 @@ typedef struct Settings {
     // blocks garbage packets that broken USB devices emit
     bool USBFilter;
 
+    // Disable Fn swap on Logitech keyboards (makes F1-F12 standard function keys)
+    bool DisableLogitechFnSwap;
+
     // What type of computer the keyboard is plugged into (i.e. PS2 or XT)
     uint8_t KeyboardMode;
 

@@ -174,9 +174,9 @@ typedef struct _USB_HUB_PORT
 	UINT8       DeviceClass;
 	UINT8       MaxPacketSize0;
 	
-/* these aren't needed
 	UINT16      VendorID;
 	UINT16      ProductID;
+/* this isn't needed
 	UINT16      bcdDevice;
 */
 
@@ -192,7 +192,16 @@ typedef struct _USB_HUB_PORT
 
 	// whether or not this device is directly connected to root
 	UINT8		IsRootHub;
-	
+
+	// Logitech Fn swap configured successfully
+	UINT8		LogitechConfigured;
+	// keyboard sent a keypress (awake); config should run from the main loop, not the poll path
+	UINT8		LogitechWoke;
+	// Logitech device slot that has keyboard (1-6), 0 if unknown
+	UINT8		LogitechDevNum;
+	// Logitech FN_INVERSION feature index, 0 if not discovered
+	UINT8		LogitechFnFeatureIndex;
+
 } USB_HUB_PORT, *USB_PHUB_PORT;
 
 #define  LOW_SPEED      0
@@ -206,6 +215,9 @@ extern void InterruptProcessRootHubPort(UINT8 port_index);
 extern void UpdateUsbKeyboardLed(UINT8 led);
 extern INTERFACE* AllocInterface(UINT8 count);
 void ReenumerateAllPorts(void);
+
+// Apply the Logitech Fn-swap setting to connected Unifying keyboards in place
+void ReapplyLogitechFnSwap(void);
 
 void ProcessUsbHostPort(void);
 

@@ -296,6 +296,327 @@ UINT8 SetReport(USB_HUB_PORT *pUsbDevice, UINT8 interface, UINT8 *pReport, UINT1
 }
 
 //-----------------------------------------------------------------------------------------------
+// Check if device is Logitech unifying receiver
+BOOL IsLogitechUnifying(USB_HUB_PORT *pDevice)
+{
+	if (pDevice->VendorID != LOGITECH_VID)
+		return FALSE;
+	return (pDevice->ProductID == LOGITECH_UNIFYING_PID1 ||
+			pDevice->ProductID == LOGITECH_UNIFYING_PID2 ||
+			pDevice->ProductID == LOGITECH_UNIFYING_PID3 ||
+			pDevice->ProductID == LOGITECH_UNIFYING_PID4);
+}
+
+//-----------------------------------------------------------------------------------------------
+// Find the HID++ interface index (HID class but not keyboard/mouse protocol)
+// Returns interface index, or 0xFF if not found
+UINT8 FindHIDPPInterface(USB_HUB_PORT *pDevice)
+{
+	UINT8 i;
+	INTERFACE *pInterface;
+
+	for (i = 0; i < pDevice->InterfaceNum; i++)
+	{
+		pInterface = (INTERFACE *)ListGetData(pDevice->Interfaces, i);
+		if (pInterface != NULL &&
+		    pInterface->InterfaceClass == USB_DEV_CLASS_HID &&
+		    pInterface->InterfaceProtocol != HID_PROTOCOL_KEYBOARD &&
+		    pInterface->InterfaceProtocol != HID_PROTOCOL_MOUSE)
+		{
+			return i;
+		}
+	}
+	return 0xFF;
+}
+
+//-----------------------------------------------------------------------------------------------
+// Send HID++ short message (7 bytes) to Logitech receiver via OUT endpoint
+// Returns error status
+UINT8 SendHIDPPShort(USB_HUB_PORT *pUsbDevice, UINT8 *pMsg)
+{
+	INTERFACE *pInterface;
+	ENDPOINT *pEndpoint;
+	UINT8 ifaceIdx;
+	UINT8 i;
+
+	ifaceIdx = FindHIDPPInterface(pUsbDevice);
+	if (ifaceIdx == 0xFF)
+	{
+		DEBUGOUT("No HID++ iface\n");
+		return ERR_USB_UNKNOWN;
+	}
+
+	pInterface = (INTERFACE *)ListGetData(pUsbDevice->Interfaces, ifaceIdx);
+	if (pInterface == NULL)
+		return ERR_USB_UNKNOWN;
+
+	// Find the OUT endpoint
+	for (i = 0; i < pInterface->EndpointNum; i++)
+	{
+		pEndpoint = &pInterface->Endpoint[i];
+		if (pEndpoint->EndpointDir == ENDPOINT_OUT)
+		{
+			return TransferSend(pEndpoint, pMsg, 7, 500);
+		}
+	}
+
+	// No OUT endpoint found - fall back to SET_REPORT control transfer
+	{
+		static __xdata UINT8 s;
+		static __xdata UINT16 len;
+		static __xdata USB_SETUP_REQ SetupReq;
+
+		FillSetupReq(&SetupReq, USB_REQ_TYP_OUT | USB_REQ_TYP_CLASS | USB_REQ_RECIP_INTERF,
+					 HID_SET_REPORT, (HID_REPORT_OUTPUT << 8) | HIDPP_SHORT_MSG, ifaceIdx, 7);
+
+		s = HostCtrlTransfer(&SetupReq, pUsbDevice->MaxPacketSize0, pMsg, &len);
+		return s;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------
+// Read HID++ response from HID++ interface's interrupt IN endpoint
+// Returns error status, response in pResponse (7 bytes for short, 20 for long)
+UINT8 RecvHIDPP(USB_HUB_PORT *pDevice, UINT8 *pResponse, UINT16 *pLen)
+{
+	INTERFACE *pInterface;
+	ENDPOINT *pEndpoint;
+	UINT8 i;
+	UINT8 ifaceIdx;
+
+	// Find HID++ interface
+	ifaceIdx = FindHIDPPInterface(pDevice);
+	if (ifaceIdx == 0xFF)
+		return ERR_USB_UNKNOWN;
+
+	pInterface = (INTERFACE *)ListGetData(pDevice->Interfaces, ifaceIdx);
+	if (pInterface == NULL)
+		return ERR_USB_UNKNOWN;
+
+	// Find the IN endpoint
+	for (i = 0; i < pInterface->EndpointNum; i++)
+	{
+		pEndpoint = &pInterface->Endpoint[i];
+		if (pEndpoint->EndpointDir == ENDPOINT_IN)
+		{
+			return TransferReceive(pEndpoint, pResponse, pLen, 500);
+		}
+	}
+	return ERR_USB_UNKNOWN;
+}
+
+//-----------------------------------------------------------------------------------------------
+// Query HID++ 2.0 feature index using IRoot (feature 0x0000)
+// Returns: feature index (1-255), or 0 if not found
+// Sets *pDevicePresent to 1 if device responded (even with error), 0 if no device
+UINT8 HIDPPGetFeatureIndex(USB_HUB_PORT *pDevice, UINT8 devNum, UINT16 featureId, UINT8 *pDevicePresent)
+{
+	UINT8 s;
+	UINT8 msg[7];
+	UINT8 response[20];
+	UINT16 len;
+	UINT8 retries;
+
+	if (pDevicePresent) *pDevicePresent = 0;
+
+	// IRoot getFeature request: [0x10] [dev] [0x00] [func<<4|sw_id] [feat_hi] [feat_lo] [0x00]
+	msg[0] = HIDPP_SHORT_MSG;
+	msg[1] = devNum;
+	msg[2] = 0x00;  // IRoot feature index is always 0
+	msg[3] = 0x01;  // Function 0 << 4 | sw_id=1 (for response matching)
+	msg[4] = (featureId >> 8) & 0xFF;
+	msg[5] = featureId & 0xFF;
+	msg[6] = 0x00;
+
+	s = SendHIDPPShort(pDevice, msg);
+	if (s != ERR_SUCCESS)
+		return 0;
+
+	// Try to read response - first try immediately, then with delays
+	for (retries = 0; retries < 5; retries++)
+	{
+		if (retries > 0)
+		{
+			SoftWatchdog = 0;
+			mDelaymS(5);
+		}
+		s = RecvHIDPP(pDevice, response, &len);
+		if (s == ERR_SUCCESS && len >= 7)
+		{
+			// Skip responses not for our device (drain stale responses)
+			if (response[1] != devNum)
+			{
+				continue;
+			}
+
+			// Check for error response: [0x10/0x11] [dev] [0x8F] [sub_id] [addr] [err] [0]
+			// Error indicator is in byte 2
+			if (response[2] == HIDPP_ERROR_MSG)
+			{
+				// Error code in response[5]
+				if (response[5] == HIDPP_ERR_UNKNOWN_DEVICE)
+				{
+					return 0;  // No device in this slot
+				}
+				// Other errors mean device is present but feature not supported
+				if (pDevicePresent) *pDevicePresent = 1;
+				return 0;
+			}
+			// Check for successful response (short 0x10 or long 0x11)
+			// Format: [0x10/0x11] [dev] [feature_idx] [func<<4|sw_id] [data...]
+			if ((response[0] == HIDPP_SHORT_MSG || response[0] == HIDPP_LONG_MSG) &&
+			    response[2] == 0x00)
+			{
+				if (pDevicePresent) *pDevicePresent = 1;
+				// Feature index is in response[4]
+				return response[4];
+			}
+		}
+	}
+	return 0;
+}
+
+//-----------------------------------------------------------------------------------------------
+// Set HID++ 2.0 feature value - fire and forget (no response wait)
+UINT8 HIDPPSetFeature(USB_HUB_PORT *pDevice, UINT8 devNum, UINT8 featureIndex, UINT8 function, UINT8 value)
+{
+	UINT8 msg[7];
+
+	msg[0] = HIDPP_SHORT_MSG;
+	msg[1] = devNum;
+	msg[2] = featureIndex;
+	msg[3] = function;  // 0x10 = setFnInversion (function 1 << 4 | sw_id 0)
+	msg[4] = value;
+	msg[5] = 0x00;
+	msg[6] = 0x00;
+
+	return SendHIDPPShort(pDevice, msg);
+}
+
+//-----------------------------------------------------------------------------------------------
+// Read a feature's current value via function 0 (get). Returns the first data
+// byte of the reply, or 0xFF if the device didn't answer (asleep / unsupported).
+UINT8 HIDPPGetFeatureValue(USB_HUB_PORT *pDevice, UINT8 devNum, UINT8 featureIndex)
+{
+	UINT8 s;
+	UINT8 msg[7];
+	UINT8 response[20];
+	UINT16 len;
+	UINT8 retries;
+
+	msg[0] = HIDPP_SHORT_MSG;
+	msg[1] = devNum;
+	msg[2] = featureIndex;
+	msg[3] = 0x01;  // function 0 (get) << 4 | sw_id 1
+	msg[4] = 0x00;
+	msg[5] = 0x00;
+	msg[6] = 0x00;
+
+	s = SendHIDPPShort(pDevice, msg);
+	if (s != ERR_SUCCESS)
+		return 0xFF;
+
+	for (retries = 0; retries < 5; retries++)
+	{
+		if (retries > 0)
+		{
+			SoftWatchdog = 0;
+			mDelaymS(5);
+		}
+		s = RecvHIDPP(pDevice, response, &len);
+		if (s == ERR_SUCCESS && len >= 7)
+		{
+			if (response[1] != devNum)
+				continue;  // not for our device
+			if (response[2] == HIDPP_ERROR_MSG)
+				return 0xFF;  // asleep / error
+			if ((response[0] == HIDPP_SHORT_MSG || response[0] == HIDPP_LONG_MSG) &&
+			    response[2] == featureIndex)
+				return response[4];  // current state byte
+		}
+	}
+	return 0xFF;
+}
+
+//-----------------------------------------------------------------------------------------------
+// Query-first apply of the Fn-inversion state; caches slot+index.
+// Returns 1 if the keyboard is now in the desired state, 0 if unreachable.
+static UINT8 ApplyFnInversion(USB_HUB_PORT *pDevice, UINT8 devNum, UINT8 featureIndex, UINT8 desired)
+{
+	UINT8 current = HIDPPGetFeatureValue(pDevice, devNum, featureIndex);
+	if (current == 0xFF)
+		return 0;  // asleep / unreachable
+
+	pDevice->LogitechDevNum = devNum;
+	pDevice->LogitechFnFeatureIndex = featureIndex;
+
+	if ((current & 0x01) == (desired & 0x01))
+		return 1;  // already set
+
+	return (HIDPPSetFeature(pDevice, devNum, featureIndex, HIDPP_FUNC_SET_FN_INVERSION, desired) == ERR_SUCCESS) ? 1 : 0;
+}
+
+//-----------------------------------------------------------------------------------------------
+// Apply the Fn-swap setting to the slot 1 keyboard on a Logitech unifying receiver.
+// Uses the cached feature index, else discovers NEW_FN_INVERSION then FN_INVERSION.
+// Stores the result in LogitechConfigured and returns it (1 on success).
+UINT8 ConfigureLogitechFnSwap(USB_HUB_PORT *pDevice)
+{
+	UINT8 devicePresent;
+	UINT8 featureIndex;
+	UINT8 result = 0;
+	UINT8 desired = HMSettings.DisableLogitechFnSwap ? HIDPP_FN_STANDARD : HIDPP_FN_DEFAULT;
+
+	SoftWatchdog = 0;
+	DEBUGOUT("Logitech: configuring Fn swap\n");
+
+	// Open the receiver's HID++ channel (keyboard is interface 0 on
+	// unifying receivers) by setting report mode. This must be done because
+	// otherwise the receiver will stall the HID++ output
+	SetBootProtocol(pDevice, 0, 1);
+
+	if (pDevice->LogitechFnFeatureIndex != 0)
+	{
+		result = ApplyFnInversion(pDevice, pDevice->LogitechDevNum, pDevice->LogitechFnFeatureIndex, desired);
+	}
+	else
+	{
+		featureIndex = HIDPPGetFeatureIndex(pDevice, 1, HIDPP20_FEAT_NEW_FN_INVERSION, &devicePresent);
+		if (featureIndex == 0 && devicePresent)
+			featureIndex = HIDPPGetFeatureIndex(pDevice, 1, HIDPP20_FEAT_FN_INVERSION, NULL);
+		if (featureIndex != 0)
+			result = ApplyFnInversion(pDevice, 1, featureIndex, desired);
+	}
+
+	// Restore boot protocol if we're set to use it
+	if (!HMSettings.KeyboardReportMode)
+		SetBootProtocol(pDevice, 0, 0);
+
+	pDevice->LogitechConfigured = result;
+	if (result)
+		DEBUGOUT("Logitech: Fn swap configured\n");
+	return result;
+}
+
+//-----------------------------------------------------------------------------------------------
+// Flag connected Logitech unifying devices so the poll loop re-applies the setting in place
+// (used after the menu toggle; the keyboard is awake while the menu is up).
+void ReapplyLogitechFnSwap(void)
+{
+	__xdata LinkedList *pnt = PolledDevices;
+	while (pnt != NULL)
+	{
+		__xdata USB_HUB_PORT *p = (USB_HUB_PORT *)pnt->data;
+		if (IsLogitechUnifying(p))
+		{
+			p->LogitechConfigured = 0;
+			p->LogitechWoke = 1;
+		}
+		pnt = pnt->next;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------
 void InitUsbData(void)
 {
 	CurrentHub = NULL;
@@ -322,6 +643,13 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 		__xdata INTERFACE *pInterface = (__xdata INTERFACE *)ListGetData(pUsbDevice->Interfaces, i);
 		if (pInterface != NULL && pInterface->InterfaceClass == USB_DEV_CLASS_HID)
 		{
+			// skip the Logitech HID++/DJ interface - its reports are notifications,
+			// not keyboard/mouse data
+			if (IsLogitechUnifying(pUsbDevice) &&
+			    pInterface->InterfaceProtocol != HID_PROTOCOL_KEYBOARD &&
+			    pInterface->InterfaceProtocol != HID_PROTOCOL_MOUSE)
+				continue;
+
 			endpointNum = pInterface->EndpointNum;
 			for (j = 0; j < endpointNum; j++)
 			{
@@ -330,24 +658,30 @@ UINT8 HIDDataTransferReceive(USB_HUB_PORT *pUsbDevice)
 				{
 					//P3 ^= 0b10000000;
 					s = TransferReceive(pEndPoint, ReceiveDataBuffer, &len, 0);
-					
+
 					if (s == ERR_SUCCESS)
 					{
-						
-						//TRACE1("interface %d data:", (UINT16)i);
-						// HIS IS WHERE THE FUN STUFF GOES
-						//ProcessHIDData(pInterface, ReceiveDataBuffer, len);
-						
+						// Process the keypress first (no delay for user)
 						ParseReport(pInterface, len * 8, ReceiveDataBuffer);
-						
 
 						if (KeyboardDebugOutput || FlashSettings->SerialDebugOutput) {
 							DEBUGOUT("I%hX L%X- ", i, len);
 							DumpHex(ReceiveDataBuffer, len);
 						}
-						
+
+						// a real keypress means the keyboard is awake and reachable;
+						// flag it so the poll loop configures it (byte 0 = modifiers,
+						// byte 2 = first keycode)
+						if (pInterface->InterfaceProtocol == HID_PROTOCOL_KEYBOARD &&
+						    IsLogitechUnifying(pUsbDevice) &&
+						    !pUsbDevice->LogitechConfigured &&
+						    len >= 3 &&
+						    (ReceiveDataBuffer[0] != 0 || ReceiveDataBuffer[2] != 0))
+						{
+							pUsbDevice->LogitechWoke = 1;
+						}
 					}
-					
+
 				}
 			}
 		}
@@ -490,9 +824,13 @@ USB_HUB_PORT * EnumerateHubPort(UINT8 speed, UINT8 level)
 
 	pUsbDevice->HubPortStatus = PORT_DEVICE_ENUM_SUCCESS;
 
+	// configure here if the keyboard is awake at plug-in; if asleep it answers
+	// RESOURCE_ERROR and we retry on the first keypress (InterruptProcessRootHubPorts)
+	if (IsLogitechUnifying(pUsbDevice))
+		ConfigureLogitechFnSwap(pUsbDevice);
 
 	// OK let's try doing hubs
-	
+
 	if (pUsbDevice->DeviceClass == USB_DEV_CLASS_HUB)
 	{
 		SelectHubPort(pUsbDevice);
@@ -725,9 +1063,9 @@ BOOL EnumerateRootHubPort(UINT8 port)
 
 	if (pHubPort != NULL)
 	{
-
-
 		TRACE("EnumerateHubPort success\r\n");
+
+		DEBUGOUT("VID=%04X PID=%04X\n", pHubPort->VendorID, pHubPort->ProductID);
 	}
 	else
 	{
@@ -867,7 +1205,7 @@ void RegrabDeviceReports()
 
 void ReenumerateAllPorts(void) {
 	UINT8 i;
-	
+
 	// red until further notice
 	SetPWM1Dat(0x40);
 	SetPWM2Dat(0x00);
@@ -894,8 +1232,9 @@ void ReenumerateAllPorts(void) {
 	}
 
 	RegrabDeviceReports();
- 
+
 	DEBUGOUT("done reenumerating, memused %d\n", MemoryUsed());
+
 	LEDDelayMs = 0;
 	OutputsEnabled = 1;
 }
@@ -968,6 +1307,15 @@ void InterruptProcessRootHubPorts()
 		{
 			SelectHubPort(pUsbHubPort);
 			HIDDataTransferReceive(pUsbHubPort);
+
+			// keyboard woke and isn't configured yet - configure in place
+			if (pUsbHubPort->LogitechWoke && !pUsbHubPort->LogitechConfigured &&
+			    IsLogitechUnifying(pUsbHubPort))
+			{
+				pUsbHubPort->LogitechWoke = 0;
+				SelectHubPort(pUsbHubPort);
+				ConfigureLogitechFnSwap(pUsbHubPort);
+			}
 		}
 		pnt = pnt->next;
 	}
@@ -1037,11 +1385,11 @@ __xdata BOOL volatile s_CheckUsbPort1 = FALSE;
 uint8_t cuntage = 0;
 
 void ProcessUsbHostPort(void)
-{	
+{
 	if (s_CheckUsbPort0)
 	{
 		s_CheckUsbPort0 = FALSE;
-		
+
 		InterruptProcessRootHubPorts();
 
 		if (cuntage++ > 40){

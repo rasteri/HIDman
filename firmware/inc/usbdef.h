@@ -163,6 +163,32 @@ extern "C" {
 #define HID_PROTOCOL_KEYBOARD           0x01
 #define HID_PROTOCOL_MOUSE              0x02
 
+/* Logitech Vendor ID */
+#define LOGITECH_VID                    0x046D
+
+/* Logitech Unifying Receiver Product IDs */
+#define LOGITECH_UNIFYING_PID1          0xC52B  /* Standard Unifying */
+#define LOGITECH_UNIFYING_PID2          0xC532  /* Unifying variant */
+#define LOGITECH_UNIFYING_PID3          0xC534  /* Unifying variant */
+#define LOGITECH_UNIFYING_PID4          0xC531  /* Nano receiver */
+
+/* Logitech HID++ Protocol */
+#define HIDPP_SHORT_MSG                 0x10
+#define HIDPP_LONG_MSG                  0x11
+#define HIDPP_ERROR_MSG                 0x8F
+
+/* HID++ Error Codes */
+#define HIDPP_ERR_UNKNOWN_DEVICE        0x01
+
+/* HID++ 2.0 Fn inversion features */
+#define HIDPP20_FEAT_NEW_FN_INVERSION   0x40A2
+#define HIDPP20_FEAT_FN_INVERSION       0x40A0
+
+/* Fn inversion: function byte (func 1 << 4 | sw_id 0) and values */
+#define HIDPP_FUNC_SET_FN_INVERSION     0x10
+#define HIDPP_FN_STANDARD               0x00  /* F1-F12 are function keys */
+#define HIDPP_FN_DEFAULT                0x01  /* keyboard default (media keys) */
+
 /* MSC Protocol Codes */
 #define MSC_PROTOCOL_CBI_INT            0x00
 #define MSC_PROTOCOL_CBI_NOINT          0x01

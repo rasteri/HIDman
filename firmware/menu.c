@@ -255,6 +255,9 @@ void Menu_Task(void)
                 SendKeyboardString("2. 83 Key Mode - ");
                 YesNo(FlashSettings->XT83Keys);
 
+                SendKeyboardString("3. Force Logitech Fn keys - ");
+                YesNo(FlashSettings->DisableLogitechFnSwap);
+
                 SendKeyboardString("\nESC Main Menu\n");
                 currchar = SendBuffer;
                 lastMenuState = menuState;
@@ -262,6 +265,7 @@ void Menu_Task(void)
             switch (menuKey) {
                 case KEY_1:     HMSettings.KeyboardReportMode ^= 1;     SyncSettings(); lastMenuState = 0; break;
                 case KEY_2:     HMSettings.XT83Keys ^= 1;               SyncSettings(); lastMenuState = 0; break;
+                case KEY_3:     HMSettings.DisableLogitechFnSwap ^= 1;  SyncSettings(); ReapplyLogitechFnSwap(); lastMenuState = 0; break;
                 case KEY_ESC:   menuState = MENU_STATE_MAIN; break;
             }
         break;
